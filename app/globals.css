@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   IMPLANTOLAB — Design tokens
+   Variante actuelle : "équilibrée premium médical"
+   Pour basculer vers une autre direction artistique, remplacer le bloc
+   `:root` par celui de la variante "luxe" ou "technique" ci-dessous.
+   ========================================================================= */
+
+@theme {
+  --font-sans: var(--font-source), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --color-bg: #f7f5f2;
+  --color-bg-elevated: #ffffff;
+  --color-bg-deep: #1c1f24;
+  --color-bg-deep-soft: #23272d;
+
+  --color-ink: #1a1d21;
+  --color-ink-muted: #5c6369;
+  --color-ink-discreet: #8a9199;
+  --color-ink-invert: #f4f1ec;
+  --color-ink-invert-muted: #a8aeb3;
+
+  --color-line: #e4e0da;
+  --color-line-strong: #d3cec5;
+  --color-line-invert: #2e333a;
+
+  --color-accent: #3d5a6c;
+  --color-accent-hover: #324a5a;
+  --color-accent-warm: #8b7355;
+  --color-accent-warm-soft: #b89a78;
+
+  --container-narrow: 64rem;
+  --container-base: 76rem;
+  --container-wide: 88rem;
+}
+
+:root {
+  --bg: #f7f5f2;
+  --bg-elevated: #ffffff;
+  --bg-deep: #1c1f24;
+  --bg-deep-soft: #23272d;
+  --ink: #1a1d21;
+  --ink-muted: #5c6369;
+  --ink-discreet: #8a9199;
+  --ink-invert: #f4f1ec;
+  --ink-invert-muted: #a8aeb3;
+  --line: #e4e0da;
+  --line-strong: #d3cec5;
+  --line-invert: #2e333a;
+  --accent: #3d5a6c;
+  --accent-hover: #324a5a;
+  --accent-warm: #8b7355;
+  --accent-warm-soft: #b89a78;
+}
+
+/* ---------- Variante A — Luxe / minimaliste (à activer plus tard) -------
+:root {
+  --bg: #fafaf8;
+  --bg-elevated: #ffffff;
+  --bg-deep: #111111;
+  --ink: #111111;
+  --ink-muted: #4a4a4a;
+  --ink-discreet: #8a8a8a;
+  --line: #ebe9e3;
+  --accent: #111111;
+  --accent-warm: #b8a88a;
+}
+------------------------------------------------------------------------ */
+
+/* ---------- Variante B — Technique / industrielle (à activer plus tard) -
+:root {
+  --bg: #e8eaed;
+  --bg-elevated: #f4f5f7;
+  --bg-deep: #2b3440;
+  --ink: #1d242e;
+  --ink-muted: #4d5663;
+  --ink-discreet: #7d8694;
+  --line: #cfd3d8;
+  --accent: #4a7c8c;
+  --accent-warm: #6a7886;
+}
+------------------------------------------------------------------------ */
+
+/* =========================================================================
+   Base
+   ========================================================================= */
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  line-height: 1.55;
+}
+
+::selection {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+/* =========================================================================
+   Typography utilities
+   ========================================================================= */
+
+@layer components {
+  .font-serif {
+    font-family: var(--font-serif);
+    font-feature-settings: "ss01", "ss02", "ss03";
+  }
+
+  .text-display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.022em;
+    line-height: 1.05;
+  }
+
+  .text-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-discreet);
+  }
+
+  .text-numeral {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "lnum";
+  }
+}
+
+/* =========================================================================
+   Focus
+   ========================================================================= */
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* =========================================================================
+   Scroll reveal — animation subtile
+   ========================================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal.reveal--active:not([data-revealed="true"]) {
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+      opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal.reveal--active[data-revealed="true"] {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 600ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* =========================================================================
+   Decorative grain — placeholders visuels
+   ========================================================================= */
+
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.06;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* =========================================================================
+   Form base
+   ========================================================================= */
+
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-discreet);
+}
