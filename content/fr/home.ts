@@ -5,9 +5,106 @@ export const home = {
       "Prothèses dentaires sur mesure, expertise implantaire et flux numérique maîtrisé.",
     subtitle:
       "IMPLANTOLAB accompagne les chirurgiens-dentistes avec des solutions prothétiques fiables, esthétiques et conçues avec un haut niveau d’exigence technique.",
-    primaryCta: { label: "Demander un devis", href: "/contact?sujet=devis" },
-    secondaryCta: { label: "Nous contacter", href: "/contact" },
-    visualCaption: "Atelier de fabrication — placeholder",
+    primaryCta: { label: "Découvrir le laboratoire", href: "/laboratoire" },
+    secondaryCta: { label: "Espace praticien", href: "/espace-praticien" },
+    visualCaption: "Atelier IMPLANTOLAB — Blois",
+  },
+
+  stats: {
+    eyebrow: "IMPLANTOLAB en chiffres",
+    title: "Un laboratoire ancré dans la précision et le numérique",
+    description:
+      "Depuis 2014, IMPLANTOLAB conjugue savoir-faire artisanal et outils CFAO pour accompagner les chirurgiens-dentistes dans leur pratique quotidienne.",
+    items: [
+      { value: 10, suffix: "+", label: "années d’expertise" },
+      { value: 90, suffix: " %", label: "de cas en flux numérique" },
+      { value: 5, suffix: " j", label: "délai moyen de fabrication" },
+      { value: 150, suffix: "+", label: "praticiens partenaires" },
+    ],
+  },
+
+  expertises: {
+    eyebrow: "Expertises",
+    title: "Une gamme complète, un seul interlocuteur",
+    description:
+      "Implantologie, prothèse fixée, restauration esthétique, flux numérique et fabrication sur mesure. Sélectionnez une expertise pour découvrir notre approche.",
+    tabs: [
+      {
+        key: "implantologie",
+        label: "Implantologie",
+        title: "Restaurations supra-implantaires",
+        body: "Couronnes vissées ou scellées, bridges implantaires, piliers personnalisés et guides chirurgicaux. Chaque restauration est conçue autour du profil d’émergence et de la biomécanique du cas.",
+        bullets: [
+          "Couronnes implantaires en zircone ou céramique",
+          "Bridges implantaires — passivité optimisée",
+          "Piliers personnalisés titane et zircone",
+          "Guides chirurgicaux à partir de vos données 3D",
+        ],
+        href: "/implantologie",
+        photo: "Détail pilier implantaire — atelier",
+        tone: "warm" as const,
+      },
+      {
+        key: "protheses",
+        label: "Prothèses",
+        title: "Prothèses fixées et amovibles",
+        body: "Céramique, zircone monolithique, métal-céramique, châssis et prothèses adjointes. Chaque pièce est ajustée avec soin pour un rendu naturel et une occlusion stable.",
+        bullets: [
+          "Couronnes céramiques et zircone",
+          "Bridges céramo-céramiques et métal-céramique",
+          "Châssis et prothèses amovibles",
+          "Restauration esthétique antérieure",
+        ],
+        href: "/protheses",
+        photo: "Couronne céramique — finition",
+        tone: "cool" as const,
+      },
+      {
+        key: "flux-numerique",
+        label: "Flux numérique",
+        title: "CFAO de bout en bout",
+        body: "De la réception du scan intra-oral à l’usinage et à l’impression, notre chaîne numérique est documentée et reproductible. Interopérabilité assurée avec les scanners du marché.",
+        bullets: [
+          "Formats STL, PLY, OBJ",
+          "Conception CAD validée par nos techniciens",
+          "Usinage 5 axes et impression 3D",
+          "Contrôle qualité automatisé et manuel",
+        ],
+        href: "/flux-numerique",
+        photo: "Conception CAD — poste technique",
+        tone: "deep" as const,
+      },
+      {
+        key: "laboratoire",
+        label: "Fabrication",
+        title: "Un atelier maîtrisé",
+        body: "Postes de travail organisés par expertise, parc CFAO entretenu et prothésistes spécialisés : les conditions de fabrication sont pensées pour la stabilité du résultat.",
+        bullets: [
+          "Équipe de prothésistes spécialisés",
+          "Parc CFAO maintenu et calibré",
+          "Contrôle qualité systématique",
+          "Traçabilité lot par lot",
+        ],
+        href: "/laboratoire",
+        photo: "Contrôle qualité — atelier",
+        tone: "warm" as const,
+      },
+    ],
+  },
+
+  gallery: {
+    eyebrow: "L’atelier",
+    title: "Le savoir-faire, en images",
+    description:
+      "Une plongée dans nos ateliers : équipe, machines et gestes qui font la précision d’IMPLANTOLAB.",
+    photos: [
+      { caption: "Atelier CFAO", tone: "cool" as const, ratio: "portrait" as const },
+      { caption: "Finition manuelle", tone: "warm" as const, ratio: "square" as const },
+      { caption: "Poste de conception", tone: "deep" as const, ratio: "square" as const },
+      { caption: "Contrôle dimensionnel", tone: "warm" as const, ratio: "landscape" as const },
+      { caption: "Zircone brute", tone: "cool" as const, ratio: "portrait" as const },
+      { caption: "Équipe technique", tone: "deep" as const, ratio: "landscape" as const },
+    ],
   },
 
   reassurance: {
@@ -42,87 +139,53 @@ export const home = {
     ],
   },
 
-  expertises: {
-    eyebrow: "Expertises",
-    title: "Des expertises au service de votre pratique",
-    description:
-      "Implantologie, prothèse fixée, restauration esthétique, flux numérique et fabrication sur mesure : IMPLANTOLAB intervient comme un partenaire technique au service de votre pratique.",
+  labIntro: {
+    eyebrow: "Le laboratoire",
+    title: "Un laboratoire à taille humaine, engagé pour la qualité",
+    body: "IMPLANTOLAB réunit une équipe de prothésistes dentaires expérimentés autour d’un objectif commun : produire des restaurations fiables, esthétiques et reproductibles, dans le respect des délais convenus. Nous travaillons main dans la main avec les cabinets dentaires de la région Centre-Val de Loire et au-delà.",
+    highlights: [
+      "Équipe spécialisée par domaine d’expertise",
+      "Communication directe avec un référent technique",
+      "Locaux à Blois — Loir-et-Cher",
+    ],
+    link: { label: "Découvrir notre approche", href: "/laboratoire" },
+    photoCaption: "Équipe IMPLANTOLAB — atelier",
+  },
+
+  ctaTriptych: {
+    eyebrow: "Aller plus loin",
+    title: "Comment souhaitez-vous nous solliciter ?",
     items: [
       {
-        index: "01",
-        title: "Implantologie",
+        title: "Espace praticien",
         description:
-          "Pilier, couronne implantaire, bridge implantaire, esthétique gingivale.",
-        href: "/implantologie",
+          "Connectez-vous pour déclarer vos fermetures et échanger avec nos équipes.",
+        cta: { label: "Se connecter", href: "/espace-praticien" },
+        tone: "deep" as const,
       },
       {
-        index: "02",
-        title: "Prothèse fixée",
+        title: "Contact",
         description:
-          "Céramique, zircone, solutions métal-céramique adaptées à chaque indication.",
-        href: "/protheses",
+          "Devis, envoi de cas, question technique : notre équipe vous répond sous 1 jour ouvré.",
+        cta: { label: "Nous écrire", href: "/contact" },
+        tone: "warm" as const,
       },
       {
-        index: "03",
-        title: "Restauration esthétique",
+        title: "Recrutement",
         description:
-          "Morphologie, teinte et intégration tissulaire travaillées avec précision.",
-        href: "/protheses",
-      },
-      {
-        index: "04",
-        title: "Flux numérique",
-        description:
-          "Scan, conception assistée par ordinateur et production CFAO maîtrisée.",
-        href: "/flux-numerique",
-      },
-      {
-        index: "05",
-        title: "Fabrication sur mesure",
-        description:
-          "Ajustements précis, finitions contrôlées et matériaux sélectionnés.",
-        href: "/laboratoire",
+          "Prothésiste, technicien CFAO, alternance : rejoignez une équipe passionnée.",
+        cta: { label: "Voir les opportunités", href: "/recrutement" },
+        tone: "cool" as const,
       },
     ],
   },
 
-  process: {
-    eyebrow: "Protocole",
-    title: "Un protocole structuré pour chaque cas",
+  news: {
+    eyebrow: "Actualités",
+    title: "Les dernières nouveautés du laboratoire",
     description:
-      "Chaque cas suit un protocole structuré : analyse, validation technique, fabrication, contrôle qualité et livraison. Cette méthode nous permet d’assurer régularité, précision et traçabilité.",
-    steps: [
-      {
-        index: "01",
-        title: "Analyse",
-        description:
-          "Réception du cas, étude des contraintes cliniques et techniques.",
-      },
-      {
-        index: "02",
-        title: "Validation",
-        description:
-          "Échange avec le praticien si nécessaire, validation du plan prothétique.",
-      },
-      {
-        index: "03",
-        title: "Fabrication",
-        description:
-          "Usinage et façonnage selon le protocole défini, dans nos ateliers.",
-      },
-      {
-        index: "04",
-        title: "Contrôle qualité",
-        description:
-          "Vérification dimensionnelle, esthétique et fonctionnelle de la pièce.",
-      },
-      {
-        index: "05",
-        title: "Livraison",
-        description:
-          "Expédition soignée, traçabilité du lot et documentation associée.",
-      },
-    ],
+      "Nouveaux matériaux, événements, ouvertures de postes : suivez la vie d’IMPLANTOLAB.",
+    link: { label: "Toutes les actualités", href: "/actualites" },
   },
 
   quality: {
@@ -148,7 +211,7 @@ export const home = {
       },
     ],
     link: { label: "Découvrir le laboratoire", href: "/laboratoire" },
-    visualCaption: "Contrôle qualité — placeholder",
+    visualCaption: "Contrôle qualité — atelier",
   },
 
   contact: {

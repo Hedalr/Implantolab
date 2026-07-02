@@ -81,7 +81,6 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
           as="select"
         >
           <option value="devis">Demande de devis</option>
-          <option value="cas">Envoi d’un cas</option>
           <option value="technique">Question technique</option>
           <option value="autre">Autre</option>
         </Field>

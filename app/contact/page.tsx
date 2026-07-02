@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/metadata";
 export const metadata = pageMetadata({
   title: "Contactez IMPLANTOLAB",
   description:
-    "Demande de devis, envoi de cas, question technique : contactez le laboratoire IMPLANTOLAB. Notre équipe vous répond rapidement.",
+    "Demande de devis, question technique : contactez le laboratoire IMPLANTOLAB. Notre équipe vous répond rapidement.",
   path: "/contact",
 });
 
@@ -49,7 +49,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Contact"
         title="Échangeons sur votre cas ou votre besoin"
-        intro="Que ce soit pour un devis, un cas à adresser ou une question technique, notre équipe est à votre écoute. Nous revenons vers vous sous 1 jour ouvré."
+        intro="Que ce soit pour un devis ou une question technique, notre équipe est à votre écoute. Les praticiens partenaires peuvent adresser leurs cas via l’espace client. Nous revenons vers vous sous 1 jour ouvré."
       />
 
       <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
@@ -109,17 +109,6 @@ export default function ContactPage() {
                   </ul>
                 </li>
               </ul>
-
-              <div className="border border-dashed border-[var(--line-strong)] p-5 text-sm text-[var(--ink-muted)] leading-relaxed">
-                <p className="text-eyebrow text-[var(--accent-warm)] mb-2">
-                  Bientôt disponible
-                </p>
-                <p className="text-[var(--ink-muted)]">
-                  Envoi sécurisé de fichiers STL et espace praticien pour le
-                  suivi de vos cas. En attendant, transmettez-nous vos
-                  fichiers via le formulaire ou par email.
-                </p>
-              </div>
             </Reveal>
 
             <Reveal delay={120} className="lg:col-span-7">

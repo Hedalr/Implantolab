@@ -19,6 +19,7 @@ const cases = [
     indication: "Secteur postérieur — molaire mandibulaire",
     material: "Zircone monolithique",
     tone: "warm" as const,
+    photoKey: "cas:couronne-implantaire",
   },
   {
     category: "Esthétique",
@@ -26,6 +27,7 @@ const cases = [
     indication: "Bloc incisivo-canin maxillaire",
     material: "Céramique pressée stratifiée",
     tone: "cool" as const,
+    photoKey: "cas:stratification-anterieure",
   },
   {
     category: "CFAO",
@@ -33,6 +35,7 @@ const cases = [
     indication: "Secteur prémolaire-molaire",
     material: "Zircone usinée",
     tone: "deep" as const,
+    photoKey: "cas:bridge-implantaire",
   },
   {
     category: "Implantologie",
@@ -40,6 +43,7 @@ const cases = [
     indication: "Région antérieure maxillaire",
     material: "Titane usiné",
     tone: "warm" as const,
+    photoKey: "cas:pilier-titane",
   },
   {
     category: "Esthétique",
@@ -47,6 +51,7 @@ const cases = [
     indication: "Sourire — réhabilitation esthétique",
     material: "Céramique feldspathique",
     tone: "cool" as const,
+    photoKey: "cas:facettes",
   },
   {
     category: "CFAO",
@@ -54,6 +59,7 @@ const cases = [
     indication: "Planification implantaire",
     material: "Résine biocompatible imprimée",
     tone: "deep" as const,
+    photoKey: "cas:guide-chirurgical",
   },
 ];
 
@@ -93,6 +99,7 @@ export default function CasCliniquesPage() {
               <Reveal as="li" delay={(index % 3) * 80} key={item.title} className="flex flex-col gap-5">
                 <VisualPlaceholder
                   caption={item.category}
+                  photoKey={item.photoKey}
                   ratio="portrait"
                   tone={item.tone}
                 />
@@ -116,8 +123,8 @@ export default function CasCliniquesPage() {
 
           <p className="mt-16 text-xs text-[var(--ink-discreet)] border-l border-[var(--line)] pl-4 max-w-2xl">
             Les cas présentés sont anonymisés et publiés avec l’accord du
-            praticien concerné. Les visuels affichés sont des placeholders dans
-            l’attente de l’intégration des photographies cliniques.
+            praticien concerné. Les visuels sont des photos de prévisualisation
+            en attendant les photographies cliniques définitives.
           </p>
         </Container>
       </section>

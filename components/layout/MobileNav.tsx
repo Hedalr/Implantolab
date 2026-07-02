@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { primaryNav, site } from "@/content/fr/site";
+import { primaryNav, practitionerLink, site } from "@/content/fr/site";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -123,7 +123,10 @@ export function MobileNav() {
             </ul>
           </nav>
 
-          <div className="px-6 py-6 border-t border-[var(--line)] flex flex-col gap-4">
+          <div className="px-6 py-6 border-t border-[var(--line)] flex flex-col gap-3">
+            <Button href={practitionerLink.href} variant="secondary">
+              {practitionerLink.label}
+            </Button>
             <Button href="/contact?sujet=devis" variant="primary">
               Demander un devis
             </Button>

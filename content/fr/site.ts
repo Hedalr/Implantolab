@@ -49,13 +49,18 @@ export const site = {
 };
 
 export const primaryNav: NavLink[] = [
-  { label: "Implantologie", href: "/implantologie" },
-  { label: "Prothèses", href: "/protheses" },
-  { label: "Flux numérique", href: "/flux-numerique" },
   { label: "Laboratoire", href: "/laboratoire" },
-  { label: "Cas cliniques", href: "/cas-cliniques" },
+  { label: "Expertises", href: "/expertises" },
+  { label: "Flux numérique", href: "/flux-numerique" },
+  { label: "Actualités", href: "/actualites" },
+  { label: "Recrutement", href: "/recrutement" },
   { label: "Contact", href: "/contact" },
 ];
+
+export const practitionerLink: NavLink = {
+  label: "Espace praticien",
+  href: "/espace-praticien",
+};
 
 export const footerColumns: { title: string; links: NavLink[] }[] = [
   {
@@ -70,13 +75,15 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     title: "Laboratoire",
     links: [
       { label: "Notre approche", href: "/laboratoire" },
-      { label: "Cas cliniques", href: "/cas-cliniques" },
+      { label: "Actualités", href: "/actualites" },
+      { label: "Recrutement", href: "/recrutement" },
       { label: "Contact", href: "/contact" },
     ],
   },
   {
     title: "Praticiens",
     links: [
+      { label: "Espace praticien", href: "/espace-praticien" },
       { label: "Demander un devis", href: "/contact?sujet=devis" },
       { label: "Envoyer un cas", href: "/contact?sujet=cas" },
       { label: "Question technique", href: "/contact?sujet=technique" },

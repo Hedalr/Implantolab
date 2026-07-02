@@ -10,10 +10,13 @@ import {
 } from "react";
 import { cn } from "@/lib/cn";
 
+type RevealVariant = "fade" | "rise" | "scale" | "reveal-x";
+
 type RevealProps = {
   children: ReactNode;
   as?: ElementType;
   delay?: number;
+  variant?: RevealVariant;
   className?: string;
 };
 
@@ -21,6 +24,7 @@ export function Reveal({
   children,
   as: Tag = "div",
   delay = 0,
+  variant = "rise",
   className,
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
@@ -71,6 +75,7 @@ export function Reveal({
       ref,
       className: cn("reveal", active && "reveal--active", className),
       "data-revealed": "true",
+      "data-reveal-variant": variant,
     },
     children,
   );

@@ -180,7 +180,9 @@ export default function MentionsLegalesPage() {
 
                 Conception et développement : {site.name}. Photographies :
 
-                placeholders en attente d’intégration.
+                visuels de prévisualisation (Unsplash) en attente de remplacement
+
+                par les photographies officielles du laboratoire.
 
               </p>
 

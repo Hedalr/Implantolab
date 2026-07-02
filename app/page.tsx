@@ -1,8 +1,10 @@
 import { Hero } from "@/components/sections/Hero";
-import { Reassurance } from "@/components/sections/Reassurance";
-import { Expertises } from "@/components/sections/Expertises";
-import { Process } from "@/components/sections/Process";
-import { Quality } from "@/components/sections/Quality";
+import { StatsBand } from "@/components/sections/StatsBand";
+import { ExpertiseTabs } from "@/components/sections/ExpertiseTabs";
+import { LabIntro } from "@/components/sections/LabIntro";
+import { PhotoGallery } from "@/components/sections/PhotoGallery";
+import { NewsTeaser } from "@/components/sections/NewsTeaser";
+import { CtaTriptych } from "@/components/sections/CtaTriptych";
 import { ContactCta } from "@/components/sections/ContactCta";
 import { pageMetadata } from "@/lib/metadata";
 
@@ -17,10 +19,12 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <Reassurance />
-      <Expertises />
-      <Process />
-      <Quality />
+      <StatsBand />
+      <ExpertiseTabs />
+      <LabIntro />
+      <PhotoGallery />
+      <NewsTeaser />
+      <CtaTriptych />
       <ContactCta />
     </>
   );

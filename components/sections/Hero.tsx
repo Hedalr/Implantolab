@@ -1,16 +1,24 @@
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import { Reveal } from "@/components/ui/Reveal";
+import { HeroVideo } from "@/components/sections/HeroVideo";
 
 export function Hero() {
-  const { eyebrow, title, subtitle, primaryCta, secondaryCta, visualCaption } =
-    home.hero;
+  const { eyebrow, title, subtitle, primaryCta, secondaryCta } = home.hero;
 
   return (
-    <section className="relative border-b border-[var(--line)] bg-[var(--bg)]">
-      <Container size="wide" className="py-20 md:py-28 lg:py-36">
+    <section className="relative overflow-hidden bg-[var(--bg)]">
+      {/* Halo doux en fond, casse l'effet plat "blog" sans être bruyant */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-0"
+      >
+        <div className="absolute -top-24 -right-16 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(163,123,82,0.10),transparent_65%)] blur-2xl" />
+        <div className="absolute top-24 -left-24 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(45,85,102,0.06),transparent_65%)] blur-2xl" />
+      </div>
+
+      <Container size="wide" className="relative py-20 md:py-28 lg:py-36">
         <div className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-center">
           <div className="lg:col-span-7 flex flex-col gap-8">
             <Reveal>
@@ -47,19 +55,24 @@ export function Hero() {
 
           <Reveal delay={200} className="lg:col-span-5">
             <div className="relative">
-              <VisualPlaceholder
-                caption={visualCaption}
-                ratio="tall"
-                tone="warm"
+              <HeroVideo
+                src="/videos/hero-implanto.mp4"
+                className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden bg-[var(--bg-elevated)]"
               />
-              <div className="absolute -bottom-px left-0 right-0 flex justify-between px-1 pt-1 text-[0.65rem] uppercase tracking-[0.18em] text-[var(--ink-discreet)]">
+              <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-between px-1 text-[0.65rem] uppercase tracking-[0.18em] text-[var(--ink-discreet)]">
                 <span>Réf. ATL—001</span>
-                <span>Paris, FR</span>
+                <span>Blois, FR</span>
               </div>
             </div>
           </Reveal>
         </div>
       </Container>
+
+      {/* Ligne séparatrice fine avec dégradé — plus soft qu'une bordure nette */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--line)] to-transparent"
+      />
     </section>
   );
 }
