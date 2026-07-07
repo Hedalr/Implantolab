@@ -19,7 +19,7 @@ export function Header() {
         <div className="flex h-16 md:h-20 items-center justify-between gap-8">
           <div className="flex items-center gap-3 md:gap-4">
             <BackButton />
-            <Logo />
+            <Logo showWordmark />
           </div>
 
           <nav

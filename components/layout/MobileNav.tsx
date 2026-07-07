@@ -82,7 +82,7 @@ export function MobileNav() {
           )}
         >
           <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--line)]">
-            <Logo />
+            <Logo showWordmark />
             <button
               type="button"
               aria-label="Fermer le menu"

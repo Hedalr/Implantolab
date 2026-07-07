@@ -5,7 +5,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { HeroVideo } from "@/components/sections/HeroVideo";
 
 export function Hero() {
-  const { eyebrow, title, subtitle, primaryCta, secondaryCta } = home.hero;
+  const { slogan, eyebrow, title, subtitle, primaryCta, secondaryCta } =
+    home.hero;
 
   return (
     <section className="relative overflow-hidden bg-[var(--bg)]">
@@ -18,7 +19,22 @@ export function Hero() {
         <div className="absolute top-24 -left-24 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(201,75,122,0.08),transparent_65%)] blur-2xl" />
       </div>
 
-      <Container size="wide" className="relative py-20 md:py-28 lg:py-36">
+      <Container
+        size="wide"
+        className="relative pt-10 md:pt-14 lg:pt-16 pb-20 md:pb-28 lg:pb-36"
+      >
+        <Reveal>
+          <p className="font-serif italic text-2xl sm:text-3xl md:text-4xl text-[var(--accent)] tracking-tight leading-tight mb-6 md:mb-8">
+            <span className="block">{slogan.line1}</span>
+            <span className="block">
+              <span aria-hidden="true" className="invisible">
+                {slogan.line2Offset}
+              </span>
+              {slogan.line2}
+            </span>
+          </p>
+        </Reveal>
+
         <div className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-center">
           <div className="lg:col-span-7 flex flex-col gap-8">
             <Reveal>

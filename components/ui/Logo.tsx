@@ -7,9 +7,7 @@ type LogoProps = {
   href?: string;
   className?: string;
   /**
-   * Affiche un wordmark texte à côté du logo. Désactivé par défaut :
-   * l'asset /brand/logo.png (fourni par le client) intègre déjà la
-   * typographie de la marque, pas besoin de doublon texte.
+   * Affiche le wordmark texte (IMPLANTOLAB + sous-titre) à côté du logo.
    */
   showWordmark?: boolean;
 };
@@ -22,10 +20,10 @@ export function Logo({
 }: LogoProps) {
   const color =
     variant === "invert" ? "text-[var(--ink-invert)]" : "text-[var(--ink)]";
-  const accent =
+  const muted =
     variant === "invert"
-      ? "text-[var(--accent-warm-soft)]"
-      : "text-[var(--accent-warm)]";
+      ? "text-[var(--ink-invert-muted)]"
+      : "text-[var(--ink-discreet)]";
 
   return (
     <Link
@@ -42,17 +40,17 @@ export function Logo({
         priority
       />
       {showWordmark ? (
-        <span className="inline-flex items-baseline gap-1">
-          <span className="font-serif text-xl md:text-[1.4rem] tracking-tight leading-none">
-            Implanto
+        <span className="flex flex-col justify-center leading-none gap-1">
+          <span className="font-serif text-lg md:text-xl font-semibold tracking-tight uppercase">
+            Implantolab
           </span>
           <span
             className={cn(
-              "font-serif text-xl md:text-[1.4rem] tracking-tight leading-none italic",
-              accent,
+              "hidden sm:block text-[0.6rem] md:text-[0.65rem] tracking-[0.15em] uppercase",
+              muted,
             )}
           >
-            lab
+            Laboratoire de prothèses dentaires
           </span>
         </span>
       ) : null}
