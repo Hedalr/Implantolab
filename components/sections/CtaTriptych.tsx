@@ -7,14 +7,14 @@ import { cn } from "@/lib/cn";
 
 const toneMap = {
   deep: "bg-[var(--bg-deep)] text-[var(--ink-invert)]",
-  warm: "bg-[var(--accent-warm)] text-[var(--ink-invert)]",
-  cool: "bg-[var(--accent)] text-[var(--ink-invert)]",
+  warm: "bg-[var(--accent)] text-[var(--ink-invert)]",
+  cool: "bg-[var(--accent-warm)] text-[var(--ink-invert)]",
 } as const;
 
 const toneMuted = {
   deep: "text-[var(--ink-invert-muted)]",
-  warm: "text-[#f4e9dc]",
-  cool: "text-[#dbe5eb]",
+  warm: "text-[#fdeef4]",
+  cool: "text-[var(--ink-invert-muted)]",
 } as const;
 
 export function CtaTriptych() {

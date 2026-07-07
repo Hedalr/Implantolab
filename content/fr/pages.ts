@@ -32,7 +32,7 @@ export const implantologie: SimplePageContent = {
         {
           title: "Couronne implantaire",
           description:
-            "Vissée ou scellée, en zircone monolithique ou céramique stratifiée.",
+            "Transvissée ou scellée, en zircone monolithique ou céramique stratifiée.",
         },
         {
           title: "Bridge implantaire",
@@ -54,17 +54,17 @@ export const implantologie: SimplePageContent = {
     {
       eyebrow: "Protocole",
       title: "Un protocole implantaire structuré",
-      body: "Réception du cas, validation du plan prothétique, fabrication selon le protocole défini, contrôle qualité dimensionnel et esthétique, livraison documentée. Chaque étape est tracée pour garantir la régularité du résultat.",
+      body: "Réception du cas, validation du plan prothétique, fabrication selon le protocole défini, contrôle qualité dimensionnel et esthétique. Chaque étape est tracée pour garantir la régularité du résultat.",
     },
     {
       eyebrow: "Matériaux",
       title: "Matériaux sélectionnés pour la performance clinique",
-      body: "Zircone haute translucidité, céramiques pressées, titane et alliages biocompatibles : nous travaillons avec des matériaux certifiés et adaptés aux contraintes implantaires.",
+      body: "Zircone 3Y dernière génération, céramiques stratifiées, titane et alliages biocompatibles : nous travaillons avec des matériaux certifiés et adaptés aux contraintes implantaires.",
     },
     {
       eyebrow: "Accompagnement",
       title: "Un partenaire technique disponible",
-      body: "Vous bénéficiez d’un interlocuteur dédié pour discuter du cas, valider les choix techniques et anticiper les contraintes : pose, espace prothétique, design d’émergence et finitions.",
+      body: "Vous bénéficiez d’un interlocuteur dédié pour discuter du cas, valider les choix techniques et anticiper les contraintes : pose, espace prothétique, design d’émergence et finitions. Pour chaque cas complexe, nous nous déplaçons directement en cabinet à vos côtés.",
     },
   ],
   cta: {
@@ -79,19 +79,41 @@ export const implantologie: SimplePageContent = {
 export const protheses: SimplePageContent = {
   slug: "protheses",
   eyebrow: "Prothèses",
-  title: "Prothèses sur mesure, fixées et amovibles",
+  title: "Prothèses sur mesure, conjointes et amovibles",
   intro:
     "Une gamme complète de prothèses dentaires, conçues et finalisées dans nos ateliers, pour répondre à la diversité des indications cliniques et des attentes esthétiques.",
   sections: [
     {
-      eyebrow: "Prothèse fixée",
+      eyebrow: "Prothèse conjointe",
       title: "Couronnes, bridges et inlays",
       body: "Solutions céramiques, zircone monolithique, métal-céramique et inlays-onlays : chaque pièce est conçue pour son indication, avec un soin particulier porté à l’adaptation marginale et à l’intégration occlusale.",
     },
     {
       eyebrow: "Prothèse amovible",
-      title: "Châssis et prothèses adjointes",
-      body: "Châssis métalliques, prothèses adjointes partielles et complètes, conçus pour le confort du patient et la stabilité fonctionnelle. Réalisations en flux numérique lorsque cela améliore la précision.",
+      title: "Châssis, PEEK, hybride et résine",
+      body: "Une offre complète de prothèses amovibles pour répondre à chaque indication clinique et au confort du patient.",
+      items: [
+        {
+          title: "Châssis métallique",
+          description:
+            "Châssis stellite conçus pour la stabilité fonctionnelle et le confort quotidien.",
+        },
+        {
+          title: "Châssis PEEK",
+          description:
+            "Alternative allégée et biocompatible, adaptée aux patients sensibles aux alliages métalliques.",
+        },
+        {
+          title: "Prothèse hybride",
+          description:
+            "Restaurations combinées associant précision de la CFAO et savoir-faire artisanal.",
+        },
+        {
+          title: "Résine définitive ou provisoire",
+          description:
+            "Prothèses résines complètes ou partielles, en version provisoire ou définitive selon l’indication.",
+        },
+      ],
     },
     {
       eyebrow: "Esthétique",
@@ -116,19 +138,19 @@ export const protheses: SimplePageContent = {
 export const fluxNumerique: SimplePageContent = {
   slug: "flux-numerique",
   eyebrow: "Numérique",
-  title: "Flux numérique et CFAO maîtrisés",
+  title: "Flux numérique, interopérabilité et CFAO maîtrisés",
   intro:
-    "Notre laboratoire intègre la chaîne numérique de bout en bout : de la réception du fichier patient à la fabrication CFAO, jusqu’au contrôle final. Une organisation pensée pour la fiabilité et la traçabilité.",
+    "Notre laboratoire intègre la chaîne numérique de bout en bout : de la réception du fichier patient à la fabrication CFAO, jusqu’au contrôle final. Interopérabilité assurée avec les principaux scanners du marché, pour une organisation pensée pour la fiabilité et la traçabilité.",
   sections: [
     {
       eyebrow: "Formats",
       title: "Formats et empreintes acceptés",
-      body: "Nous acceptons les principaux formats du marché (STL, PLY, OBJ) issus des scanners intra-oraux courants, ainsi que les empreintes physiques numérisées au laboratoire.",
+      body: "Nous acceptons les principaux formats du marché — STL, PLY, OBJ — issus des scanners intra-oraux courants, ainsi que les empreintes physiques numérisées au laboratoire. Interopérabilité garantie avec les scanners 3Shape, Medit, iTero et équivalents.",
     },
     {
       eyebrow: "Workflow",
       title: "Du scan à la prothèse",
-      body: "Réception du fichier, contrôle qualité du scan, conception assistée par ordinateur, fabrication CFAO, finitions, contrôle. Le flux numérique est documenté et reproductible.",
+      body: "Réception du fichier, contrôle qualité du scan, conception CAO, fabrication CFAO, finitions, contrôle. Le flux numérique est documenté et reproductible.",
       items: [
         {
           title: "Réception sécurisée",
@@ -136,9 +158,9 @@ export const fluxNumerique: SimplePageContent = {
             "Transfert via plateforme sécurisée ou portail praticien.",
         },
         {
-          title: "Conception assistée",
+          title: "Conception CAO",
           description:
-            "Conception CAD validée par un technicien qualifié.",
+            "Conception CAO validée par un technicien qualifié.",
         },
         {
           title: "Production CFAO",
@@ -148,14 +170,36 @@ export const fluxNumerique: SimplePageContent = {
         {
           title: "Finitions atelier",
           description:
-            "Maquillage, polissage et contrôle dimensionnel manuel.",
+            "Maquillage, polissage et contrôle manuel par des prothésistes qualifiés.",
         },
       ],
     },
     {
       eyebrow: "Outils",
-      title: "Un parc technologique adapté",
-      body: "Logiciels de conception, scanners de laboratoire, fraiseuses et imprimantes : notre parc est sélectionné pour la précision et la cohérence du résultat clinique.",
+      title: "Un laboratoire à la veille de la technologie",
+      body: "Logiciels de conception, scanners de laboratoire, fraiseuses et imprimantes : notre parc est sélectionné pour la précision et la cohérence du résultat clinique. Nous investissons régulièrement dans les dernières technologies du marché.",
+      items: [
+        {
+          title: "Parc imprimantes résine",
+          description:
+            "HeyGears dernière génération, Formlabs automatisées et imprimante filaire pour couvrir toutes les indications.",
+        },
+        {
+          title: "Parc usinage 5 axes",
+          description:
+            "Usineuses 5 axes iMES-iCore dernière génération pour zircone, PMMA et alliages.",
+        },
+        {
+          title: "Micro-fusion métal",
+          description:
+            "Micro-fusion métal iMES-iCore réalisée en interne, sans sous-traitance.",
+        },
+        {
+          title: "Conception 3Shape",
+          description:
+            "Conception sur 3Shape — nous sommes bêta-testeurs France sur les évolutions logicielles.",
+        },
+      ],
     },
     {
       eyebrow: "Sécurité",
@@ -174,24 +218,51 @@ export const fluxNumerique: SimplePageContent = {
 export const laboratoire: SimplePageContent = {
   slug: "laboratoire",
   eyebrow: "Laboratoire",
-  title: "Un laboratoire engagé pour la qualité",
+  title: "Un atelier maîtrisé, organisé par secteur d’activité",
   intro:
-    "IMPLANTOLAB réunit une équipe de prothésistes dentaires expérimentés autour d’un objectif commun : produire des restaurations fiables, esthétiques et reproductibles, dans le respect des délais convenus.",
+    "IMPLANTOLAB réunit une équipe de prothésistes dentaires expérimentés autour d’un objectif commun : produire des restaurations fiables, esthétiques et reproductibles, dans le respect des délais convenus. Postes de travail organisés par secteur d’activité, chaîne de production 100 % interne à Blois.",
   sections: [
     {
       eyebrow: "Savoir-faire",
-      title: "Une équipe spécialisée",
-      body: "Nos prothésistes interviennent sur leurs domaines d’expertise — implantologie, esthétique antérieure, CFAO, prothèse amovible — pour garantir la précision sur chaque cas.",
+      title: "Une équipe spécialisée par secteur d’activité",
+      body: "Nos prothésistes interviennent sur leurs domaines d’expertise pour garantir la précision sur chaque cas. Postes de travail organisés par secteur d’activité, avec un référent technique par domaine.",
+      items: [
+        {
+          title: "CFAO",
+          description:
+            "Conception, usinage et impression : notre chaîne numérique complète.",
+        },
+        {
+          title: "Prothèses adjointes",
+          description:
+            "Châssis, PEEK, résines et prothèses hybrides.",
+        },
+        {
+          title: "Prothèses conjointes",
+          description:
+            "Couronnes, bridges et inlays, en céramique, zircone ou métal-céramique.",
+        },
+        {
+          title: "Implantologie",
+          description:
+            "Restaurations supra-implantaires, piliers personnalisés et guides chirurgicaux.",
+        },
+        {
+          title: "Orthodontie simple",
+          description:
+            "Tout type de gouttière, sur mesure et en flux numérique.",
+        },
+      ],
     },
     {
       eyebrow: "Atelier",
-      title: "Atelier et équipements",
-      body: "Espaces de travail organisés par poste, parc CFAO maintenu, instruments calibrés : les conditions de fabrication sont pensées pour la stabilité du résultat.",
+      title: "Un atelier organisé pour la précision",
+      body: "Espaces de travail dédiés à chaque secteur, parc CFAO calibré et instruments contrôlés régulièrement.",
     },
     {
       eyebrow: "Qualité",
-      title: "Contrôle qualité documenté",
-      body: "Chaque restauration fait l’objet d’un contrôle qualité formalisé avant expédition : adaptation, dimensions, teinte, finitions.",
+      title: "Contrôle qualité documenté et écoute clinique",
+      body: "Chaque restauration fait l’objet d’un contrôle qualité formalisé avant expédition : adaptation, dimensions, teinte, finitions. Nous restons à l’écoute des doléances des praticiens et de leurs patients pour ajuster nos protocoles et améliorer chaque étape.",
     },
     {
       eyebrow: "Traçabilité",
@@ -201,7 +272,7 @@ export const laboratoire: SimplePageContent = {
     {
       eyebrow: "Délais",
       title: "Engagement sur les délais",
-      body: "Notre organisation interne et notre planification nous permettent de respecter les délais annoncés pour chaque type de réalisation.",
+      body: "Suite à une organisation bien structurée et contrôlée, notre planification interne nous permet de respecter les délais annoncés pour chaque type de réalisation, du cas unitaire au chantier implantaire complexe.",
     },
   ],
   cta: {

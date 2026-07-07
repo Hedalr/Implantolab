@@ -68,21 +68,23 @@ export function LabIntro() {
                 ))}
               </ul>
             </Reveal>
-            <Reveal delay={280}>
-              <Link
-                href={link.href}
-                className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start"
-              >
-                {link.label}
-                <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
-                  <path
-                    d="M0 5H12M12 5L8 1M12 5L8 9"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  />
-                </svg>
-              </Link>
-            </Reveal>
+            {link ? (
+              <Reveal delay={280}>
+                <Link
+                  href={link.href}
+                  className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start"
+                >
+                  {link.label}
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                    <path
+                      d="M0 5H12M12 5L8 1M12 5L8 9"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                </Link>
+              </Reveal>
+            ) : null}
           </div>
         </div>
       </Container>

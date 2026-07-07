@@ -22,106 +22,86 @@ export default function RecrutementPage() {
         intro={recrutement.intro}
       />
 
-      <ValuesSection />
-      <BenefitsSection />
+      <ValuesAndBenefitsSection />
       <OpeningsSection />
-      <SpontaneousSection />
+      <StageAlternanceSection />
 
       <PageCta cta={recrutement.cta} />
     </>
   );
 }
 
-function ValuesSection() {
-  const { values } = recrutement;
+function ValuesAndBenefitsSection() {
+  const { values, benefits } = recrutement;
 
   return (
-    <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-20 md:py-24">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-          <div className="lg:col-span-4">
-            <Reveal>
-              <span className="text-eyebrow flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="h-px w-8 bg-[var(--accent-warm)]"
-                />
-                Nos valeurs
-              </span>
-            </Reveal>
-          </div>
-          <Reveal delay={80} className="lg:col-span-8">
-            <p className="text-xl md:text-2xl text-[var(--ink)] leading-relaxed font-serif text-balance">
-              Un état d’esprit partagé, qui guide nos gestes techniques et
-              notre manière de collaborer au quotidien.
+    <section
+      id="valeurs"
+      className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
+    >
+      <Container size="wide" className="py-24 md:py-32">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 items-end">
+          <Reveal className="lg:col-span-7 flex flex-col gap-5">
+            <span className="text-eyebrow flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="h-px w-8 bg-[var(--accent-warm)]"
+              />
+              Nos valeurs & pourquoi nous rejoindre
+            </span>
+            <h2 className="text-display text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
+              Un état d’esprit partagé, un cadre humain et tourné vers l’avenir
+            </h2>
+          </Reveal>
+          <Reveal delay={100} className="lg:col-span-5">
+            <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
+              Nos valeurs guident nos gestes techniques ; notre organisation en
+              fait un quotidien vivable et stimulant. Voici, en deux temps, ce
+              qui nous anime et ce que nous vous offrons.
             </p>
           </Reveal>
         </div>
 
-        <ul className="mt-16 grid gap-px border-y border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-4">
-          {values.map((value, index) => (
-            <Reveal
-              as="li"
-              delay={index * 70}
-              key={value.title}
-              className="bg-[var(--bg-elevated)] p-6 lg:p-7 flex flex-col gap-3"
-            >
-              <span className="text-numeral text-eyebrow text-[var(--accent-warm)]">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="font-serif text-lg leading-snug text-[var(--ink)]">
-                {value.title}
-              </h3>
-              <p className="text-sm text-[var(--ink-muted)] leading-relaxed">
-                {value.description}
-              </p>
-            </Reveal>
-          ))}
-        </ul>
-      </Container>
-    </section>
-  );
-}
-
-function BenefitsSection() {
-  const { benefits } = recrutement;
-
-  return (
-    <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-24 md:py-32">
-        <div className="grid gap-14 lg:gap-20 lg:grid-cols-12 items-start">
+        <div className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-20">
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <Reveal>
-              <span className="text-eyebrow flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="h-px w-8 bg-[var(--accent-warm)]"
-                />
-                Pourquoi nous rejoindre
-              </span>
-            </Reveal>
-            <Reveal delay={80}>
-              <h2 className="text-display text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
-                Un cadre de travail exigeant, humain et tourné vers l’avenir
-              </h2>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
-                Nous croyons qu’un bon environnement technique et humain est la
-                condition indispensable pour produire des restaurations de
-                qualité, jour après jour.
-              </p>
-            </Reveal>
+            <span className="text-numeral text-eyebrow text-[var(--accent)]">
+              I — Nos valeurs
+            </span>
+            <ul className="flex flex-col divide-y divide-[var(--line)] border-y border-[var(--line)]">
+              {values.map((value, index) => (
+                <Reveal
+                  as="li"
+                  delay={index * 60}
+                  key={value.title}
+                  className="py-5 flex flex-col gap-2"
+                >
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-numeral text-eyebrow text-[var(--accent-warm)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="font-serif text-lg leading-snug text-[var(--ink)]">
+                      {value.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-[var(--ink-muted)] leading-relaxed pl-10">
+                    {value.description}
+                  </p>
+                </Reveal>
+              ))}
+            </ul>
           </div>
 
-          <Reveal delay={140} className="lg:col-span-7">
+          <div className="lg:col-span-7 flex flex-col gap-6">
+            <span className="text-numeral text-eyebrow text-[var(--accent)]">
+              II — Pourquoi nous rejoindre
+            </span>
             <ul className="flex flex-col divide-y divide-[var(--line)] border-y border-[var(--line)]">
               {benefits.map((benefit, index) => (
                 <Reveal
                   as="li"
                   key={benefit.title}
                   delay={index * 60}
-                  className="py-6 grid gap-4 sm:grid-cols-[minmax(0,1fr)_2fr] sm:gap-8 items-start"
+                  className="py-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_2fr] sm:gap-8 items-start"
                 >
                   <div className="flex items-start gap-3">
                     <span
@@ -138,7 +118,7 @@ function BenefitsSection() {
                 </Reveal>
               ))}
             </ul>
-          </Reveal>
+          </div>
         </div>
       </Container>
     </section>
@@ -149,7 +129,10 @@ function OpeningsSection() {
   const { openings } = recrutement;
 
   return (
-    <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
+    <section
+      id="postes"
+      className="bg-[var(--bg)] border-b border-[var(--line)] scroll-mt-24"
+    >
       <Container size="wide" className="py-24 md:py-32">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 items-end">
           <Reveal className="lg:col-span-8 flex flex-col gap-5">
@@ -233,37 +216,65 @@ function OpeningsSection() {
   );
 }
 
-function SpontaneousSection() {
-  const { spontaneous } = recrutement;
+function StageAlternanceSection() {
+  const { stageAlternance } = recrutement;
 
   return (
-    <section className="bg-[var(--bg)] border-b border-[var(--line)]">
+    <section
+      id="stage-alternance"
+      className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
+    >
       <Container size="wide" className="py-20 md:py-24">
         <Reveal>
-          <div className="border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-8 md:p-12 lg:p-16">
-            <div className="grid gap-8 lg:grid-cols-12 lg:gap-16 items-center">
+          <div className="border border-[var(--line-strong)] bg-[var(--bg)] p-8 md:p-12 lg:p-16">
+            <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 items-start">
               <div className="lg:col-span-7 flex flex-col gap-5">
                 <span className="text-eyebrow flex items-center gap-3">
                   <span
                     aria-hidden="true"
                     className="h-px w-8 bg-[var(--accent-warm)]"
                   />
-                  Candidature spontanée
+                  Stage & alternance
                 </span>
                 <h2 className="text-display text-2xl md:text-3xl lg:text-[2.25rem] text-balance">
-                  {spontaneous.title}
+                  {stageAlternance.title}
                 </h2>
                 <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
-                  {spontaneous.description}
+                  {stageAlternance.description}
                 </p>
+                <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {stageAlternance.highlights.map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-3 text-sm text-[var(--ink)] leading-relaxed"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 h-px w-4 bg-[var(--accent)] shrink-0"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="lg:col-span-5 flex flex-wrap gap-3 lg:justify-end">
-                <Button href="/recrutement/candidature" variant="primary">
-                  Envoyer une candidature
+              <div className="lg:col-span-5 flex flex-col gap-4 lg:items-end">
+                <Button
+                  href="/recrutement/candidature?poste=Demande de stage"
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                >
+                  Postuler pour un stage
+                </Button>
+                <Button
+                  href="/recrutement/candidature?poste=Demande d’alternance"
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                >
+                  Postuler en alternance
                 </Button>
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-center"
+                  className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start lg:self-end"
                 >
                   Nous écrire
                   <svg

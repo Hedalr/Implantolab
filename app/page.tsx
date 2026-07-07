@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/metadata";
 export const metadata = pageMetadata({
   title: "Laboratoire de prothèse dentaire",
   description:
-    "IMPLANTOLAB conçoit des prothèses dentaires sur mesure pour les chirurgiens-dentistes : implantologie, prothèse fixée, flux numérique CFAO et accompagnement praticien.",
+    "IMPLANTOLAB conçoit des prothèses dentaires sur mesure pour les chirurgiens-dentistes : implantologie, prothèse conjointe, prothèse amovible et flux numérique CFAO. Chaîne de production 100 % interne à Blois.",
   path: "/",
 });
 
@@ -22,9 +22,9 @@ export default function HomePage() {
       <StatsBand />
       <ExpertiseTabs />
       <LabIntro />
+      <CtaTriptych />
       <PhotoGallery />
       <NewsTeaser />
-      <CtaTriptych />
       <ContactCta />
     </>
   );

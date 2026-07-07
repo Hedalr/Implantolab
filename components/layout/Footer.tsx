@@ -35,6 +35,12 @@ export function Footer() {
               >
                 {site.contact.email}
               </a>
+              <a
+                href={`mailto:${site.contact.emailSecondary}`}
+                className="text-[var(--ink-invert-muted)] hover:text-[var(--accent-warm-soft)] transition-colors"
+              >
+                {site.contact.emailSecondary}
+              </a>
             </div>
           </div>
 

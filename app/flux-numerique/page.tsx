@@ -1,4 +1,4 @@
-import { SimplePage } from "@/components/layout/SimplePage";
+import { FluxNumeriqueLayout } from "@/components/sections/FluxNumeriqueLayout";
 import { fluxNumerique } from "@/content/fr/pages";
 import { pageMetadata } from "@/lib/metadata";
 
@@ -9,5 +9,5 @@ export const metadata = pageMetadata({
 });
 
 export default function FluxNumeriquePage() {
-  return <SimplePage content={fluxNumerique} />;
+  return <FluxNumeriqueLayout content={fluxNumerique} />;
 }

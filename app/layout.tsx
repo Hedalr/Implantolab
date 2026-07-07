@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { AuthHashRecovery } from "@/components/auth/AuthHashRecovery";
 import { site } from "@/content/fr/site";
 import "./globals.css";
 
@@ -34,8 +35,10 @@ export const metadata: Metadata = {
     "CFAO dentaire",
     "prothèse sur mesure",
     "flux numérique dentaire",
-    "prothèse fixée",
+    "prothèse conjointe",
+    "prothèse amovible",
     "couronne zircone",
+    "made in Blois",
   ],
   openGraph: {
     type: "website",
@@ -67,7 +70,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f7f5f2",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
 };
@@ -108,6 +111,7 @@ export default function RootLayout({
         >
           Aller au contenu
         </a>
+        <AuthHashRecovery />
         <Header />
         <main id="contenu" className="flex-1">
           {children}

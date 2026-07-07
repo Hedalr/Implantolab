@@ -14,8 +14,8 @@ export function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-0"
       >
-        <div className="absolute -top-24 -right-16 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(163,123,82,0.10),transparent_65%)] blur-2xl" />
-        <div className="absolute top-24 -left-24 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(45,85,102,0.06),transparent_65%)] blur-2xl" />
+        <div className="absolute -top-24 -right-16 h-[38rem] w-[38rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(232,143,172,0.16),transparent_65%)] blur-2xl" />
+        <div className="absolute top-24 -left-24 h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle_at_center,rgba(201,75,122,0.08),transparent_65%)] blur-2xl" />
       </div>
 
       <Container size="wide" className="relative py-20 md:py-28 lg:py-36">

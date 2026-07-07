@@ -17,6 +17,10 @@ const ACCEPTED_CV_TYPES = [
 ];
 
 const MAX_CV_SIZE_MB = 5;
+const MAX_ATTACHMENTS = 4;
+
+const STAGE_OPTION = "Demande de stage";
+const ALTERNANCE_OPTION = "Demande d’alternance";
 
 export function RecruitmentApplicationForm({
   openings,
@@ -24,15 +28,15 @@ export function RecruitmentApplicationForm({
 }: RecruitmentApplicationFormProps) {
   const [status, setStatus] = useState<Status>("idle");
   const [fileError, setFileError] = useState<string | null>(null);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
 
-  const posteOptions = [...openings, "Candidature spontanée"];
+  const posteOptions = [...openings, STAGE_OPTION, ALTERNANCE_OPTION];
   const initialPoste =
     defaultPoste && posteOptions.includes(defaultPoste)
       ? defaultPoste
       : defaultPoste
         ? defaultPoste
-        : "Candidature spontanée";
+        : STAGE_OPTION;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,28 +44,36 @@ export function RecruitmentApplicationForm({
 
     const form = event.currentTarget;
     const fileInput = form.elements.namedItem("cv") as HTMLInputElement;
-    const file = fileInput.files?.[0];
+    const files = Array.from(fileInput.files ?? []);
 
-    if (!file) {
+    if (files.length === 0) {
       setFileError("Merci de joindre votre CV.");
       return;
     }
 
-    if (!ACCEPTED_CV_TYPES.includes(file.type)) {
-      setFileError("Format accepté : PDF, DOC ou DOCX.");
+    if (files.length > MAX_ATTACHMENTS) {
+      setFileError(
+        `Vous pouvez joindre jusqu’à ${MAX_ATTACHMENTS} fichiers (CV, lettre, convention de stage…).`,
+      );
       return;
     }
 
-    if (file.size > MAX_CV_SIZE_MB * 1024 * 1024) {
-      setFileError(`Le fichier ne doit pas dépasser ${MAX_CV_SIZE_MB} Mo.`);
-      return;
+    for (const file of files) {
+      if (!ACCEPTED_CV_TYPES.includes(file.type)) {
+        setFileError("Format accepté : PDF, DOC ou DOCX pour chaque pièce jointe.");
+        return;
+      }
+      if (file.size > MAX_CV_SIZE_MB * 1024 * 1024) {
+        setFileError(`Chaque fichier doit peser moins de ${MAX_CV_SIZE_MB} Mo.`);
+        return;
+      }
     }
 
     setStatus("submitting");
     try {
       await new Promise((resolve) => setTimeout(resolve, 600));
       form.reset();
-      setSelectedFileName(null);
+      setSelectedFileNames([]);
       setStatus("success");
     } catch {
       setStatus("error");
@@ -123,13 +135,14 @@ export function RecruitmentApplicationForm({
 
       <label className="flex flex-col gap-3">
         <span className={labelBase}>
-          CV <span aria-hidden="true">*</span>
+          CV & pièces jointes <span aria-hidden="true">*</span>
         </span>
         <div className="flex flex-col gap-2">
           <input
             type="file"
             name="cv"
             required
+            multiple
             accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className={cn(
               fieldBase,
@@ -137,18 +150,29 @@ export function RecruitmentApplicationForm({
             )}
             onChange={(event) => {
               setFileError(null);
-              const file = event.target.files?.[0];
-              setSelectedFileName(file?.name ?? null);
+              const files = Array.from(event.target.files ?? []);
+              setSelectedFileNames(files.map((file) => file.name));
             }}
           />
           <p className="text-xs text-[var(--ink-muted)]">
-            PDF, DOC ou DOCX — {MAX_CV_SIZE_MB} Mo maximum
-            {selectedFileName ? (
-              <span className="block mt-1 text-[var(--ink)]">{selectedFileName}</span>
-            ) : null}
+            CV, lettre de motivation, convention de stage… PDF, DOC ou DOCX —{" "}
+            {MAX_CV_SIZE_MB} Mo par fichier, {MAX_ATTACHMENTS} fichiers max.
           </p>
+          {selectedFileNames.length > 0 ? (
+            <ul className="mt-1 flex flex-col gap-1 text-xs text-[var(--ink)]">
+              {selectedFileNames.map((name) => (
+                <li key={name} className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-3 bg-[var(--accent)]"
+                  />
+                  {name}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {fileError ? (
-            <p className="text-xs text-[var(--accent-warm)]" role="alert">
+            <p className="text-xs text-[var(--accent)]" role="alert">
               {fileError}
             </p>
           ) : null}

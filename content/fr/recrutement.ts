@@ -32,9 +32,10 @@ export type RecrutementContent = {
   values: RecrutementValue[];
   benefits: RecrutementBenefit[];
   openings: RecrutementOpening[];
-  spontaneous: {
+  stageAlternance: {
     title: string;
     description: string;
+    highlights: string[];
   };
   cta: RecrutementCta;
 };
@@ -137,10 +138,16 @@ export const recrutement: RecrutementContent = {
       ],
     },
   ],
-  spontaneous: {
-    title: "Candidature spontanée",
+  stageAlternance: {
+    title: "Demande de stage ou d’alternance",
     description:
-      "Aucun poste ne correspond exactement à votre profil ? Nous restons à l’écoute des prothésistes, techniciens CFAO, céramistes et alternants motivés par notre approche. Envoyez-nous votre candidature : nous étudions chaque dossier avec attention.",
+      "Vous êtes étudiant(e) en prothèse dentaire, en BTM, BTMS ou en formation CFAO ? IMPLANTOLAB accueille chaque année des stagiaires et des alternants au sein de son atelier de Blois. Envoyez votre CV et quelques mots sur votre projet : nous étudions chaque candidature avec attention.",
+    highlights: [
+      "Stage conventionné ou alternance (contrat d’apprentissage / professionnalisation)",
+      "Encadrement par des prothésistes seniors",
+      "Immersion sur l’ensemble de la chaîne CFAO",
+      "Dépôt du CV et documents en pièces jointes",
+    ],
   },
   cta: {
     title: "Envie de rejoindre IMPLANTOLAB ?",

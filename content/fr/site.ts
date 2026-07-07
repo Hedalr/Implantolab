@@ -1,19 +1,21 @@
 export type NavLink = {
   label: string;
   href: string;
+  children?: NavLink[];
 };
 
 export const site = {
   name: "IMPLANTOLAB",
   baseline: "Laboratoire de prothèse dentaire",
   description:
-    "IMPLANTOLAB conçoit et fabrique des prothèses dentaires sur mesure pour les chirurgiens-dentistes, avec une expertise implantaire et un flux numérique maîtrisé.",
+    "IMPLANTOLAB conçoit et fabrique des prothèses dentaires sur mesure pour les chirurgiens-dentistes, avec une chaîne de production interne 100 % Made in Blois.",
   url: "https://www.implantolab.fr",
   locale: "fr-FR",
   contact: {
     phone: "+33967359779",
     phoneDisplay: "09 67 35 97 79",
     email: "contact@implantolab.fr",
+    emailSecondary: "implatolab.pro@gmail.com",
     address: {
       line1: "84 avenue de Châteaudun",
       line2: "",
@@ -49,11 +51,36 @@ export const site = {
 };
 
 export const primaryNav: NavLink[] = [
-  { label: "Laboratoire", href: "/laboratoire" },
-  { label: "Expertises", href: "/expertises" },
+  {
+    label: "Laboratoire",
+    href: "/laboratoire",
+    children: [
+      { label: "Savoir-faire", href: "/laboratoire#savoir-faire" },
+      { label: "Atelier & équipements", href: "/laboratoire#atelier" },
+      { label: "Qualité & traçabilité", href: "/laboratoire#qualite" },
+      { label: "Délais", href: "/laboratoire#delais" },
+    ],
+  },
+  {
+    label: "Expertises",
+    href: "/expertises",
+    children: [
+      { label: "Implantologie", href: "/implantologie" },
+      { label: "Prothèse conjointe", href: "/protheses#prothese-conjointe" },
+      { label: "Prothèse amovible", href: "/protheses#prothese-amovible" },
+    ],
+  },
   { label: "Flux numérique", href: "/flux-numerique" },
   { label: "Actualités", href: "/actualites" },
-  { label: "Recrutement", href: "/recrutement" },
+  {
+    label: "Recrutement",
+    href: "/recrutement",
+    children: [
+      { label: "Postes ouverts", href: "/recrutement#postes" },
+      { label: "Stage & alternance", href: "/recrutement#stage-alternance" },
+      { label: "Nos valeurs & nous rejoindre", href: "/recrutement#valeurs" },
+    ],
+  },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -67,7 +94,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     title: "Expertises",
     links: [
       { label: "Implantologie", href: "/implantologie" },
-      { label: "Prothèses fixées et amovibles", href: "/protheses" },
+      { label: "Prothèse conjointe et amovible", href: "/protheses" },
       { label: "Flux numérique et CFAO", href: "/flux-numerique" },
     ],
   },

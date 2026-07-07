@@ -23,9 +23,9 @@ const ratioMap: Record<Ratio, string> = {
 };
 
 const toneMap = {
-  warm: "bg-[#ece6dc] text-[#7a6a55]",
-  cool: "bg-[#e6e9ec] text-[#4d5663]",
-  deep: "bg-[#23272d] text-[#a8aeb3]",
+  warm: "bg-[#fbe4ed] text-[#9c3a63]",
+  cool: "bg-[#f4f4f4] text-[#525252]",
+  deep: "bg-[#171717] text-[#a3a3a3]",
 } as const;
 
 export function VisualPlaceholder({

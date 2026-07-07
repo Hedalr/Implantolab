@@ -6,6 +6,11 @@ type LogoProps = {
   variant?: "default" | "invert";
   href?: string;
   className?: string;
+  /**
+   * Affiche un wordmark texte à côté du logo. Désactivé par défaut :
+   * l'asset /brand/logo.png (fourni par le client) intègre déjà la
+   * typographie de la marque, pas besoin de doublon texte.
+   */
   showWordmark?: boolean;
 };
 
@@ -13,7 +18,7 @@ export function Logo({
   variant = "default",
   href = "/",
   className,
-  showWordmark = true,
+  showWordmark = false,
 }: LogoProps) {
   const color =
     variant === "invert" ? "text-[var(--ink-invert)]" : "text-[var(--ink)]";
@@ -30,9 +35,9 @@ export function Logo({
     >
       <Image
         src="/brand/logo.png"
-        alt=""
-        width={160}
-        height={200}
+        alt="IMPLANTOLAB"
+        width={200}
+        height={80}
         className="h-9 w-auto md:h-10 shrink-0"
         priority
       />

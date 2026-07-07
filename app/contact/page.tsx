@@ -85,6 +85,12 @@ export default function ContactPage() {
                   >
                     {site.contact.email}
                   </a>
+                  <a
+                    href={`mailto:${site.contact.emailSecondary}`}
+                    className="font-serif text-base text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors"
+                  >
+                    {site.contact.emailSecondary}
+                  </a>
                 </li>
                 <li className="flex flex-col gap-1">
                   <span className="text-eyebrow">Adresse</span>

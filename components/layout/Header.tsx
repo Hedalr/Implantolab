@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { primaryNav, practitionerLink } from "@/content/fr/site";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
+import { BackButton } from "@/components/ui/BackButton";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { NavDropdown } from "@/components/layout/NavDropdown";
 import { Container } from "@/components/ui/Container";
-import { cn } from "@/lib/cn";
 
 export function Header() {
   const pathname = usePathname();
@@ -16,7 +17,10 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--bg)]/85 backdrop-blur-md">
       <Container size="wide">
         <div className="flex h-16 md:h-20 items-center justify-between gap-8">
-          <Logo />
+          <div className="flex items-center gap-3 md:gap-4">
+            <BackButton />
+            <Logo />
+          </div>
 
           <nav
             aria-label="Navigation principale"
@@ -27,24 +31,7 @@ export function Header() {
                 pathname === link.href ||
                 (link.href !== "/" && pathname.startsWith(link.href));
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    "relative text-sm tracking-wide py-1.5 transition-colors",
-                    isActive
-                      ? "text-[var(--ink)]"
-                      : "text-[var(--ink-muted)] hover:text-[var(--ink)]",
-                  )}
-                >
-                  {link.label}
-                  {isActive ? (
-                    <span
-                      aria-hidden="true"
-                      className="absolute -bottom-px left-0 right-0 h-px bg-[var(--accent-warm)]"
-                    />
-                  ) : null}
-                </Link>
+                <NavDropdown key={link.href} link={link} isActive={isActive} />
               );
             })}
           </nav>

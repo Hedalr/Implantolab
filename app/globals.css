@@ -2,34 +2,35 @@
 
 /* =========================================================================
    IMPLANTOLAB — Design tokens
-   Direction : laboratoire pro / industriel maîtrisé
-   Palette plus contrastée que la variante "éditoriale" précédente,
-   pour donner un aspect moins « blog » et plus « site laboratoire ».
+   Direction : charte laboratoire — noir / rose / blanc.
+   Les tokens `--accent` (rose profond) et `--accent-warm` (rose souple)
+   restent utilisés partout, un changement centralisé suffit pour rebrander.
+   NOTE : les codes HEX exacts du rose du labo sont à valider par le client.
    ========================================================================= */
 
 @theme {
   --font-sans: var(--font-source), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
 
-  --color-bg: #f4f2ee;
-  --color-bg-elevated: #ffffff;
-  --color-bg-deep: #14181d;
-  --color-bg-deep-soft: #1c2129;
+  --color-bg: #ffffff;
+  --color-bg-elevated: #fafafa;
+  --color-bg-deep: #0a0a0a;
+  --color-bg-deep-soft: #171717;
 
-  --color-ink: #14181d;
-  --color-ink-muted: #4a5058;
-  --color-ink-discreet: #7d8590;
-  --color-ink-invert: #f4f1ec;
-  --color-ink-invert-muted: #a8aeb3;
+  --color-ink: #0a0a0a;
+  --color-ink-muted: #525252;
+  --color-ink-discreet: #8a8a8a;
+  --color-ink-invert: #fafafa;
+  --color-ink-invert-muted: #a3a3a3;
 
-  --color-line: #dcd7cf;
-  --color-line-strong: #c6bfb4;
-  --color-line-invert: #2b323b;
+  --color-line: #e5e5e5;
+  --color-line-strong: #c9c9c9;
+  --color-line-invert: #262626;
 
-  --color-accent: #2d5566;
-  --color-accent-hover: #234453;
-  --color-accent-warm: #a37b52;
-  --color-accent-warm-soft: #c7a37a;
+  --color-accent: #c94b7a;
+  --color-accent-hover: #a83660;
+  --color-accent-warm: #e88fac;
+  --color-accent-warm-soft: #f5c8d8;
 
   --container-narrow: 64rem;
   --container-base: 76rem;
@@ -37,22 +38,22 @@
 }
 
 :root {
-  --bg: #f4f2ee;
-  --bg-elevated: #ffffff;
-  --bg-deep: #14181d;
-  --bg-deep-soft: #1c2129;
-  --ink: #14181d;
-  --ink-muted: #4a5058;
-  --ink-discreet: #7d8590;
-  --ink-invert: #f4f1ec;
-  --ink-invert-muted: #a8aeb3;
-  --line: #dcd7cf;
-  --line-strong: #c6bfb4;
-  --line-invert: #2b323b;
-  --accent: #2d5566;
-  --accent-hover: #234453;
-  --accent-warm: #a37b52;
-  --accent-warm-soft: #c7a37a;
+  --bg: #ffffff;
+  --bg-elevated: #fafafa;
+  --bg-deep: #0a0a0a;
+  --bg-deep-soft: #171717;
+  --ink: #0a0a0a;
+  --ink-muted: #525252;
+  --ink-discreet: #8a8a8a;
+  --ink-invert: #fafafa;
+  --ink-invert-muted: #a3a3a3;
+  --line: #e5e5e5;
+  --line-strong: #c9c9c9;
+  --line-invert: #262626;
+  --accent: #c94b7a;
+  --accent-hover: #a83660;
+  --accent-warm: #e88fac;
+  --accent-warm-soft: #f5c8d8;
 }
 
 /* =========================================================================

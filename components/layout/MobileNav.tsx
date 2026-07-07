@@ -103,11 +103,11 @@ export function MobileNav() {
                   pathname === link.href ||
                   (link.href !== "/" && pathname.startsWith(link.href));
                 return (
-                  <li key={link.href}>
+                  <li key={link.href} className="border-b border-[var(--line)]">
                     <Link
                       href={link.href}
                       className={cn(
-                        "flex items-baseline gap-4 py-4 border-b border-[var(--line)]",
+                        "flex items-baseline gap-4 py-4",
                         "font-serif text-2xl tracking-tight",
                         isActive ? "text-[var(--ink)]" : "text-[var(--ink-muted)] hover:text-[var(--ink)]",
                       )}
@@ -117,6 +117,20 @@ export function MobileNav() {
                       </span>
                       {link.label}
                     </Link>
+                    {link.children && link.children.length > 0 ? (
+                      <ul className="pl-10 pb-4 flex flex-col gap-2">
+                        {link.children.map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </li>
                 );
               })}
@@ -130,13 +144,18 @@ export function MobileNav() {
             <Button href="/contact?sujet=devis" variant="primary">
               Demander un devis
             </Button>
-            <div className="text-sm text-[var(--ink-muted)]">
+            <div className="flex flex-col gap-1 text-sm text-[var(--ink-muted)]">
               <a href={`tel:${site.contact.phone}`} className="hover:text-[var(--ink)]">
                 {site.contact.phoneDisplay}
               </a>
-              <span aria-hidden="true" className="mx-2 text-[var(--ink-discreet)]">·</span>
               <a href={`mailto:${site.contact.email}`} className="hover:text-[var(--ink)]">
                 {site.contact.email}
+              </a>
+              <a
+                href={`mailto:${site.contact.emailSecondary}`}
+                className="hover:text-[var(--ink)]"
+              >
+                {site.contact.emailSecondary}
               </a>
             </div>
           </div>

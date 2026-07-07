@@ -6,13 +6,28 @@ type Props = {
   sections: SimplePageContent["sections"];
 };
 
+/**
+ * Génère un slug ancre stable à partir de l'eyebrow d'une section.
+ * Utilisé pour les liens de navigation type /laboratoire#atelier.
+ */
+function sectionAnchor(eyebrow: string | undefined, index: number): string {
+  if (!eyebrow) return `section-${index + 1}`;
+  return eyebrow
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function PageSections({ sections }: Props) {
   return (
     <div className="bg-[var(--bg-elevated)]">
       {sections.map((section, index) => (
         <section
           key={`${section.title}-${index}`}
-          className="border-b border-[var(--line)]"
+          id={sectionAnchor(section.eyebrow, index)}
+          className="border-b border-[var(--line)] scroll-mt-24"
         >
           <Container size="wide" className="py-20 md:py-24">
             <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-start">

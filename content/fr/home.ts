@@ -2,7 +2,7 @@ export const home = {
   hero: {
     eyebrow: "Laboratoire de prothèse dentaire",
     title:
-      "Prothèses dentaires sur mesure, expertise implantaire et flux numérique maîtrisé.",
+      "Prothèses dentaires sur mesure et flux numérique maîtrisé.",
     subtitle:
       "IMPLANTOLAB accompagne les chirurgiens-dentistes avec des solutions prothétiques fiables, esthétiques et conçues avec un haut niveau d’exigence technique.",
     primaryCta: { label: "Découvrir le laboratoire", href: "/laboratoire" },
@@ -17,9 +17,9 @@ export const home = {
       "Depuis 2014, IMPLANTOLAB conjugue savoir-faire artisanal et outils CFAO pour accompagner les chirurgiens-dentistes dans leur pratique quotidienne.",
     items: [
       { value: 10, suffix: "+", label: "années d’expertise" },
+      { value: 100, suffix: "", label: "clients cabinets dentaires" },
       { value: 90, suffix: " %", label: "de cas en flux numérique" },
       { value: 5, suffix: " j", label: "délai moyen de fabrication" },
-      { value: 150, suffix: "+", label: "praticiens partenaires" },
     ],
   },
 
@@ -27,15 +27,15 @@ export const home = {
     eyebrow: "Expertises",
     title: "Une gamme complète, un seul interlocuteur",
     description:
-      "Implantologie, prothèse fixée, restauration esthétique, flux numérique et fabrication sur mesure. Sélectionnez une expertise pour découvrir notre approche.",
+      "Implantologie, prothèse amovible, prothèse conjointe et flux numérique complet : une gamme complète, un seul interlocuteur. Sélectionnez une expertise pour découvrir notre approche.",
     tabs: [
       {
         key: "implantologie",
         label: "Implantologie",
         title: "Restaurations supra-implantaires",
-        body: "Couronnes vissées ou scellées, bridges implantaires, piliers personnalisés et guides chirurgicaux. Chaque restauration est conçue autour du profil d’émergence et de la biomécanique du cas.",
+        body: "Couronnes transvissées ou scellées, bridges implantaires, piliers personnalisés et guides chirurgicaux. Chaque restauration est conçue autour du profil d’émergence et de la biomécanique du cas.",
         bullets: [
-          "Couronnes implantaires en zircone ou céramique",
+          "Couronnes transvissées ou scellées",
           "Bridges implantaires — passivité optimisée",
           "Piliers personnalisés titane et zircone",
           "Guides chirurgicaux à partir de vos données 3D",
@@ -47,13 +47,13 @@ export const home = {
       {
         key: "protheses",
         label: "Prothèses",
-        title: "Prothèses fixées et amovibles",
-        body: "Céramique, zircone monolithique, métal-céramique, châssis et prothèses adjointes. Chaque pièce est ajustée avec soin pour un rendu naturel et une occlusion stable.",
+        title: "Prothèse conjointe et prothèse amovible",
+        body: "Céramique, zircone monolithique, métal-céramique pour la prothèse conjointe ; châssis métalliques, PEEK, prothèses hybrides et résines définitives ou provisoires pour la prothèse amovible.",
         bullets: [
           "Couronnes céramiques et zircone",
           "Bridges céramo-céramiques et métal-céramique",
-          "Châssis et prothèses amovibles",
-          "Restauration esthétique antérieure",
+          "Châssis métalliques et PEEK",
+          "Prothèse hybride et résine définitive ou provisoire",
         ],
         href: "/protheses",
         photo: "Couronne céramique — finition",
@@ -66,28 +66,13 @@ export const home = {
         body: "De la réception du scan intra-oral à l’usinage et à l’impression, notre chaîne numérique est documentée et reproductible. Interopérabilité assurée avec les scanners du marché.",
         bullets: [
           "Formats STL, PLY, OBJ",
-          "Conception CAD validée par nos techniciens",
+          "Conception CAO validée par nos techniciens",
           "Usinage 5 axes et impression 3D",
           "Contrôle qualité automatisé et manuel",
         ],
         href: "/flux-numerique",
-        photo: "Conception CAD — poste technique",
+        photo: "Conception CAO — poste technique",
         tone: "deep" as const,
-      },
-      {
-        key: "laboratoire",
-        label: "Fabrication",
-        title: "Un atelier maîtrisé",
-        body: "Postes de travail organisés par expertise, parc CFAO entretenu et prothésistes spécialisés : les conditions de fabrication sont pensées pour la stabilité du résultat.",
-        bullets: [
-          "Équipe de prothésistes spécialisés",
-          "Parc CFAO maintenu et calibré",
-          "Contrôle qualité systématique",
-          "Traçabilité lot par lot",
-        ],
-        href: "/laboratoire",
-        photo: "Contrôle qualité — atelier",
-        tone: "warm" as const,
       },
     ],
   },
@@ -141,14 +126,16 @@ export const home = {
 
   labIntro: {
     eyebrow: "Le laboratoire",
-    title: "Un laboratoire à taille humaine, engagé pour la qualité",
-    body: "IMPLANTOLAB réunit une équipe de prothésistes dentaires expérimentés autour d’un objectif commun : produire des restaurations fiables, esthétiques et reproductibles, dans le respect des délais convenus. Nous travaillons main dans la main avec les cabinets dentaires de la région Centre-Val de Loire et au-delà.",
+    title: "Chaîne de production interne, un réel 100 % Made in Blois",
+    body: "Chaque prothèse dentaire est fabriquée en interne, dans nos ateliers de Blois. Nous disposons de notre propre chaîne de production et d’un centre d’usinage dédié à nos clients — pas de sous-traitance : la totalité des étapes, de la conception CAO à la finition céramique, est réalisée par notre équipe de prothésistes.",
     highlights: [
-      "Équipe spécialisée par domaine d’expertise",
-      "Communication directe avec un référent technique",
+      "Chaîne de production 100 % interne",
+      "Centre d’usinage dédié à nos clients",
       "Locaux à Blois — Loir-et-Cher",
     ],
-    link: { label: "Découvrir notre approche", href: "/laboratoire" },
+    // On retire le lien pour éviter la duplication avec le CTA du Hero
+    // qui pointe déjà vers /laboratoire (voir Chantier 2.4 du plan).
+    link: null as { label: string; href: string } | null,
     photoCaption: "Équipe IMPLANTOLAB — atelier",
   },
 
