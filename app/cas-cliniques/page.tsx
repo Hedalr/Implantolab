@@ -3,6 +3,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
+import { CaseJourney } from "@/components/sections/CaseJourney";
 import { casCliniques } from "@/content/fr/pages";
 import { pageMetadata } from "@/lib/metadata";
 
@@ -72,7 +73,9 @@ export default function CasCliniquesPage() {
         intro={casCliniques.intro}
       />
 
-      <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
+      <CaseJourney />
+
+      <section className="bg-[var(--bg)] border-b border-[var(--line)]">
         <Container size="wide" className="py-20 md:py-28">
           <div className="flex flex-wrap items-center justify-between gap-6 mb-14">
             <p className="text-eyebrow">Sélection</p>

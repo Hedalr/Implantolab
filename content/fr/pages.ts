@@ -313,3 +313,88 @@ export const casCliniques: SimplePageContent = {
     primary: { label: "Discuter d’un cas", href: "/contact?sujet=cas" },
   },
 };
+
+export type CaseJourneyStep = {
+  key: string;
+  number: string;
+  label: string;
+  duration: string;
+  title: string;
+  description: string;
+  details: string[];
+  photoKey: string;
+};
+
+export const caseJourney: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  steps: CaseJourneyStep[];
+} = {
+  eyebrow: "Parcours",
+  title: "Le parcours d’un cas, du scan à la livraison",
+  description:
+    "De la réception de l’empreinte numérique à l’expédition de la restauration finie, chaque cas suit une chaîne de fabrication structurée et tracée. Parcourez les étapes.",
+  steps: [
+    {
+      key: "scan",
+      number: "01",
+      label: "Scan",
+      duration: "Jour 0",
+      title: "Réception de l’empreinte numérique",
+      description:
+        "Le fichier transmis par le praticien — scanner intra-oral ou empreinte physique numérisée au laboratoire — est réceptionné et contrôlé avant son intégration dans notre chaîne de production.",
+      details: [
+        "Formats acceptés : STL, PLY, OBJ",
+        "Vérification de la qualité et de la complétude du scan",
+        "Ouverture du dossier de fabrication",
+      ],
+      photoKey: "Contrôle dimensionnel",
+    },
+    {
+      key: "design",
+      number: "02",
+      label: "Design",
+      duration: "Jour 1",
+      title: "Conception assistée par ordinateur",
+      description:
+        "Nos techniciens modélisent la restauration sur poste de CAO en tenant compte de l’occlusion, du profil d’émergence et des contraintes biomécaniques propres au cas.",
+      details: [
+        "Modélisation sur mesure du cas",
+        "Validation du plan prothétique",
+        "Optimisation du fichier avant fabrication",
+      ],
+      photoKey: "Conception CAO — poste technique",
+    },
+    {
+      key: "usinage",
+      number: "03",
+      label: "Usinage",
+      duration: "Jour 2–3",
+      title: "Usinage, impression et finitions",
+      description:
+        "La pièce est usinée sur nos centres 5 axes ou imprimée selon le matériau requis, puis reprise à la main par nos prothésistes pour la stratification et les finitions esthétiques.",
+      details: [
+        "Usinage 5 axes et impression 3D",
+        "Zircone, titane ou résine biocompatible",
+        "Finitions manuelles et contrôle en cours de fabrication",
+      ],
+      photoKey: "Atelier CFAO",
+    },
+    {
+      key: "livraison",
+      number: "04",
+      label: "Livraison",
+      duration: "Jour 4–5",
+      title: "Contrôle qualité et livraison",
+      description:
+        "Chaque restauration fait l’objet d’un contrôle qualité formalisé — forme, teinte, adaptation — avant un conditionnement soigné et une expédition sécurisée vers le cabinet.",
+      details: [
+        "Contrôle qualité documenté et tracé",
+        "Conditionnement adapté au transport",
+        "Expédition dans le délai annoncé",
+      ],
+      photoKey: "Couronne céramique — finition",
+    },
+  ],
+};

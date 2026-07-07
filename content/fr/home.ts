@@ -88,14 +88,56 @@ export const home = {
     eyebrow: "L’atelier",
     title: "Le savoir-faire, en images",
     description:
-      "Une plongée dans nos ateliers : équipe, machines et gestes qui font la précision d’IMPLANTOLAB.",
+      "Une plongée dans nos ateliers : équipe, machines et gestes qui font la précision d’IMPLANTOLAB. Suivez le fil du process, étape par étape.",
     photos: [
-      { caption: "Atelier CFAO", tone: "cool" as const, ratio: "portrait" as const },
-      { caption: "Finition manuelle", tone: "warm" as const, ratio: "square" as const },
-      { caption: "Poste de conception", tone: "deep" as const, ratio: "square" as const },
-      { caption: "Contrôle dimensionnel", tone: "warm" as const, ratio: "landscape" as const },
-      { caption: "Zircone brute", tone: "cool" as const, ratio: "portrait" as const },
-      { caption: "Équipe technique", tone: "deep" as const, ratio: "landscape" as const },
+      {
+        caption: "Poste de conception",
+        step: "Conception",
+        description:
+          "Le fichier numérique du praticien est étudié et modélisé sur nos postes de CAO.",
+        tone: "deep" as const,
+        ratio: "landscape" as const,
+      },
+      {
+        caption: "Atelier CFAO",
+        step: "Usinage",
+        description:
+          "Usinage 5 axes et impression 3D, pilotés depuis notre atelier CFAO intégré.",
+        tone: "cool" as const,
+        ratio: "landscape" as const,
+      },
+      {
+        caption: "Zircone brute",
+        step: "Matériaux",
+        description:
+          "Blocs de zircone et disques bruts, sélectionnés avant la mise en forme.",
+        tone: "cool" as const,
+        ratio: "landscape" as const,
+      },
+      {
+        caption: "Finition manuelle",
+        step: "Finition",
+        description:
+          "Stratification, polissage et ajustements réalisés à la main par nos prothésistes.",
+        tone: "warm" as const,
+        ratio: "landscape" as const,
+      },
+      {
+        caption: "Contrôle dimensionnel",
+        step: "Contrôle qualité",
+        description:
+          "Chaque pièce est vérifiée avant expédition : forme, teinte, adaptation.",
+        tone: "warm" as const,
+        ratio: "landscape" as const,
+      },
+      {
+        caption: "Équipe technique",
+        step: "Équipe",
+        description:
+          "Une équipe de prothésistes spécialisés, présente à chaque étape du process.",
+        tone: "deep" as const,
+        ratio: "landscape" as const,
+      },
     ],
   },
 

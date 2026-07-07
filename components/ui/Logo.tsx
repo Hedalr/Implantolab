@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 type LogoProps = {
@@ -18,6 +21,20 @@ export function Logo({
   className,
   showWordmark = false,
 }: LogoProps) {
+  const pathname = usePathname();
+
+  /**
+   * Sur la page déjà ciblée par le lien (typiquement l'accueil), Next.js ne
+   * déclenche aucune navigation au clic — donc aucun scroll. On force un
+   * retour en haut de page dans ce cas précis pour que le logo reste utile
+   * même quand on a scrollé loin dans la page.
+   */
+  const handleClick = () => {
+    if (pathname === href) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const color =
     variant === "invert" ? "text-[var(--ink-invert)]" : "text-[var(--ink)]";
   const muted =
@@ -28,6 +45,7 @@ export function Logo({
   return (
     <Link
       href={href}
+      onClick={handleClick}
       aria-label="IMPLANTOLAB — Accueil"
       className={cn("inline-flex items-center gap-3 group", color, className)}
     >

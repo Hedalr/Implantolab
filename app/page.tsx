@@ -22,10 +22,10 @@ export default function HomePage() {
       <StatsBand />
       <ExpertiseTabs />
       <LabIntro />
-      <CtaTriptych />
       <PhotoGallery />
       <NewsTeaser />
       <ContactCta />
+      <CtaTriptych />
     </>
   );
 }
