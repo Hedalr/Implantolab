@@ -13,8 +13,15 @@
 
 .prose-article p {
   color: var(--ink-muted);
-  font-size: 1.125rem;
-  line-height: 1.75;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 640px) {
+  .prose-article p {
+    font-size: 1.125rem;
+    line-height: 1.75;
+  }
 }
 
 .prose-article h1,
@@ -100,8 +107,15 @@
   padding: 0.25rem 0 0.25rem 1.25rem;
   color: var(--ink);
   font-family: var(--font-serif);
-  font-size: 1.25rem;
-  line-height: 1.5;
+  font-size: 1.125rem;
+  line-height: 1.55;
+}
+
+@media (min-width: 640px) {
+  .prose-article blockquote {
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
 }
 
 .prose-article code {
@@ -153,7 +167,11 @@
 }
 
 .prose-article table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-collapse: collapse;
   font-size: 0.9375rem;
   color: var(--ink);

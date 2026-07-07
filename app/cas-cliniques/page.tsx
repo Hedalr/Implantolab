@@ -79,18 +79,26 @@ export default function CasCliniquesPage() {
         <Container size="wide" className="py-20 md:py-28">
           <div className="flex flex-wrap items-center justify-between gap-6 mb-14">
             <p className="text-eyebrow">Sélection</p>
-            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--ink-muted)]">
+            <ul className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-1 text-sm text-[var(--ink-muted)]">
               {["Tous", "Implantologie", "Esthétique", "CFAO"].map((label, i) => (
                 <li key={label}>
                   <button
                     type="button"
                     className={
                       i === 0
-                        ? "text-[var(--ink)] border-b border-[var(--ink)] pb-1"
-                        : "hover:text-[var(--ink)] transition-colors"
+                        ? "tap-link px-2 text-[var(--ink)]"
+                        : "tap-link px-2 hover:text-[var(--ink)] transition-colors"
                     }
                   >
-                    {label}
+                    <span
+                      className={
+                        i === 0
+                          ? "border-b border-[var(--ink)] pb-1"
+                          : ""
+                      }
+                    >
+                      {label}
+                    </span>
                   </button>
                 </li>
               ))}

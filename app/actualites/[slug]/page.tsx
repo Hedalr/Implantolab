@@ -106,7 +106,7 @@ export default async function ArticlePage({ params }: PageProps) {
       <section className="bg-[var(--bg)] border-b border-[var(--line)]">
         <Container size="narrow" className="py-16 md:py-24">
           <div className="flex flex-col gap-10">
-            <div className="flex items-center gap-4 text-eyebrow">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-eyebrow">
               <time
                 dateTime={article.date}
                 className="text-[var(--ink-discreet)]"
@@ -146,29 +146,31 @@ export default async function ArticlePage({ params }: PageProps) {
             )}
 
             <article
-              className="prose-article flex flex-col gap-6 text-lg leading-relaxed text-[var(--ink-muted)]"
+              className="prose-article flex flex-col gap-6 text-base sm:text-lg leading-relaxed text-[var(--ink-muted)]"
               dangerouslySetInnerHTML={{ __html: article.contentHtml }}
             />
 
             <div className="pt-6 border-t border-[var(--line)]">
               <Link
                 href="/actualites"
-                className="inline-flex items-center gap-3 text-sm tracking-wide text-[var(--ink)] border-b border-[var(--ink)] pb-1 hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                className="tap-link gap-3 text-sm tracking-wide text-[var(--ink)] hover:text-[var(--accent)] transition-colors"
               >
-                <svg
-                  width="14"
-                  height="10"
-                  viewBox="0 0 14 10"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M14 5H2M2 5L6 1M2 5L6 9"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  />
-                </svg>
-                Retour aux actualités
+                <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                  <svg
+                    width="14"
+                    height="10"
+                    viewBox="0 0 14 10"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M14 5H2M2 5L6 1M2 5L6 9"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                  Retour aux actualités
+                </span>
               </Link>
             </div>
           </div>

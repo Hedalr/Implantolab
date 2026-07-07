@@ -52,7 +52,7 @@ export default async function ActualitesPage() {
       />
 
       <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-        <Container size="wide" className="py-20 md:py-28">
+        <Container size="wide" className="py-14 md:py-20 lg:py-28">
           {articles.length === 0 ? (
             <Reveal>
               <div className="border border-[var(--line)] bg-[var(--bg-elevated)] px-8 py-16 flex flex-col gap-3 items-start">
@@ -103,7 +103,7 @@ export default async function ActualitesPage() {
                       )}
                     </div>
                     <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-3 text-eyebrow text-[var(--accent-warm)]">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-eyebrow text-[var(--accent-warm)]">
                         {article.category ? (
                           <>
                             <span>{article.category}</span>
@@ -128,21 +128,23 @@ export default async function ActualitesPage() {
                           {article.excerpt}
                         </p>
                       ) : null}
-                      <span className="mt-2 inline-flex items-center gap-2 text-sm text-[var(--ink)] border-b border-[var(--ink)] pb-1 self-start group-hover:text-[var(--accent)] group-hover:border-[var(--accent)] transition-colors">
-                        Lire l’article
-                        <svg
-                          width="14"
-                          height="10"
-                          viewBox="0 0 14 10"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M0 5H12M12 5L8 1M12 5L8 9"
-                            stroke="currentColor"
-                            strokeWidth="1"
-                          />
-                        </svg>
+                      <span className="tap-link mt-1 gap-2 text-sm text-[var(--ink)] self-start group-hover:text-[var(--accent)] transition-colors">
+                        <span className="inline-flex items-center gap-2 border-b border-current pb-1">
+                          Lire l’article
+                          <svg
+                            width="14"
+                            height="10"
+                            viewBox="0 0 14 10"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M0 5H12M12 5L8 1M12 5L8 9"
+                              stroke="currentColor"
+                              strokeWidth="1"
+                            />
+                          </svg>
+                        </span>
                       </span>
                     </div>
                   </Link>

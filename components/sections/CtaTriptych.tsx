@@ -22,7 +22,7 @@ export function CtaTriptych() {
 
   return (
     <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="max-w-2xl">
           <Reveal>
             <SectionHeading eyebrow={eyebrow} title={title} />
@@ -36,7 +36,7 @@ export function CtaTriptych() {
               delay={index * 100}
               key={item.title}
               className={cn(
-                "group relative flex flex-col justify-between gap-10 p-8 md:p-10 min-h-[16rem] transition-transform duration-500",
+                "group relative flex flex-col justify-between gap-8 md:gap-10 p-6 sm:p-8 md:p-10 min-h-0 md:min-h-[16rem] transition-transform duration-500",
                 toneMap[item.tone],
                 "hover:-translate-y-1",
               )}
@@ -56,16 +56,18 @@ export function CtaTriptych() {
 
               <Link
                 href={item.cta.href}
-                className="inline-flex items-center gap-3 text-sm tracking-wide border-b border-current pb-1 self-start"
+                className="tap-link gap-3 text-sm tracking-wide self-start"
               >
-                {item.cta.label}
-                <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
-                  <path
-                    d="M0 5H12M12 5L8 1M12 5L8 9"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  />
-                </svg>
+                <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                  {item.cta.label}
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                    <path
+                      d="M0 5H12M12 5L8 1M12 5L8 9"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                </span>
               </Link>
             </Reveal>
           ))}

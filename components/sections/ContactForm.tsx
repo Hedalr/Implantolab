@@ -105,7 +105,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
             name="rgpd"
             required
             className={cn(
-              "mt-1 h-4 w-4 shrink-0 appearance-none border bg-transparent transition-colors",
+              "mt-0.5 h-5 w-5 shrink-0 appearance-none border bg-transparent transition-colors",
               dark
                 ? "border-[var(--line-invert)] checked:bg-[var(--accent-warm-soft)] checked:border-[var(--accent-warm-soft)]"
                 : "border-[var(--line-strong)] checked:bg-[var(--ink)] checked:border-[var(--ink)]",

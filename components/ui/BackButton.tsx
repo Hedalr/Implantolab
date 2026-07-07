@@ -46,7 +46,7 @@ export function BackButton({ variant = "default", className }: BackButtonProps) 
       }}
       aria-label="Retour à la page précédente"
       className={cn(
-        "group inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center shrink-0",
+        "group inline-flex h-11 w-11 md:h-10 md:w-10 items-center justify-center shrink-0",
         "transition-[color,transform] duration-300 ease-out",
         color,
         className,

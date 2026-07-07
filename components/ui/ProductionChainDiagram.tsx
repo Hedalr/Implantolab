@@ -27,7 +27,7 @@ export function ProductionChainDiagram({
   return (
     <figure
       className={cn(
-        "relative w-full overflow-hidden grain bg-[var(--bg-deep-soft)] px-7 py-9 md:px-10 md:py-11",
+        "relative w-full overflow-hidden grain bg-[var(--bg-deep-soft)] px-5 py-8 sm:px-7 sm:py-9 md:px-10 md:py-11",
         className,
       )}
     >
@@ -95,7 +95,7 @@ export function ProductionChainDiagram({
       </ol>
 
       {footnote ? (
-        <div className="relative mt-8 flex items-center gap-3 border-t border-white/10 pt-6 text-[0.65rem] uppercase tracking-[0.18em] text-white/40">
+        <div className="relative mt-8 flex items-center gap-3 border-t border-white/10 pt-6 text-xs sm:text-[0.65rem] uppercase tracking-widest sm:tracking-[0.18em] text-white/40">
           <span
             aria-hidden="true"
             className="h-1.5 w-1.5 rounded-full bg-[var(--accent-warm)]"

@@ -26,7 +26,7 @@ export function CaseJourney() {
 
   return (
     <section className="relative bg-[var(--bg-elevated)] border-b border-[var(--line)] overflow-hidden">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl">
           <Reveal>
             <SectionHeading eyebrow={eyebrow} title={title} description={description} />
@@ -37,15 +37,15 @@ export function CaseJourney() {
           <div
             role="tablist"
             aria-label="Étapes du parcours d’un cas clinique"
-            className="relative mt-16 grid grid-cols-4 gap-2 md:gap-4"
+            className="relative mt-12 md:mt-16 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 sm:gap-2 md:gap-4"
           >
             <div
               aria-hidden="true"
-              className="absolute left-0 right-0 top-5 hidden h-px bg-[var(--line)] md:block"
+              className="absolute left-0 right-0 top-[34px] hidden h-px bg-[var(--line)] md:block"
             />
             <motion.div
               aria-hidden="true"
-              className="absolute top-5 left-0 hidden h-px bg-[var(--accent)] md:block"
+              className="absolute top-[34px] left-0 hidden h-px bg-[var(--accent)] md:block"
               animate={{
                 width: `${(activeIndex / (steps.length - 1)) * 100}%`,
               }}
@@ -63,9 +63,9 @@ export function CaseJourney() {
                   aria-controls={`journey-panel-${step.key}`}
                   id={`journey-tab-${step.key}`}
                   onClick={() => setActiveKey(step.key)}
-                  className="group relative z-10 flex flex-col items-center gap-3 text-center"
+                  className="group relative z-10 flex flex-col items-center gap-3 text-center px-2 py-3 min-h-[44px]"
                 >
-                  <span className="relative flex h-9 w-9 md:h-11 md:w-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--bg-elevated)] transition-colors group-hover:border-[var(--accent)]">
+                  <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--bg-elevated)] transition-colors group-hover:border-[var(--accent)]">
                     {selected ? (
                       <motion.span
                         layoutId="journey-active-dot"
@@ -75,7 +75,7 @@ export function CaseJourney() {
                     ) : null}
                     <span
                       className={cn(
-                        "text-numeral relative z-10 text-xs md:text-sm transition-colors",
+                        "text-numeral relative z-10 text-sm transition-colors",
                         selected ? "text-white" : "text-[var(--ink-muted)] group-hover:text-[var(--ink)]",
                       )}
                     >
@@ -96,7 +96,7 @@ export function CaseJourney() {
           </div>
         </Reveal>
 
-        <div className="relative mt-14 md:mt-16 min-h-[420px] md:min-h-[380px]">
+        <div className="relative mt-12 md:mt-16 min-h-0 md:min-h-[380px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={active.key}
@@ -121,10 +121,10 @@ export function CaseJourney() {
                     <span aria-hidden="true" className="h-px w-8 bg-[var(--accent-warm)]" />
                     Étape {active.number} — {active.duration}
                   </span>
-                  <h3 className="text-display text-3xl md:text-4xl text-[var(--ink)] text-balance">
+                  <h3 className="text-display text-2xl sm:text-3xl md:text-4xl text-[var(--ink)] text-balance">
                     {active.title}
                   </h3>
-                  <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty max-w-2xl">
+                  <p className="text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty max-w-2xl">
                     {active.description}
                   </p>
                 </div>
@@ -141,12 +141,12 @@ export function CaseJourney() {
                   ))}
                 </ul>
 
-                <div className="flex items-center gap-4 pt-2">
+                <div className="flex items-center gap-2 sm:gap-4 pt-2">
                   <button
                     type="button"
                     onClick={() => setActiveKey(steps[Math.max(activeIndex - 1, 0)].key)}
                     disabled={activeIndex === 0}
-                    className="inline-flex items-center gap-2 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"
+                    className="tap-link gap-2 px-3 sm:px-4 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"
                   >
                     <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
                       <path d="M14 5H2M2 5L5.5 1.5M2 5L5.5 8.5" stroke="currentColor" strokeWidth="1" />
@@ -159,7 +159,7 @@ export function CaseJourney() {
                       setActiveKey(steps[Math.min(activeIndex + 1, steps.length - 1)].key)
                     }
                     disabled={activeIndex === steps.length - 1}
-                    className="inline-flex items-center gap-2 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"
+                    className="tap-link gap-2 px-3 sm:px-4 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"
                   >
                     Étape suivante
                     <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">

@@ -31,7 +31,7 @@ export async function NewsTeaser() {
 
   return (
     <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <Reveal>
@@ -45,22 +45,24 @@ export async function NewsTeaser() {
           <Reveal delay={80}>
             <Link
               href={link.href}
-              className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start md:self-end"
+              className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start md:self-end"
             >
-              {link.label}
-              <svg
-                width="14"
-                height="10"
-                viewBox="0 0 14 10"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M0 5H12M12 5L8 1M12 5L8 9"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                />
-              </svg>
+              <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                {link.label}
+                <svg
+                  width="14"
+                  height="10"
+                  viewBox="0 0 14 10"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M0 5H12M12 5L8 1M12 5L8 9"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                  />
+                </svg>
+              </span>
             </Link>
           </Reveal>
         </div>
@@ -115,7 +117,7 @@ export async function NewsTeaser() {
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-3 text-eyebrow text-[var(--accent-warm)]">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-eyebrow text-[var(--accent-warm)]">
                       {article.category ? (
                         <span>{article.category}</span>
                       ) : null}

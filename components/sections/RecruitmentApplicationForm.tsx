@@ -161,12 +161,12 @@ export function RecruitmentApplicationForm({
           {selectedFileNames.length > 0 ? (
             <ul className="mt-1 flex flex-col gap-1 text-xs text-[var(--ink)]">
               {selectedFileNames.map((name) => (
-                <li key={name} className="flex items-center gap-2">
+                <li key={name} className="flex items-start gap-2">
                   <span
                     aria-hidden="true"
-                    className="h-px w-3 bg-[var(--accent)]"
+                    className="mt-2 h-px w-3 bg-[var(--accent)] shrink-0"
                   />
-                  {name}
+                  <span className="break-all">{name}</span>
                 </li>
               ))}
             </ul>
@@ -199,7 +199,7 @@ export function RecruitmentApplicationForm({
           name="rgpd"
           required
           className={cn(
-            "mt-1 h-4 w-4 shrink-0 appearance-none border bg-transparent transition-colors",
+            "mt-0.5 h-5 w-5 shrink-0 appearance-none border bg-transparent transition-colors",
             "border-[var(--line-strong)] checked:bg-[var(--ink)] checked:border-[var(--ink)]",
           )}
         />

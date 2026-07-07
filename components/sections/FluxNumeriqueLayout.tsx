@@ -50,7 +50,7 @@ function FormatsBlock({ section }: SectionProps) {
       id="formats"
       className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-20 md:py-24">
+      <Container size="wide" className="py-14 md:py-20 lg:py-28">
         <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-start">
           <Reveal className="lg:col-span-5">
             <div className="flex flex-col gap-4">
@@ -64,14 +64,14 @@ function FormatsBlock({ section }: SectionProps) {
           </Reveal>
 
           <Reveal delay={80} className="lg:col-span-7 flex flex-col gap-8">
-            <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
+            <p className="text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty">
               {section.body}
             </p>
             <ul className="flex flex-wrap gap-3">
               {FORMAT_BADGES.map((format) => (
                 <li
                   key={format}
-                  className="inline-flex items-center gap-2 border border-[var(--line-strong)] bg-[var(--bg)] px-5 py-3 text-numeral text-lg tracking-wider text-[var(--ink)]"
+                  className="inline-flex items-center gap-2 border border-[var(--line-strong)] bg-[var(--bg)] px-4 sm:px-5 py-2.5 sm:py-3 text-numeral text-base sm:text-lg tracking-wider text-[var(--ink)]"
                 >
                   <span
                     aria-hidden="true"
@@ -80,7 +80,7 @@ function FormatsBlock({ section }: SectionProps) {
                   .{format.toLowerCase()}
                 </li>
               ))}
-              <li className="inline-flex items-center gap-2 border border-dashed border-[var(--line-strong)] bg-transparent px-5 py-3 text-sm text-[var(--ink-discreet)]">
+              <li className="w-full sm:w-auto inline-flex items-center gap-2 border border-dashed border-[var(--line-strong)] bg-transparent px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm text-[var(--ink-discreet)]">
                 + empreintes physiques numérisées
               </li>
             </ul>
@@ -99,7 +99,7 @@ function WorkflowTimeline({ section }: SectionProps) {
       id="workflow"
       className="bg-[var(--bg)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-20 md:py-28">
+      <Container size="wide" className="py-14 md:py-20 lg:py-28">
         <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-end">
           <Reveal className="lg:col-span-7 flex flex-col gap-4">
             <span className="text-numeral text-eyebrow text-[var(--accent-warm)]">
@@ -124,7 +124,7 @@ function WorkflowTimeline({ section }: SectionProps) {
               delay={index * 90}
               className="relative flex flex-col gap-3 border md:border-r-0 last:md:border-r border-[var(--line)] bg-[var(--bg-elevated)] p-6 md:p-7"
             >
-              <span className="text-numeral text-display text-3xl md:text-4xl text-[var(--accent)] leading-none">
+              <span className="text-numeral text-display text-2xl sm:text-3xl md:text-4xl text-[var(--accent)] leading-none">
                 {String(index + 1).padStart(2, "0")}
               </span>
               <h3 className="font-serif text-lg text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
@@ -164,7 +164,7 @@ function ToolsGrid({ section }: SectionProps) {
       id="outils"
       className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-20 md:py-28">
+      <Container size="wide" className="py-14 md:py-20 lg:py-28">
         <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-end">
           <Reveal className="lg:col-span-7 flex flex-col gap-4">
             <span className="text-numeral text-eyebrow text-[var(--accent-warm)]">
@@ -220,7 +220,7 @@ function SecurityBlock({ section }: SectionProps) {
       id="securite"
       className="bg-[var(--bg-deep)] text-[var(--ink-invert)] border-b border-[var(--line-invert)] scroll-mt-24"
     >
-      <Container size="wide" className="py-20 md:py-28">
+      <Container size="wide" className="py-14 md:py-20 lg:py-28">
         <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-start">
           <Reveal className="lg:col-span-4">
             <div className="flex flex-col gap-4">
@@ -233,7 +233,7 @@ function SecurityBlock({ section }: SectionProps) {
             </div>
           </Reveal>
           <Reveal delay={100} className="lg:col-span-8">
-            <p className="text-[var(--ink-invert-muted)] text-lg leading-relaxed text-pretty">
+            <p className="text-[var(--ink-invert-muted)] text-base sm:text-lg leading-relaxed text-pretty">
               {section.body}
             </p>
           </Reveal>

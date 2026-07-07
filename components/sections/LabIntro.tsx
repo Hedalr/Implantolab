@@ -29,8 +29,8 @@ export function LabIntro() {
         className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--bg)] to-transparent"
       />
 
-      <Container size="wide" className="relative py-24 md:py-32">
-        <div className="grid gap-14 lg:gap-20 lg:grid-cols-12 items-center">
+      <Container size="wide" className="relative py-16 md:py-24 lg:py-32">
+        <div className="grid gap-10 lg:gap-20 lg:grid-cols-12 items-center">
           <Reveal className="lg:col-span-6" variant="reveal-x">
             <ParallaxImage offset={40}>
               <ProductionChainDiagram
@@ -52,12 +52,12 @@ export function LabIntro() {
               </span>
             </Reveal>
             <Reveal delay={80}>
-              <h2 className="text-display text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
+              <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
                 {title}
               </h2>
             </Reveal>
             <Reveal delay={160}>
-              <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
+              <p className="text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty">
                 {body}
               </p>
             </Reveal>
@@ -81,16 +81,18 @@ export function LabIntro() {
               <Reveal delay={280}>
                 <Link
                   href={link.href}
-                  className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start"
+                  className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start"
                 >
-                  {link.label}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
-                    <path
-                      d="M0 5H12M12 5L8 1M12 5L8 9"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                  </svg>
+                  <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                    {link.label}
+                    <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                      <path
+                        d="M0 5H12M12 5L8 1M12 5L8 9"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                  </span>
                 </Link>
               </Reveal>
             ) : null}

@@ -9,7 +9,7 @@ export function ContactCta() {
 
   return (
     <section className="bg-[var(--bg-deep)] text-[var(--ink-invert)]">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="grid gap-14 lg:gap-20 lg:grid-cols-12 items-start">
           <div className="lg:col-span-5 flex flex-col gap-8">
             <Reveal>
@@ -23,27 +23,27 @@ export function ContactCta() {
             </Reveal>
 
             <Reveal delay={80}>
-              <h2 className="text-display text-3xl md:text-4xl lg:text-5xl text-[var(--ink-invert)] text-balance">
+              <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-[var(--ink-invert)] text-balance">
                 {title}
               </h2>
             </Reveal>
 
             <Reveal delay={160}>
-              <p className="text-lg text-[var(--ink-invert-muted)] leading-relaxed max-w-md text-pretty">
+              <p className="text-base sm:text-lg text-[var(--ink-invert-muted)] leading-relaxed max-w-md text-pretty">
                 {description}
               </p>
             </Reveal>
 
-            <Reveal delay={220} className="flex flex-col gap-2 pt-4 text-sm">
+            <Reveal delay={220} className="flex flex-col gap-1 pt-4 text-sm">
               <a
                 href={`tel:${site.contact.phone}`}
-                className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                className="tap-link text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors break-all"
               >
                 {site.contact.phoneDisplay}
               </a>
               <a
                 href={`mailto:${site.contact.email}`}
-                className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                className="tap-link text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors break-all"
               >
                 {site.contact.email}
               </a>

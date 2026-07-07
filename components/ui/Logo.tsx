@@ -59,7 +59,7 @@ export function Logo({
       />
       {showWordmark ? (
         <span className="flex flex-col justify-center leading-none gap-1">
-          <span className="font-serif text-lg md:text-xl font-semibold tracking-tight uppercase">
+          <span className="font-serif text-base sm:text-lg md:text-xl font-semibold tracking-tight uppercase">
             Implantolab
           </span>
           <span

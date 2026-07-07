@@ -46,7 +46,7 @@ export function PhotoGallery() {
 
   return (
     <section className="relative bg-[var(--bg)] overflow-hidden">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl">
           <Reveal>
             <SectionHeading eyebrow={eyebrow} title={title} description={description} />
@@ -64,7 +64,7 @@ export function PhotoGallery() {
             <div
               role="tablist"
               aria-label="Étapes du process de l’atelier"
-              className="lg:col-span-4 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible -mx-1 px-1 lg:mx-0 lg:px-0"
+              className="lg:col-span-4 flex flex-col lg:flex-col gap-1 lg:overflow-visible"
             >
               {photos.map((photo, i) => {
                 const selected = i === index;
@@ -77,7 +77,7 @@ export function PhotoGallery() {
                     aria-controls={`atelier-stage-${i}`}
                     onClick={() => goTo(i)}
                     className={cn(
-                      "group relative flex shrink-0 lg:shrink items-start gap-4 text-left px-4 py-4 border-l-2 transition-colors",
+                      "group relative flex items-start gap-4 text-left px-4 py-4 min-h-[44px] border-l-2 transition-colors",
                       selected
                         ? "border-[var(--accent)] bg-[var(--bg-elevated)]"
                         : "border-transparent hover:bg-[var(--bg-elevated)]",
@@ -98,7 +98,7 @@ export function PhotoGallery() {
                     >
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="flex flex-col gap-1 min-w-[9rem] lg:min-w-0">
+                    <span className="flex flex-col gap-1 min-w-0">
                       <span
                         className={cn(
                           "text-sm tracking-wide transition-colors",
@@ -144,7 +144,7 @@ export function PhotoGallery() {
                   type="button"
                   aria-label="Étape précédente"
                   onClick={() => goTo(index - 1)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+                  className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
                 >
                   <svg width="12" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
                     <path d="M14 5H2M2 5L5.5 1.5M2 5L5.5 8.5" stroke="currentColor" strokeWidth="1.4" />
@@ -154,7 +154,7 @@ export function PhotoGallery() {
                   type="button"
                   aria-label="Étape suivante"
                   onClick={() => goTo(index + 1)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-black/50"
                 >
                   <svg width="12" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
                     <path d="M0 5H12M12 5L8.5 1.5M12 5L8.5 8.5" stroke="currentColor" strokeWidth="1.4" />
@@ -162,18 +162,18 @@ export function PhotoGallery() {
                 </button>
               </div>
 
-              <div className="mt-5 flex items-center justify-between gap-4">
+              <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-[var(--ink-muted)] leading-relaxed lg:hidden">
                   {active.description}
                 </p>
-                <div className="flex gap-2" role="presentation">
+                <div className="flex gap-1 self-center sm:self-auto" role="presentation">
                   {photos.map((photo, i) => (
                     <button
                       key={photo.caption}
                       type="button"
                       aria-label={`Aller à l’étape ${i + 1} — ${photo.step}`}
                       onClick={() => goTo(i)}
-                      className="p-1.5"
+                      className="p-3 min-h-11 min-w-11 flex items-center justify-center"
                     >
                       <span
                         className={cn(

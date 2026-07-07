@@ -39,7 +39,7 @@ function ValuesAndBenefitsSection() {
       id="valeurs"
       className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 items-end">
           <Reveal className="lg:col-span-7 flex flex-col gap-5">
             <span className="text-eyebrow flex items-center gap-3">
@@ -49,12 +49,12 @@ function ValuesAndBenefitsSection() {
               />
               Nos valeurs & pourquoi nous rejoindre
             </span>
-            <h2 className="text-display text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
+            <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
               Un état d’esprit partagé, un cadre humain et tourné vers l’avenir
             </h2>
           </Reveal>
           <Reveal delay={100} className="lg:col-span-5">
-            <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
+            <p className="text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty">
               Nos valeurs guident nos gestes techniques ; notre organisation en
               fait un quotidien vivable et stimulant. Voici, en deux temps, ce
               qui nous anime et ce que nous vous offrons.
@@ -133,7 +133,7 @@ function OpeningsSection() {
       id="postes"
       className="bg-[var(--bg)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 items-end">
           <Reveal className="lg:col-span-8 flex flex-col gap-5">
             <span className="text-eyebrow flex items-center gap-3">
@@ -143,7 +143,7 @@ function OpeningsSection() {
               />
               Postes ouverts
             </span>
-            <h2 className="text-display text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
+            <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
               Trois opportunités pour rejoindre l’atelier
             </h2>
           </Reveal>
@@ -224,9 +224,9 @@ function StageAlternanceSection() {
       id="stage-alternance"
       className="bg-[var(--bg-elevated)] border-b border-[var(--line)] scroll-mt-24"
     >
-      <Container size="wide" className="py-20 md:py-24">
+      <Container size="wide" className="py-14 md:py-20 lg:py-28">
         <Reveal>
-          <div className="border border-[var(--line-strong)] bg-[var(--bg)] p-8 md:p-12 lg:p-16">
+          <div className="border border-[var(--line-strong)] bg-[var(--bg)] p-6 sm:p-8 md:p-12 lg:p-16">
             <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 items-start">
               <div className="lg:col-span-7 flex flex-col gap-5">
                 <span className="text-eyebrow flex items-center gap-3">
@@ -239,7 +239,7 @@ function StageAlternanceSection() {
                 <h2 className="text-display text-2xl md:text-3xl lg:text-[2.25rem] text-balance">
                   {stageAlternance.title}
                 </h2>
-                <p className="text-[var(--ink-muted)] text-lg leading-relaxed text-pretty">
+                <p className="text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty">
                   {stageAlternance.description}
                 </p>
                 <ul className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -274,22 +274,24 @@ function StageAlternanceSection() {
                 </Button>
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start lg:self-end"
+                  className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start lg:self-end"
                 >
-                  Nous écrire
-                  <svg
-                    width="14"
-                    height="10"
-                    viewBox="0 0 14 10"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M0 5H12M12 5L8 1M12 5L8 9"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                  </svg>
+                  <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                    Nous écrire
+                    <svg
+                      width="14"
+                      height="10"
+                      viewBox="0 0 14 10"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M0 5H12M12 5L8 1M12 5L8 9"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                      />
+                    </svg>
+                  </span>
                 </Link>
               </div>
             </div>

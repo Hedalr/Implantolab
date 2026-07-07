@@ -112,6 +112,16 @@ body {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum", "lnum";
   }
+
+  /* Zone tactile confortable pour les liens texte type "En savoir plus" / "Voir tout".
+     Garantit 44px de hauteur tactile sans changer l'apparence visuelle du lien. */
+  .tap-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
 }
 
 /* =========================================================================

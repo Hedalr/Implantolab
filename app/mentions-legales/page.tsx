@@ -42,7 +42,7 @@ export default function MentionsLegalesPage() {
 
       <section className="bg-[var(--bg-elevated)]">
 
-        <Container size="narrow" className="py-20 md:py-28 prose-fr">
+        <Container size="narrow" className="py-14 md:py-20 lg:py-28 prose-fr">
 
           <article className="flex flex-col gap-10 text-[var(--ink-muted)] leading-relaxed">
 
@@ -88,7 +88,7 @@ export default function MentionsLegalesPage() {
 
                   href={`mailto:${contact.email}`}
 
-                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4"
+                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4 break-all"
 
                 >
 
@@ -112,7 +112,7 @@ export default function MentionsLegalesPage() {
 
                   href={legal.annuaireUrl}
 
-                  className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors"
+                  className="underline underline-offset-4 hover:text-[var(--ink)] transition-colors break-all"
 
                   target="_blank"
 
@@ -144,7 +144,7 @@ export default function MentionsLegalesPage() {
 
                   href={legal.hosting.url}
 
-                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4"
+                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4 break-all"
 
                   target="_blank"
 

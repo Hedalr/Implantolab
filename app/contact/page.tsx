@@ -53,7 +53,7 @@ export default function ContactPage() {
       />
 
       <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
-        <Container size="wide" className="py-20 md:py-28">
+        <Container size="wide" className="py-14 md:py-20 lg:py-28">
           <div className="grid gap-14 lg:gap-20 lg:grid-cols-12 items-start">
             <Reveal className="lg:col-span-5 flex flex-col gap-10">
               <div className="flex flex-col gap-4">
@@ -72,7 +72,7 @@ export default function ContactPage() {
                   <span className="text-eyebrow">Téléphone</span>
                   <a
                     href={`tel:${site.contact.phone}`}
-                    className="font-serif text-xl text-[var(--ink)] hover:text-[var(--accent)] transition-colors"
+                    className="font-serif text-lg sm:text-xl text-[var(--ink)] hover:text-[var(--accent)] transition-colors break-all"
                   >
                     {site.contact.phoneDisplay}
                   </a>
@@ -81,13 +81,13 @@ export default function ContactPage() {
                   <span className="text-eyebrow">Email</span>
                   <a
                     href={`mailto:${site.contact.email}`}
-                    className="font-serif text-xl text-[var(--ink)] hover:text-[var(--accent)] transition-colors"
+                    className="font-serif text-lg sm:text-xl text-[var(--ink)] hover:text-[var(--accent)] transition-colors break-all"
                   >
                     {site.contact.email}
                   </a>
                   <a
                     href={`mailto:${site.contact.emailSecondary}`}
-                    className="font-serif text-base text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors"
+                    className="font-serif text-sm sm:text-base text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors break-all"
                   >
                     {site.contact.emailSecondary}
                   </a>
@@ -103,10 +103,10 @@ export default function ContactPage() {
                 </li>
                 <li className="flex flex-col gap-2">
                   <span className="text-eyebrow">Horaires</span>
-                  <ul className="flex flex-col gap-1 text-[var(--ink-muted)]">
+                  <ul className="flex flex-col gap-2 sm:gap-1 text-[var(--ink-muted)]">
                     {site.contact.hours.map((slot) => (
-                      <li key={slot.label} className="flex gap-3">
-                        <span className="text-[var(--ink-discreet)] w-44">
+                      <li key={slot.label} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                        <span className="text-[var(--ink-discreet)] sm:w-44">
                           {slot.label}
                         </span>
                         <span className="text-[var(--ink)]">{slot.value}</span>

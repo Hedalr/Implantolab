@@ -16,7 +16,7 @@ export function ExpertiseTabs() {
 
   return (
     <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-24 md:py-32">
+      <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl">
           <Reveal>
             <SectionHeading
@@ -31,7 +31,7 @@ export function ExpertiseTabs() {
           <div
             role="tablist"
             aria-label="Choisissez une expertise"
-            className="mt-12 flex flex-wrap gap-x-1 gap-y-2 border-b border-[var(--line)]"
+            className="mt-12 flex flex-wrap gap-x-2 gap-y-2 border-b border-[var(--line)]"
           >
             {tabs.map((tab) => {
               const selected = tab.key === activeKey;
@@ -45,7 +45,7 @@ export function ExpertiseTabs() {
                   id={`expertise-tab-${tab.key}`}
                   onClick={() => setActiveKey(tab.key)}
                   className={cn(
-                    "relative px-5 py-4 text-sm tracking-wide transition-colors",
+                    "relative px-4 sm:px-5 py-4 min-h-[44px] text-sm tracking-wide transition-colors",
                     selected
                       ? "text-[var(--ink)]"
                       : "text-[var(--ink-discreet)] hover:text-[var(--ink)]",
@@ -84,10 +84,10 @@ export function ExpertiseTabs() {
 
           <div className="lg:col-span-7 order-1 lg:order-2 flex flex-col gap-8">
             <div>
-              <h3 className="text-display text-3xl md:text-4xl text-[var(--ink)] text-balance">
+              <h3 className="text-display text-2xl sm:text-3xl md:text-4xl text-[var(--ink)] text-balance">
                 {active.title}
               </h3>
-              <p className="mt-5 text-[var(--ink-muted)] text-lg leading-relaxed text-pretty max-w-2xl">
+              <p className="mt-5 text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty max-w-2xl">
                 {active.body}
               </p>
             </div>
@@ -110,16 +110,18 @@ export function ExpertiseTabs() {
             <div>
               <Link
                 href={active.href}
-                className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+                className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start"
               >
-                En savoir plus sur {active.label.toLowerCase()}
-                <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
-                  <path
-                    d="M0 5H12M12 5L8 1M12 5L8 9"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                  />
-                </svg>
+                <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                  En savoir plus sur {active.label.toLowerCase()}
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                    <path
+                      d="M0 5H12M12 5L8 1M12 5L8 9"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                </span>
               </Link>
             </div>
           </div>
