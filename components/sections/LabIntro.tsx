@@ -1,12 +1,21 @@
 import Link from "next/link";
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
-import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
+import { ProductionChainDiagram } from "@/components/ui/ProductionChainDiagram";
 import { Reveal } from "@/components/ui/Reveal";
 import { ParallaxImage } from "@/components/ui/ParallaxImage";
 
 export function LabIntro() {
-  const { eyebrow, title, body, highlights, link, photoCaption } = home.labIntro;
+  const {
+    eyebrow,
+    title,
+    body,
+    highlights,
+    link,
+    processEyebrow,
+    processFootnote,
+    processSteps,
+  } = home.labIntro;
 
   return (
     <section className="relative bg-[var(--bg-elevated)] overflow-hidden">
@@ -24,10 +33,10 @@ export function LabIntro() {
         <div className="grid gap-14 lg:gap-20 lg:grid-cols-12 items-center">
           <Reveal className="lg:col-span-6" variant="reveal-x">
             <ParallaxImage offset={40}>
-              <VisualPlaceholder
-                caption={photoCaption}
-                ratio="landscape"
-                tone="deep"
+              <ProductionChainDiagram
+                steps={processSteps}
+                eyebrow={processEyebrow}
+                footnote={processFootnote}
               />
             </ParallaxImage>
           </Reveal>

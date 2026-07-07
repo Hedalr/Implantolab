@@ -127,7 +127,7 @@ function WorkflowTimeline({ section }: SectionProps) {
               <span className="text-numeral text-display text-3xl md:text-4xl text-[var(--accent)] leading-none">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="font-serif text-lg text-[var(--ink)]">
+              <h3 className="font-serif text-lg text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
                 {step.title}
               </h3>
               <p className="text-sm text-[var(--ink-muted)] leading-relaxed">
@@ -200,7 +200,7 @@ function ToolsGrid({ section }: SectionProps) {
                   {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
-              <h3 className="font-serif text-lg text-[var(--ink)]">
+              <h3 className="font-serif text-lg text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
                 {item.title}
               </h3>
               <p className="text-sm text-[var(--ink-muted)] leading-relaxed">

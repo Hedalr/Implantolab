@@ -144,6 +144,35 @@ export const home = {
     // qui pointe déjà vers /laboratoire (voir Chantier 2.4 du plan).
     link: null as { label: string; href: string } | null,
     photoCaption: "Équipe IMPLANTOLAB — atelier",
+    processEyebrow: "De la conception à la livraison",
+    processFootnote: "Fabrication 100 % interne — Blois",
+    processSteps: [
+      {
+        title: "Conception CAO",
+        description:
+          "Modélisation numérique du cas à partir de vos empreintes ou scans intra-oraux.",
+      },
+      {
+        title: "Sélection des matériaux",
+        description:
+          "Choix de la zircone, du disilicate ou du titane adaptés à chaque restauration.",
+      },
+      {
+        title: "Usinage & impression 3D",
+        description:
+          "Fabrication en CFAO 5 axes, pilotée depuis notre centre d’usinage intégré.",
+      },
+      {
+        title: "Finition céramique",
+        description:
+          "Stratification, polissage et ajustements réalisés à la main par nos prothésistes.",
+      },
+      {
+        title: "Contrôle qualité",
+        description:
+          "Vérification de la forme, de la teinte et de l’adaptation avant expédition.",
+      },
+    ],
   },
 
   ctaTriptych: {

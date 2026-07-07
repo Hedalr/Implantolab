@@ -54,7 +54,7 @@ export function PageSections({ sections }: Props) {
                         key={item.title}
                         className="bg-[var(--bg-elevated)] p-6 flex flex-col gap-2"
                       >
-                        <h3 className="font-serif text-lg text-[var(--ink)]">
+                        <h3 className="font-serif text-lg text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
                           {item.title}
                         </h3>
                         <p className="text-sm text-[var(--ink-muted)] leading-relaxed">
