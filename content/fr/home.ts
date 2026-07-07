@@ -162,7 +162,7 @@ export const home = {
         description:
           "Prothésiste, technicien CFAO, alternance : rejoignez une équipe passionnée.",
         cta: { label: "Voir les opportunités", href: "/recrutement" },
-        tone: "cool" as const,
+        tone: "deep" as const,
       },
     ],
   },

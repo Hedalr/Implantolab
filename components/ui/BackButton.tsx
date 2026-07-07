@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 type BackButtonProps = {
@@ -30,8 +31,8 @@ export function BackButton({ variant = "default", className }: BackButtonProps) 
 
   const color =
     variant === "invert"
-      ? "text-[var(--ink-invert)] border-[var(--line-invert)] hover:border-[var(--ink-invert)]"
-      : "text-[var(--ink)] border-[var(--line-strong)] hover:border-[var(--ink)]";
+      ? "text-[var(--accent-warm-soft)] hover:text-[var(--ink-invert)]"
+      : "text-[var(--accent)] hover:text-[var(--accent-hover)]";
 
   return (
     <button
@@ -45,25 +46,17 @@ export function BackButton({ variant = "default", className }: BackButtonProps) 
       }}
       aria-label="Retour à la page précédente"
       className={cn(
-        "inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center border transition-colors shrink-0",
+        "group inline-flex h-9 w-9 md:h-10 md:w-10 items-center justify-center shrink-0",
+        "transition-[color,transform] duration-300 ease-out",
         color,
         className,
       )}
     >
-      <svg
-        width="14"
-        height="12"
-        viewBox="0 0 14 12"
-        fill="none"
+      <ChevronLeft
         aria-hidden="true"
-      >
-        <path
-          d="M13 6H1M1 6L6 1M1 6L6 11"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          strokeLinecap="square"
-        />
-      </svg>
+        className="h-5 w-5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+        strokeWidth={1.5}
+      />
     </button>
   );
 }
