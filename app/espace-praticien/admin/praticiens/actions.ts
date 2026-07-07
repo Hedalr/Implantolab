@@ -47,8 +47,16 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const email = readText(formData, "email").toLowerCase();
   const fullName = readText(formData, "full_name");
   const practiceId = readText(formData, "practice_id");
+  const rawRole = readText(formData, "role") || "practitioner";
+  const role: "practitioner" | "prosthetist" =
+    rawRole === "prosthetist" ? "prosthetist" : "practitioner";
 
-  if (!email.includes("@") || !practiceId) {
+  if (!email.includes("@")) {
+    go({ error: "invite-validation" });
+  }
+  // Le cabinet n'est requis que pour un praticien ; un prothésiste n'y est
+  // pas rattaché.
+  if (role === "practitioner" && !practiceId) {
     go({ error: "invite-validation" });
   }
 
@@ -59,7 +67,10 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     go({ error: "service-role" });
   }
 
-  const redirectTo = `${getSiteUrl()}/espace-praticien/auth/callback?next=/espace-praticien/fermetures`;
+  // Redirect vers /set-password après validation de l'invitation : le user
+  // définit son mot de passe avant d'accéder à son espace. Sans cette étape,
+  // il n'aurait aucun mot de passe et ne pourrait plus se reconnecter.
+  const redirectTo = `${getSiteUrl()}/espace-praticien/auth/callback?next=/espace-praticien/set-password`;
 
   const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo,
@@ -67,19 +78,40 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   });
 
   if (error || !data.user) {
-    const message = error?.message?.toLowerCase() ?? "";
+    const rawMessage = error?.message ?? "unknown error";
+    const message = rawMessage.toLowerCase();
+    // Log complet côté serveur (visible dans le terminal `npm run dev` ou
+    // les logs Vercel) pour diagnostiquer les erreurs SMTP / Auth.
+    console.error("[invitePractitioner] échec inviteUserByEmail:", rawMessage, error);
     if (message.includes("already") || message.includes("registered")) {
       go({ error: "invite-exists" });
     }
-    go({ error: "invite-failed" });
+    if (
+      message.includes("rate limit") ||
+      message.includes("email rate limit")
+    ) {
+      go({ error: "invite-rate-limit" });
+    }
+    if (
+      message.includes("smtp") ||
+      message.includes("sending") ||
+      message.includes("email") ||
+      message.includes("relay")
+    ) {
+      go({
+        error: "invite-smtp",
+        detail: rawMessage.slice(0, 200),
+      });
+    }
+    go({ error: "invite-failed", detail: rawMessage.slice(0, 200) });
   }
 
   const { error: profileError } = await admin
     .from("profiles")
     .update({
-      practice_id: practiceId,
+      practice_id: role === "practitioner" ? practiceId : null,
       full_name: fullName.length > 0 ? fullName : null,
-      role: "practitioner",
+      role,
     })
     .eq("id", data.user.id);
 
@@ -89,7 +121,7 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
 
   revalidatePath(PRATICIENS_PATH);
   revalidatePath("/espace-praticien/admin");
-  go({ ok: "invited" });
+  go({ ok: role === "prosthetist" ? "invited-prosthetist" : "invited" });
 }
 
 export async function linkPractitioner(formData: FormData): Promise<void> {

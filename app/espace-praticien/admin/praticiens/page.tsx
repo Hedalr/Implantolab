@@ -14,7 +14,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ ok?: string; error?: string }>;
+type SearchParams = Promise<{ ok?: string; error?: string; detail?: string }>;
 
 type PracticeRow = {
   id: string;
@@ -40,6 +40,11 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Invitation envoyée",
     message:
       "Le praticien recevra un e-mail pour définir son mot de passe et accéder à l’espace.",
+  },
+  "invited-prosthetist": {
+    title: "Invitation envoyée",
+    message:
+      "Le prothésiste recevra un e-mail pour définir son mot de passe et accéder au module laboratoire.",
   },
   linked: {
     title: "Cabinet rattaché",
@@ -71,6 +76,16 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Erreur",
     message: "L’invitation n’a pas pu être envoyée. Vérifiez l’e-mail et réessayez.",
   },
+  "invite-rate-limit": {
+    title: "Quota d’e-mails atteint",
+    message:
+      "Le SMTP par défaut de Supabase est limité à 2 e-mails/heure (invitations + resets). Attendez 1 h ou configurez un SMTP custom (Resend, SendGrid) dans Project Settings → Authentication → SMTP Settings.",
+  },
+  "invite-smtp": {
+    title: "Erreur SMTP",
+    message:
+      "Supabase n’a pas pu envoyer l’e-mail. Vérifiez la configuration SMTP dans le dashboard Supabase.",
+  },
   "invite-profile": {
     title: "Erreur partielle",
     message:
@@ -97,7 +112,7 @@ export default async function AdminPraticiensPage({
   searchParams: SearchParams;
 }) {
   await requireAdmin();
-  const { ok, error } = await searchParams;
+  const { ok, error, detail } = await searchParams;
   const feedbackKey = ok ?? error;
   const feedback = feedbackKey ? FEEDBACK[feedbackKey] : null;
   const canInvite = isServiceRoleConfigured();
@@ -160,6 +175,11 @@ export default async function AdminPraticiensPage({
         >
           <p className="text-sm font-medium text-[var(--ink)]">{feedback.title}</p>
           <p className="mt-1 text-sm text-[var(--ink-muted)]">{feedback.message}</p>
+          {error && detail ? (
+            <p className="mt-2 text-xs font-mono text-[var(--ink-discreet)] break-all">
+              Détail technique : {detail}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -203,22 +223,63 @@ export default async function AdminPraticiensPage({
             </form>
           </Panel>
 
-          <Panel title="Inviter un praticien" eyebrow="Étape 2">
+          <Panel title="Inviter un utilisateur" eyebrow="Étape 2">
             <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
-              Le praticien reçoit un e-mail pour choisir son mot de passe. Son
-              compte est automatiquement rattaché au cabinet sélectionné.
+              L’utilisateur reçoit un e-mail pour choisir son mot de passe.
+              Choisissez le type de compte : praticien (dentiste, rattaché à
+              un cabinet) ou prothésiste du laboratoire.
             </p>
             <form
               action={invitePractitioner}
               className="mt-5 flex flex-col gap-5"
             >
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-eyebrow mb-1">Type de compte *</legend>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="practitioner"
+                    defaultChecked
+                    disabled={!canInvite}
+                    className="mt-1 accent-[var(--accent-warm)]"
+                  />
+                  <span className="flex flex-col">
+                    <span className="text-sm text-[var(--ink)]">
+                      Praticien (dentiste)
+                    </span>
+                    <span className="text-xs text-[var(--ink-discreet)]">
+                      Accès à ses fermetures et demandes, rattaché à un cabinet.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="prosthetist"
+                    disabled={!canInvite}
+                    className="mt-1 accent-[var(--accent-warm)]"
+                  />
+                  <span className="flex flex-col">
+                    <span className="text-sm text-[var(--ink)]">
+                      Prothésiste (collaborateur labo)
+                    </span>
+                    <span className="text-xs text-[var(--ink-discreet)]">
+                      Accès aux dossiers patient reçus par WhatsApp. Aucun
+                      cabinet à sélectionner.
+                    </span>
+                  </span>
+                </label>
+              </fieldset>
+
               <Field label="E-mail" htmlFor="invite-email" required>
                 <input
                   id="invite-email"
                   name="email"
                   type="email"
                   required
-                  disabled={!canInvite || practices.length === 0}
+                  disabled={!canInvite}
                   placeholder="dr.martin@cabinet.fr"
                   className={inputStyle}
                 />
@@ -227,21 +288,23 @@ export default async function AdminPraticiensPage({
                 <input
                   id="invite-name"
                   name="full_name"
-                  disabled={!canInvite || practices.length === 0}
+                  disabled={!canInvite}
                   placeholder="Dr. Jean Martin"
                   className={inputStyle}
                 />
               </Field>
-              <Field label="Cabinet" htmlFor="invite-practice" required>
+              <Field
+                label="Cabinet (praticiens uniquement)"
+                htmlFor="invite-practice"
+              >
                 <select
                   id="invite-practice"
                   name="practice_id"
-                  required
                   disabled={!canInvite || practices.length === 0}
                   className={cn(inputStyle, "cursor-pointer")}
                   defaultValue=""
                 >
-                  <option value="" disabled>
+                  <option value="">
                     {practices.length === 0
                       ? "Créez d’abord un cabinet"
                       : "Sélectionner un cabinet"}
@@ -254,11 +317,7 @@ export default async function AdminPraticiensPage({
                   ))}
                 </select>
               </Field>
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={!canInvite || practices.length === 0}
-              >
+              <Button type="submit" variant="primary" disabled={!canInvite}>
                 Envoyer l’invitation
               </Button>
             </form>

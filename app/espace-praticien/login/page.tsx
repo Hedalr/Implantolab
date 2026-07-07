@@ -16,6 +16,7 @@ export default async function LoginPage({
   const configured = isSupabaseConfigured();
   const configError = params.error === "config" || !configured;
   const credentialsError = params.error === "1";
+  const inviteError = params.error === "invite";
 
   const fieldBase = cn(
     "w-full bg-transparent border-b py-3 text-base transition-colors",
@@ -89,6 +90,17 @@ export default async function LoginPage({
               className="text-sm text-[var(--accent-warm)]"
             >
               Identifiants incorrects. Merci de réessayer.
+            </p>
+          ) : null}
+
+          {inviteError ? (
+            <p
+              role="alert"
+              className="text-sm text-[var(--accent-warm)]"
+            >
+              Le lien d&apos;invitation est invalide ou a expiré. Demandez une
+              nouvelle invitation, de préférence dans une fenêtre de navigation
+              privée si vous étiez déjà connecté.
             </p>
           ) : null}
 

@@ -22,6 +22,11 @@ const adminNav: NavItem[] = [
   { href: "/espace-praticien/admin/praticiens", label: "Praticiens" },
   { href: "/espace-praticien/admin/calendrier", label: "Calendrier" },
   { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
+  { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
+];
+
+const prosthetistNav: NavItem[] = [
+  { href: "/espace-praticien/laboratoire", label: "Dossiers patient" },
 ];
 
 export default async function EspacePraticienLayout({
@@ -41,7 +46,12 @@ export default async function EspacePraticienLayout({
     }
   }
 
-  const nav = profile?.role === "admin" ? adminNav : practitionerNav;
+  const nav =
+    profile?.role === "admin"
+      ? adminNav
+      : profile?.role === "prosthetist"
+        ? prosthetistNav
+        : practitionerNav;
   const showNav = Boolean(profile);
 
   return (

@@ -13,7 +13,7 @@ import { redirect } from "next/navigation";
 export type Profile = {
   id: string;
   email: string;
-  role: "practitioner" | "admin";
+  role: "practitioner" | "admin" | "prosthetist";
   practiceId: string | null;
   practiceName: string | null;
   fullName: string | null;
@@ -21,6 +21,7 @@ export type Profile = {
 
 const LOGIN_PATH = "/espace-praticien/login";
 const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/fermetures";
+const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
 
 /** Vérifie que les variables d'environnement Supabase sont bien définies. */
 export function isSupabaseConfigured(): boolean {
@@ -175,6 +176,22 @@ export async function requireAdmin(): Promise<{
 }> {
   const session = await requireUser();
   if (session.profile.role !== "admin") {
+    redirect(DEFAULT_PRACTITIONER_HOME);
+  }
+  return session;
+}
+
+/**
+ * Comme `requireUser` mais s'assure que le profil est admin ou prothésiste
+ * (personnel du labo). Utilisé par les routes /espace-praticien/laboratoire.
+ */
+export async function requireLaboStaff(): Promise<{
+  userId: string;
+  email: string;
+  profile: Profile;
+}> {
+  const session = await requireUser();
+  if (session.profile.role !== "admin" && session.profile.role !== "prosthetist") {
     redirect(DEFAULT_PRACTITIONER_HOME);
   }
   return session;

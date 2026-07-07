@@ -62,6 +62,31 @@ supabase link --project-ref <votre-ref>   # ref visible dans l'URL du dashboard
 supabase db push
 ```
 
+## 4-bis. Configurer les URL d’auth Supabase (indispensable pour les invitations)
+
+Sans cette étape, le lien de l’e-mail d’invitation ne redirige pas vers
+votre site et le collaborateur ne peut pas définir son mot de passe.
+
+Dans le dashboard Supabase → **Authentication → URL Configuration** :
+
+- **Site URL** : URL principale de votre site.
+  - Dev : `http://localhost:3000`
+  - Prod : `https://www.implantolab.fr`
+- **Redirect URLs** (liste blanche) : ajouter les patterns autorisés :
+  - `http://localhost:3000/**`
+  - `https://www.implantolab.fr/**`
+  - Toute preview Vercel (ex. `https://implantolab-*.vercel.app/**`).
+
+En parallèle, dans **Authentication → Email Templates → Invite user**, le
+template par défaut de Supabase utilise `{{ .ConfirmationURL }}` qui pointe
+sur `/auth/v1/verify?...&type=invite` puis suit le `redirect_to` transmis
+par le code — pas besoin d’y toucher sauf pour personnaliser le style.
+
+**Important** : si la **Site URL** Supabase pointe encore vers
+`http://localhost:3000`, les liens d’invitation renverront vers votre machine
+locale même quand l’invitation est envoyée depuis Vercel. En production, mettez
+la **Site URL** sur `https://implantolab.vercel.app` (ou votre domaine final).
+
 ## 5. Créer les cabinets et inviter les praticiens
 
 ### Depuis le site (recommandé)
@@ -69,8 +94,15 @@ supabase db push
 1. Connectez-vous en **admin** sur `/espace-praticien/login`.
 2. Ouvrez **Praticiens** dans le menu admin (`/espace-praticien/admin/praticiens`).
 3. **Créez le cabinet** (nom + ville).
-4. **Invitez le praticien** par e-mail : il reçoit un lien pour définir son mot de
-   passe, son compte est automatiquement rattaché au cabinet.
+4. **Invitez l’utilisateur** par e-mail. Deux types disponibles :
+   - **Praticien (dentiste)** : rattaché à un cabinet, accès à ses fermetures
+     et demandes.
+   - **Prothésiste (collaborateur labo)** : accès au module Laboratoire
+     (dossiers patient WhatsApp). Aucun cabinet à sélectionner.
+5. L’utilisateur reçoit un lien « You've been invited ». En cliquant, il
+   arrive sur `/espace-praticien/set-password` où il choisit son mot de
+   passe, puis est automatiquement redirigé vers son espace selon son
+   rôle.
 
 Pour les invitations par e-mail, ajoutez `SUPABASE_SERVICE_ROLE_KEY` dans
 `.env.local` (local) ou Vercel (production). Récupérez-la dans Supabase →
@@ -136,6 +168,16 @@ passe.
 - **« Identifiants incorrects »** → mot de passe erroné, ou l’email
   n’existe pas dans Supabase Auth. Vérifiez dans
   **Authentication → Users**.
+- **L’invité clique sur le lien mais atterrit sur une page vide, une
+  erreur ou l’URL Supabase brute** → la **Site URL** ou la liste des
+  **Redirect URLs** dans **Authentication → URL Configuration** ne
+  contient pas votre domaine (`http://localhost:3000/**` ou
+  `https://www.implantolab.fr/**`). Corrigez et renvoyez une invitation.
+- **L’invité définit son mot de passe puis « invalid credentials » à la
+  reconnexion** → l’ancienne invitation ne passait pas par
+  `/espace-praticien/set-password`. Renvoyez une nouvelle invitation
+  depuis l’espace admin ; le nouveau flux force le passage sur la page
+  de définition du mot de passe.
 - **Redirection en boucle vers `/login`** → l’utilisateur est bien
   authentifié dans Supabase mais son profil `profiles` n’existe pas
   ou n’est pas accessible (trigger `handle_new_user` désactivé, ou

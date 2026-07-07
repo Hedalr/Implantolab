@@ -21,6 +21,9 @@ export default async function EspacePraticienIndex() {
   if (profile?.role === "admin") {
     redirect("/espace-praticien/admin");
   }
+  if (profile?.role === "prosthetist") {
+    redirect("/espace-praticien/laboratoire");
+  }
 
   redirect("/espace-praticien/fermetures");
 }
