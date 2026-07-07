@@ -6,7 +6,7 @@ export const sitePhotos = {
   "Atelier IMPLANTOLAB — Blois": "/photos/hero-atelier.jpg",
   "Détail pilier implantaire — atelier": "/photos/pilier-implantaire.jpg",
   "Couronne céramique — finition": "/photos/couronne-ceramique.jpg",
-  "Conception CAD — poste technique": "/photos/conception-cad.jpg",
+  "Conception CAO — poste technique": "/photos/conception-cad.jpg",
   "Contrôle qualité — atelier": "/photos/controle-qualite.jpg",
   "Atelier CFAO": "/photos/atelier-cfao.jpg",
   "Finition manuelle": "/photos/finition-manuelle.jpg",

@@ -76,7 +76,7 @@ export const recrutement: RecrutementContent = {
     {
       title: "Environnement technique moderne",
       description:
-        "Parc numérique complet, ateliers organisés par expertise et instruments régulièrement calibrés.",
+        "Parc numérique complet, ateliers organisés par secteur d’activité et instruments régulièrement calibrés.",
     },
     {
       title: "Cabinets partenaires reconnus",
@@ -100,11 +100,11 @@ export const recrutement: RecrutementContent = {
       contract: "CDI",
       location: "Blois (41)",
       summary:
-        "Vous prenez en charge des cas implantaires complexes, de la conception CAD à la finition céramique. Vous êtes un référent technique pour l’équipe.",
+        "Vous prenez en charge des cas implantaires complexes, de la conception CAO à la finition céramique. Vous êtes un référent technique pour l’équipe.",
       skills: [
         "Implantologie prothétique",
         "Céramique stratifiée",
-        "Conception CAD (exocad, 3Shape)",
+        "Conception CAO (exocad, 3Shape)",
         "5 ans d’expérience minimum",
         "Autonomie et rigueur",
       ],
@@ -114,9 +114,9 @@ export const recrutement: RecrutementContent = {
       contract: "CDI",
       location: "Blois (41)",
       summary:
-        "Vous pilotez notre chaîne numérique : réception des scans, conception CAD, préparation à l’usinage et à l’impression, contrôle qualité.",
+        "Vous pilotez notre chaîne numérique : réception des scans, conception CAO, préparation à l’usinage et à l’impression, contrôle qualité.",
       skills: [
-        "Maîtrise CAD dentaire",
+        "Maîtrise CAO dentaire",
         "Usinage 5 axes",
         "Impression 3D résine",
         "Formats STL, PLY, OBJ",

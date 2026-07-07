@@ -29,7 +29,7 @@ Pour rester cohérent avec la direction artistique premium médical :
 - **Sujets prioritaires**
   - Mains du prothésiste sur une pièce en cours de finition
   - Fraiseuse ou imprimante 3D en fonctionnement
-  - Écran de conception CAD (avec accord du fournisseur logiciel)
+  - Écran de conception CAO (avec accord du fournisseur logiciel)
   - Détail matériau (zircone brute, céramique, titane)
   - Contrôle qualité (instrument de mesure sur une pièce)
 - **Traitement** — colorimétrie sobre, désaturation légère, pas de filtre

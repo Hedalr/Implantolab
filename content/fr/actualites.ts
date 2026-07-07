@@ -104,7 +104,7 @@ chaîne CFAO en fonctionnement.</p>
 <h2>Programme</h2>
 <ul>
   <li>Visite guidée de l’atelier et présentation des postes techniques.</li>
-  <li>Démonstration de conception CAD et d’usinage 5 axes.</li>
+  <li>Démonstration de conception CAO et d’usinage 5 axes.</li>
   <li>Échange informel avec l’équipe autour d’un café.</li>
 </ul>
 

@@ -40,7 +40,7 @@ const expertises = [
     eyebrow: fluxNumerique.eyebrow,
     title: fluxNumerique.title,
     intro: fluxNumerique.intro,
-    photoCaption: "Conception CAD — poste technique",
+    photoCaption: "Conception CAO — poste technique",
     tone: "deep" as const,
   },
 ];
