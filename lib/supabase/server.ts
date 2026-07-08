@@ -17,6 +17,10 @@ export type Profile = {
   practiceId: string | null;
   practiceName: string | null;
   fullName: string | null;
+  sectorId: string | null;
+  sectorName: string | null;
+  sectorColor: string | null;
+  leaveBalanceDays: number;
 };
 
 const LOGIN_PATH = "/espace-praticien/login";
@@ -107,7 +111,9 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await getServerSupabase();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, role, practice_id, full_name, practices ( name )")
+    .select(
+      "id, role, practice_id, full_name, sector_id, leave_balance_days, practices ( name ), sectors ( name, color )",
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -121,11 +127,20 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     role: Profile["role"] | null;
     practice_id: string | null;
     full_name: string | null;
+    sector_id: string | null;
+    leave_balance_days: number | null;
     practices: { name: string | null } | { name: string | null }[] | null;
+    sectors:
+      | { name: string | null; color: string | null }
+      | { name: string | null; color: string | null }[]
+      | null;
   };
   const practiceRow = Array.isArray(row.practices)
     ? row.practices[0] ?? null
     : row.practices;
+  const sectorRow = Array.isArray(row.sectors)
+    ? row.sectors[0] ?? null
+    : row.sectors;
 
   return {
     id: row.id,
@@ -134,6 +149,10 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     practiceId: row.practice_id ?? null,
     practiceName: practiceRow?.name ?? null,
     fullName: row.full_name ?? null,
+    sectorId: row.sector_id ?? null,
+    sectorName: sectorRow?.name ?? null,
+    sectorColor: sectorRow?.color ?? null,
+    leaveBalanceDays: row.leave_balance_days ?? 0,
   };
 }
 
@@ -193,6 +212,25 @@ export async function requireLaboStaff(): Promise<{
   const session = await requireUser();
   if (session.profile.role !== "admin" && session.profile.role !== "prosthetist") {
     redirect(DEFAULT_PRACTITIONER_HOME);
+  }
+  return session;
+}
+
+/**
+ * Comme `requireUser` mais s'assure que le profil est prothésiste (employé
+ * du labo, périmètre du module congés). Un admin qui souhaite voir la page
+ * n'est pas concerné : il passe par /espace-praticien/admin/conges.
+ */
+export async function requireProsthetist(): Promise<{
+  userId: string;
+  email: string;
+  profile: Profile;
+}> {
+  const session = await requireUser();
+  if (session.profile.role !== "prosthetist") {
+    redirect(
+      session.profile.role === "admin" ? DEFAULT_LABO_HOME : DEFAULT_PRACTITIONER_HOME,
+    );
   }
   return session;
 }

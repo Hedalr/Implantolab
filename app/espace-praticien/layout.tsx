@@ -20,13 +20,16 @@ const practitionerNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
   { href: "/espace-praticien/admin/praticiens", label: "Praticiens" },
+  { href: "/espace-praticien/admin/employes", label: "Employés" },
   { href: "/espace-praticien/admin/calendrier", label: "Fermetures dentistes" },
+  { href: "/espace-praticien/admin/conges", label: "Congés employés" },
   { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
 ];
 
 const prosthetistNav: NavItem[] = [
   { href: "/espace-praticien/laboratoire", label: "Dossiers patient" },
+  { href: "/espace-praticien/conges", label: "Mes congés" },
 ];
 
 export default async function EspacePraticienLayout({
