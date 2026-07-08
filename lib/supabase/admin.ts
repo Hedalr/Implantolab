@@ -1,5 +1,38 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+/**
+ * Timeout par défaut (ms) pour les appels admin (listUsers, invite…) faits
+ * depuis un Server Component ou une Server Action. Sur Vercel Hobby les
+ * fonctions ont 10 s max ; on garde une marge pour que la page puisse
+ * dégrader gracieusement plutôt que de renvoyer un 504.
+ */
+const ADMIN_CALL_TIMEOUT_MS = 6_000;
+
+/**
+ * Enveloppe une promesse avec un timeout. Rejette avec `Error("timeout")` si
+ * la promesse ne s'est pas résolue dans le délai imparti — le code appelant
+ * peut catcher cette erreur pour retomber sur un mode dégradé.
+ */
+export async function withAdminTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs = ADMIN_CALL_TIMEOUT_MS,
+): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race<T>([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`admin call timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 /** Client Supabase avec clé service_role — réservé aux Server Actions admin. */
 export function getServiceRoleSupabase(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

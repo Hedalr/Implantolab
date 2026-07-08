@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import {
   getServiceRoleSupabase,
   isServiceRoleConfigured,
+  withAdminTimeout,
 } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
@@ -136,17 +137,22 @@ export default async function AdminPraticiensPage({
   if (canInvite) {
     try {
       const admin = getServiceRoleSupabase();
-      const { data: listData } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-      });
+      const { data: listData } = await withAdminTimeout(
+        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      );
       for (const user of listData.users ?? []) {
         if (user.email) {
           emailById.set(user.id, user.email);
         }
       }
-    } catch {
-      // La liste reste affichée sans e-mails si la clé service_role est invalide.
+    } catch (err) {
+      // On log l'échec (visible dans les logs Vercel) mais on dégrade
+      // gracieusement : la page s'affiche sans e-mails. Cela évite un
+      // 504 Gateway Timeout si l'API Auth de Supabase ralentit.
+      console.warn(
+        "[admin/praticiens] listUsers indisponible, e-mails masqués :",
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 

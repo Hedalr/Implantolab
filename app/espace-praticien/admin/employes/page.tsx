@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import {
   getServiceRoleSupabase,
   isServiceRoleConfigured,
+  withAdminTimeout,
 } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
@@ -146,17 +147,19 @@ export default async function AdminEmployesPage({
   if (canListEmails && employeeIds.length > 0) {
     try {
       const admin = getServiceRoleSupabase();
-      const { data: listData } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-      });
+      const { data: listData } = await withAdminTimeout(
+        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      );
       for (const user of listData.users ?? []) {
         if (user.email) {
           emailById.set(user.id, user.email);
         }
       }
-    } catch {
-      // Fallback silencieux : l'affichage reste possible sans les e-mails.
+    } catch (err) {
+      console.warn(
+        "[admin/employes] listUsers indisponible, e-mails masqués :",
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 

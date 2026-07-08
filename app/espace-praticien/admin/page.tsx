@@ -12,7 +12,7 @@ type RequestRow = {
   status: "open" | "closed";
   created_at: string;
   practices: { name: string | null; city: string | null } | null;
-  profiles: { full_name: string | null; email: string | null } | null;
+  profiles: { full_name: string | null } | null;
 };
 
 type ClosureRow = {
@@ -80,7 +80,7 @@ export default async function AdminDashboardPage() {
     supabase
       .from("requests")
       .select(
-        "id, subject, message, status, created_at, practices(name, city), profiles(full_name, email)",
+        "id, subject, message, status, created_at, practices(name, city), profiles(full_name)",
       )
       .order("created_at", { ascending: false })
       .limit(5),

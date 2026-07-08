@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServiceRoleSupabase, getSiteUrl } from "@/lib/supabase/admin";
+import {
+  getServiceRoleSupabase,
+  getSiteUrl,
+  withAdminTimeout,
+} from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 
 const PRATICIENS_PATH = "/espace-praticien/admin/praticiens";
@@ -72,12 +76,29 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   // il n'aurait aucun mot de passe et ne pourrait plus se reconnecter.
   const redirectTo = `${getSiteUrl()}/espace-praticien/auth/callback?next=/espace-praticien/set-password`;
 
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo,
-    data: fullName.length > 0 ? { full_name: fullName } : undefined,
-  });
+  // On enveloppe l'appel dans un timeout : si le SMTP par défaut de Supabase
+  // ralentit, on renvoie une erreur explicite plutôt que de laisser la
+  // Function Vercel se faire tuer par timeout (10 s Hobby, 60 s Pro).
+  let data: Awaited<
+    ReturnType<typeof admin.auth.admin.inviteUserByEmail>
+  >["data"] | null = null;
+  let error: { message?: string } | null = null;
+  try {
+    const res = await withAdminTimeout(
+      admin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: fullName.length > 0 ? { full_name: fullName } : undefined,
+      }),
+    );
+    data = res.data;
+    error = res.error;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[invitePractitioner] timeout ou exception:", message);
+    go({ error: "invite-smtp", detail: message.slice(0, 200) });
+  }
 
-  if (error || !data.user) {
+  if (error || !data?.user) {
     const rawMessage = error?.message ?? "unknown error";
     const message = rawMessage.toLowerCase();
     // Log complet côté serveur (visible dans le terminal `npm run dev` ou
