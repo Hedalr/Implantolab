@@ -8,9 +8,14 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
-export function MobileNav() {
+type MobileNavProps = {
+  userDisplayName?: string | null;
+};
+
+export function MobileNav({ userDisplayName = null }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const isLoggedIn = Boolean(userDisplayName);
 
   useEffect(() => {
     setOpen(false);
@@ -139,11 +144,13 @@ export function MobileNav() {
 
           <div className="px-6 py-6 border-t border-[var(--line)] flex flex-col gap-3">
             <Button href={practitionerLink.href} variant="secondary">
-              {practitionerLink.label}
+              {isLoggedIn ? userDisplayName : practitionerLink.label}
             </Button>
-            <Button href="/contact?sujet=devis" variant="primary">
-              Demander un devis
-            </Button>
+            {!isLoggedIn ? (
+              <Button href="/contact?sujet=devis" variant="primary">
+                Demander un devis
+              </Button>
+            ) : null}
             <div className="flex flex-col gap-1 text-sm text-[var(--ink-muted)]">
               <a href={`tel:${site.contact.phone}`} className="hover:text-[var(--ink)]">
                 {site.contact.phoneDisplay}

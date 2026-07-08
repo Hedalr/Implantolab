@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
-import { Header } from "@/components/layout/Header";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { AuthHashRecovery } from "@/components/auth/AuthHashRecovery";
 import { site } from "@/content/fr/site";
@@ -113,7 +113,7 @@ export default function RootLayout({
           Aller au contenu
         </a>
         <AuthHashRecovery />
-        <Header />
+        <SiteHeader />
         <main id="contenu" className="flex-1">
           {children}
         </main>

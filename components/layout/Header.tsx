@@ -10,8 +10,13 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { NavDropdown } from "@/components/layout/NavDropdown";
 import { Container } from "@/components/ui/Container";
 
-export function Header() {
+type HeaderProps = {
+  userDisplayName?: string | null;
+};
+
+export function Header({ userDisplayName = null }: HeaderProps) {
   const pathname = usePathname();
+  const isLoggedIn = Boolean(userDisplayName);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--bg)]/85 backdrop-blur-md">
@@ -55,14 +60,16 @@ export function Header() {
                   strokeWidth="1"
                 />
               </svg>
-              {practitionerLink.label}
+              {isLoggedIn ? userDisplayName : practitionerLink.label}
             </Link>
-            <Button href="/contact?sujet=devis" variant="primary" className="py-2.5 text-xs">
-              Demander un devis
-            </Button>
+            {!isLoggedIn ? (
+              <Button href="/contact?sujet=devis" variant="primary" className="py-2.5 text-xs">
+                Demander un devis
+              </Button>
+            ) : null}
           </div>
 
-          <MobileNav />
+          <MobileNav userDisplayName={userDisplayName} />
         </div>
       </Container>
     </header>
