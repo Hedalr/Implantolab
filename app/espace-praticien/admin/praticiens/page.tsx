@@ -161,7 +161,6 @@ export default async function AdminPraticiensPage({
         </h1>
         <p className="mt-2 text-[var(--ink-muted)] leading-relaxed">
           Créez les cabinets partenaires et invitez les praticiens par e-mail.
-          Plus besoin d’ouvrir Supabase pour chaque nouveau client.
         </p>
       </header>
 

@@ -20,7 +20,7 @@ const practitionerNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
   { href: "/espace-praticien/admin/praticiens", label: "Praticiens" },
-  { href: "/espace-praticien/admin/calendrier", label: "Calendrier" },
+  { href: "/espace-praticien/admin/calendrier", label: "Fermetures dentistes" },
   { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
 ];
