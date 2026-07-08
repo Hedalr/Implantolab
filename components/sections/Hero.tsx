@@ -35,8 +35,8 @@ export function Hero() {
           </p>
         </Reveal>
 
-        <div className="grid gap-8 sm:gap-12 lg:gap-16 lg:grid-cols-12 items-center">
-          <div className="lg:col-span-7 flex flex-col gap-8">
+        <div className="grid gap-8 sm:gap-12 lg:gap-10 lg:grid-cols-12 items-center">
+          <div className="lg:col-span-6 flex flex-col gap-8">
             <Reveal>
               <span className="text-eyebrow flex items-center gap-3">
                 <span
@@ -69,15 +69,25 @@ export function Hero() {
             </Reveal>
           </div>
 
-          <Reveal delay={200} className="lg:col-span-5">
-            <div className="relative">
-              <HeroVideo
-                src="/videos/hero-implanto.mp4"
-                className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden bg-[var(--bg-elevated)]"
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-between px-1 text-[0.7rem] sm:text-xs uppercase tracking-[0.18em] text-[var(--ink-discreet)]">
-                <span>Réf. ATL—001</span>
-                <span>Blois, FR</span>
+          <Reveal delay={200} className="lg:col-span-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-5">
+              <div className="relative">
+                <HeroVideo
+                  src="/videos/hero-implanto.mp4"
+                  className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden bg-[var(--bg-elevated)]"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-between px-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                  <span>Réf. ATL—001</span>
+                </div>
+              </div>
+              <div className="relative mt-4 sm:mt-6">
+                <HeroVideo
+                  src="/videos/hero-implanto-2.mp4"
+                  className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden bg-[var(--bg-elevated)]"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-between px-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                  <span>Blois, FR</span>
+                </div>
               </div>
             </div>
           </Reveal>
