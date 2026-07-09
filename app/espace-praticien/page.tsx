@@ -25,5 +25,5 @@ export default async function EspacePraticienIndex() {
     redirect("/espace-praticien/laboratoire");
   }
 
-  redirect("/espace-praticien/fermetures");
+  redirect("/espace-praticien/demandes");
 }

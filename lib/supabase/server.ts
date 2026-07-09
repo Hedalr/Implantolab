@@ -24,7 +24,7 @@ export type Profile = {
 };
 
 const LOGIN_PATH = "/espace-praticien/login";
-const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/fermetures";
+const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/demandes";
 const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
 
 /** Vérifie que les variables d'environnement Supabase sont bien définies. */

@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import { REQUEST_CATEGORIES } from "@/lib/requests/types";
 import { createRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -20,13 +21,22 @@ type RequestRow = {
   created_at: string;
 };
 
+type RequestMediaRow = {
+  id: string;
+  request_id: string;
+  original_filename: string | null;
+};
+
 const FEEDBACK_MESSAGES: Record<string, string> = {
   sent: "Votre demande a bien été transmise au laboratoire.",
-  subject: "L’objet doit contenir entre 3 et 140 caractères.",
+  subject: "Merci de choisir une catégorie.",
   message: "Le message doit contenir entre 10 et 2000 caractères.",
   save: "Une erreur est survenue lors de l’envoi. Merci de réessayer.",
   "no-practice":
     "Votre cabinet n’est pas encore rattaché à votre compte.",
+  "too-many-photos": "Vous pouvez joindre jusqu’à 6 photos maximum.",
+  "photo-size": "Chaque photo doit peser moins de 5 Mo.",
+  "photo-type": "Formats acceptés pour les photos : JPG, PNG, WEBP, HEIC.",
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -99,6 +109,22 @@ export default async function DemandesPage({
   const openRows = rows.filter((r) => r.status === "open");
   const closedRows = rows.filter((r) => r.status === "closed");
 
+  const requestIds = rows.map((r) => r.id);
+  const { data: mediaData } =
+    requestIds.length > 0
+      ? await supabase
+          .from("request_media")
+          .select("id, request_id, original_filename")
+          .in("request_id", requestIds)
+      : { data: [] as RequestMediaRow[] };
+  const mediaRows = (mediaData ?? []) as RequestMediaRow[];
+  const mediaByRequest = new Map<string, RequestMediaRow[]>();
+  for (const media of mediaRows) {
+    const list = mediaByRequest.get(media.request_id) ?? [];
+    list.push(media);
+    mediaByRequest.set(media.request_id, list);
+  }
+
   return (
     <Container size="wide" className="py-12 md:py-16">
       <PageHeader
@@ -116,17 +142,23 @@ export default async function DemandesPage({
             description="Décrivez votre demande. Notre équipe vous répond dans les meilleurs délais."
           />
           <form action={createRequest} className="mt-6 flex flex-col gap-6">
-            <FormField label="Objet" htmlFor="subject" required hint="Résumé court (3 à 140 caractères).">
-              <input
+            <FormField label="Catégorie" htmlFor="subject" required>
+              <select
                 id="subject"
                 name="subject"
-                type="text"
                 required
-                minLength={3}
-                maxLength={140}
-                placeholder="Ex. Cas urgent avant congés"
+                defaultValue=""
                 className={inputStyle}
-              />
+              >
+                <option value="" disabled>
+                  Choisir une catégorie…
+                </option>
+                {REQUEST_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </FormField>
 
             <FormField
@@ -144,6 +176,24 @@ export default async function DemandesPage({
                 rows={6}
                 placeholder="Détaillez votre demande…"
                 className={cn(inputStyle, "resize-y p-3 border")}
+              />
+            </FormField>
+
+            <FormField
+              label="Photos"
+              htmlFor="photos"
+              hint="Facultatif — jusqu’à 6 photos (JPG, PNG, WEBP, HEIC), 5 Mo max par fichier."
+            >
+              <input
+                id="photos"
+                name="photos"
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                className={cn(
+                  inputStyle,
+                  "cursor-pointer file:mr-4 file:border-0 file:bg-transparent file:text-sm file:tracking-wide file:text-[var(--ink)]",
+                )}
               />
             </FormField>
 
@@ -167,7 +217,7 @@ export default async function DemandesPage({
             <ul className="flex flex-col gap-4">
               {openRows.map((row) => (
                 <li key={row.id}>
-                  <RequestCard row={row} />
+                  <RequestCard row={row} media={mediaByRequest.get(row.id) ?? []} />
                 </li>
               ))}
             </ul>
@@ -310,24 +360,66 @@ function SectionHeading({
   );
 }
 
-function RequestCard({ row }: { row: RequestRow }) {
+function RequestCard({
+  row,
+  media,
+}: {
+  row: RequestRow;
+  media: RequestMediaRow[];
+}) {
   return (
     <article className="bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-7">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <p className="text-eyebrow tabular-nums">
             {formatDateTime(row.created_at)}
           </p>
-          <h3 className="font-serif text-lg text-[var(--ink)]">
-            {row.subject}
-          </h3>
+          <CategoryBadge category={row.subject} />
         </div>
         <StatusBadge status={row.status} />
       </header>
       <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed whitespace-pre-line">
         {row.message}
       </p>
+      {media.length > 0 ? (
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {media.map((m) => (
+            <li key={m.id}>
+              <a
+                href={`/api/request-media/${m.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block h-16 w-16 overflow-hidden border border-[var(--line)] bg-[var(--bg)]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/request-media/${m.id}`}
+                  alt={m.original_filename ?? "Photo jointe"}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </article>
+  );
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  const isUrgent = category === "Urgence";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-2 border px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] shrink-0 self-start",
+        isUrgent
+          ? "border-[var(--accent-warm)] text-[var(--accent-warm)]"
+          : "border-[var(--line-strong)] text-[var(--ink)]",
+      )}
+    >
+      {category}
+    </span>
   );
 }
 

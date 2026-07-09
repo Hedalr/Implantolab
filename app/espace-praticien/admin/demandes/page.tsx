@@ -16,6 +16,12 @@ type RequestRow = {
   profiles: { full_name: string | null; email: string | null } | null;
 };
 
+type RequestMediaRow = {
+  id: string;
+  request_id: string;
+  original_filename: string | null;
+};
+
 type StatusFilter = "all" | "open" | "closed";
 
 function parseStatus(value: string | string[] | undefined): StatusFilter {
@@ -56,6 +62,22 @@ export default async function AdminRequestsPage({
   const { data } = await query;
   const requests = (data ?? []) as unknown as RequestRow[];
 
+  const requestIds = requests.map((r) => r.id);
+  const { data: mediaData } =
+    requestIds.length > 0
+      ? await supabase
+          .from("request_media")
+          .select("id, request_id, original_filename")
+          .in("request_id", requestIds)
+      : { data: [] as RequestMediaRow[] };
+  const mediaRows = (mediaData ?? []) as RequestMediaRow[];
+  const mediaByRequest = new Map<string, RequestMediaRow[]>();
+  for (const media of mediaRows) {
+    const list = mediaByRequest.get(media.request_id) ?? [];
+    list.push(media);
+    mediaByRequest.set(media.request_id, list);
+  }
+
   return (
     <Container size="wide" className="py-10 md:py-14">
       <header className="mb-8 max-w-2xl">
@@ -91,14 +113,19 @@ export default async function AdminRequestsPage({
                 <Th className="w-32">Date</Th>
                 <Th>Cabinet</Th>
                 <Th>Praticien</Th>
-                <Th>Sujet</Th>
+                <Th>Catégorie</Th>
                 <Th className="w-28">Statut</Th>
                 <Th className="w-40 text-right">Action</Th>
               </tr>
             </thead>
             <tbody>
               {requests.map((r) => (
-                <RequestRowView key={r.id} row={r} statusFilter={status} />
+                <RequestRowView
+                  key={r.id}
+                  row={r}
+                  media={mediaByRequest.get(r.id) ?? []}
+                  statusFilter={status}
+                />
               ))}
             </tbody>
           </table>
@@ -155,9 +182,11 @@ function Th({
 
 function RequestRowView({
   row,
+  media,
   statusFilter,
 }: {
   row: RequestRow;
+  media: RequestMediaRow[];
   statusFilter: StatusFilter;
 }) {
   const practiceLabel = row.practices?.name ?? "—";
@@ -182,19 +211,41 @@ function RequestRowView({
           {practitionerLabel}
         </td>
         <td className="px-4 py-3 border-b border-[var(--line)]">
-          <details className="group">
+          <CategoryBadge category={row.subject} />
+          <details className="group mt-2">
             <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
-              <span className="font-medium">{row.subject}</span>
-              <span className="ml-2 text-xs text-[var(--ink-discreet)] group-open:hidden">
-                Voir le message
+              <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
+                Voir le message{media.length > 0 ? ` (${media.length} photo${media.length > 1 ? "s" : ""})` : ""}
               </span>
-              <span className="ml-2 text-xs text-[var(--ink-discreet)] hidden group-open:inline">
+              <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
                 Masquer
               </span>
             </summary>
             <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--ink-muted)] max-w-2xl">
               {row.message}
             </p>
+            {media.length > 0 ? (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {media.map((m) => (
+                  <li key={m.id}>
+                    <a
+                      href={`/api/request-media/${m.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block h-16 w-16 overflow-hidden border border-[var(--line)] bg-[var(--bg)]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/api/request-media/${m.id}`}
+                        alt={m.original_filename ?? "Photo jointe"}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </details>
         </td>
         <td className="px-4 py-3 border-b border-[var(--line)]">
@@ -205,6 +256,22 @@ function RequestRowView({
         </td>
       </tr>
     </>
+  );
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  const isUrgent = category === "Urgence";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-0.5 text-[10px] tracking-widest uppercase",
+        isUrgent
+          ? "bg-[var(--accent-warm)]/10 text-[var(--accent-warm)]"
+          : "bg-[var(--ink-discreet)]/10 text-[var(--ink-discreet)]",
+      )}
+    >
+      {category}
+    </span>
   );
 }
 
