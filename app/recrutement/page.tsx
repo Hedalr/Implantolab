@@ -182,7 +182,7 @@ function ValuesAndBenefitsSection() {
 function OpeningsSection({ openings }: { openings: RecrutementOpening[] }) {
   const heading =
     openings.length > 0
-      ? `${openings.length} opportunité${openings.length > 1 ? "s" : ""} pour rejoindre l’atelier`
+      ? "Les opportunités pour nous rejoindre"
       : "Aucun poste ouvert pour le moment";
 
   return (
