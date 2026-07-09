@@ -3,9 +3,11 @@ import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { PageHero } from "@/components/sections/PageHero";
 import { RecruitmentApplicationForm } from "@/components/sections/RecruitmentApplicationForm";
-import { recrutement } from "@/content/fr/recrutement";
 import { site } from "@/content/fr/site";
+import { getJobOpenings } from "@/lib/notion-jobs";
 import { pageMetadata } from "@/lib/metadata";
+
+export const revalidate = 600;
 
 export const metadata = pageMetadata({
   title: "Envoyer sa candidature",
@@ -22,7 +24,8 @@ export default async function CandidaturePage({
   searchParams: SearchParams;
 }) {
   const { poste } = await searchParams;
-  const openings = recrutement.openings.map((opening) => opening.role);
+  const jobOpenings = await getJobOpenings();
+  const openings = jobOpenings.map((opening) => opening.role);
 
   return (
     <>

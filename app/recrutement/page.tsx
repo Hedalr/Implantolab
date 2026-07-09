@@ -6,7 +6,10 @@ import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
 import { PageSummaryNav } from "@/components/sections/PageSummaryNav";
 import { recrutement } from "@/content/fr/recrutement";
+import { getJobOpenings, type RecrutementOpening } from "@/lib/notion-jobs";
 import { pageMetadata } from "@/lib/metadata";
+
+export const revalidate = 600;
 
 const summary = [
   {
@@ -38,7 +41,9 @@ export const metadata = pageMetadata({
   path: "/recrutement",
 });
 
-export default function RecrutementPage() {
+export default async function RecrutementPage() {
+  const openings = await getJobOpenings();
+
   return (
     <>
       <PageHero
@@ -54,7 +59,7 @@ export default function RecrutementPage() {
       />
 
       <ValuesAndBenefitsSection />
-      <OpeningsSection />
+      <OpeningsSection openings={openings} />
       <StageAlternanceSection />
 
       <PageCta cta={recrutement.cta} />
@@ -174,8 +179,11 @@ function ValuesAndBenefitsSection() {
   );
 }
 
-function OpeningsSection() {
-  const { openings } = recrutement;
+function OpeningsSection({ openings }: { openings: RecrutementOpening[] }) {
+  const heading =
+    openings.length > 0
+      ? `${openings.length} opportunité${openings.length > 1 ? "s" : ""} pour rejoindre l’atelier`
+      : "Aucun poste ouvert pour le moment";
 
   return (
     <section
@@ -193,17 +201,33 @@ function OpeningsSection() {
               Postes ouverts
             </span>
             <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
-              Trois opportunités pour rejoindre l’atelier
+              {heading}
             </h2>
           </Reveal>
           <Reveal delay={100} className="lg:col-span-4">
             <p className="text-[var(--ink-muted)] leading-relaxed text-pretty">
-              Nos postes ouverts, actualisés régulièrement. Chaque candidature
-              est étudiée par notre équipe.
+              {openings.length > 0
+                ? "Nos postes ouverts, actualisés régulièrement. Chaque candidature est étudiée par notre équipe."
+                : "N’hésitez pas à nous adresser une candidature spontanée : nous étudions chaque profil avec attention."}
             </p>
           </Reveal>
         </div>
 
+        {openings.length === 0 ? (
+          <div className="mt-14 border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-8 md:p-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <p className="text-[var(--ink-muted)] leading-relaxed max-w-xl text-pretty">
+              Il n’y a pas d’offre publiée actuellement, mais votre profil peut nous intéresser
+              pour une prochaine ouverture.
+            </p>
+            <Button
+              href="/recrutement/candidature"
+              variant="secondary"
+              className="w-full sm:w-auto shrink-0"
+            >
+              Candidature spontanée
+            </Button>
+          </div>
+        ) : (
         <ul className="mt-14 flex flex-col gap-px bg-[var(--line)] border-y border-[var(--line)]">
           {openings.map((opening, index) => (
             <Reveal
@@ -260,6 +284,7 @@ function OpeningsSection() {
             </Reveal>
           ))}
         </ul>
+        )}
       </Container>
     </section>
   );
