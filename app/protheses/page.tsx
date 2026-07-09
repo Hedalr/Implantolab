@@ -1,4 +1,4 @@
-import { SimplePage } from "@/components/layout/SimplePage";
+import { ProthesesLayout } from "@/components/sections/ProthesesLayout";
 import { protheses } from "@/content/fr/pages";
 import { pageMetadata } from "@/lib/metadata";
 
@@ -9,5 +9,5 @@ export const metadata = pageMetadata({
 });
 
 export default function ProthesesPage() {
-  return <SimplePage content={protheses} />;
+  return <ProthesesLayout content={protheses} />;
 }
