@@ -155,6 +155,19 @@ function toLocalPathIfSiteAsset(url: string): string {
 }
 
 /**
+ * Même normalisation que `toLocalPathIfSiteAsset`, mais appliquée à un bloc
+ * de texte entier (le markdown généré depuis le contenu d'une page Notion)
+ * plutôt qu'à une URL isolée. Les images insérées dans le corps d'un article
+ * (blocs `image`) contiennent des URL complètes qui peuvent pointer vers un
+ * domaine différent de celui actuellement en ligne — on les ramène toutes en
+ * chemin relatif `/photos/...` pour qu'elles se chargent quel que soit le
+ * domaine du déploiement.
+ */
+function normalizeSiteImageUrlsInText(text: string): string {
+  return text.replace(/https?:\/\/[^\s)"'>]+?(\/photos\/[^\s)"'>]*)/g, "$1");
+}
+
+/**
  * Extrait une URL d'image depuis une propriété "Files & media" ou "URL".
  * Les fichiers hébergés par Notion ont des URL signées qui expirent.
  * Comme les pages qui utilisent cette URL sont en ISR (revalidate=600),
@@ -288,8 +301,9 @@ async function pageToHtml(pageId: string): Promise<string> {
   if (!n2m) return "";
   try {
     const mdBlocks = await n2m.pageToMarkdown(pageId);
-    const md = n2m.toMarkdownString(mdBlocks).parent ?? "";
-    if (!md) return "";
+    const rawMd = n2m.toMarkdownString(mdBlocks).parent ?? "";
+    if (!rawMd) return "";
+    const md = normalizeSiteImageUrlsInText(rawMd);
     return marked.parse(md, { async: false }) as string;
   } catch (error) {
     console.error("[notion] Échec du rendu markdown pour la page", pageId, error);
