@@ -2,6 +2,7 @@ import type { SimplePageContent } from "@/content/fr/pages";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { SwipeGallery } from "@/components/ui/SwipeGallery";
+import { ProcessSchema } from "@/components/ui/ProcessSchema";
 import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
 import { prothesesGalleries } from "@/content/fr/protheses-media";
@@ -71,6 +72,8 @@ export function ProthesesLayout({ content }: Props) {
                         ))}
                       </ul>
                     ) : null}
+
+                    {section.eyebrow === "Process" ? <ProcessSchema /> : null}
 
                     {gallery ? (
                       <div className="flex flex-col gap-3">
