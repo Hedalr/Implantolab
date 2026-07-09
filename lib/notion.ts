@@ -131,24 +131,48 @@ function readCheckbox(prop: unknown): boolean {
 }
 
 /**
+ * Ramène une URL d'image « propre » — quand elle pointe vers un fichier local
+ * du site (convention `/photos/...`, voir `content/fr/site-photos.ts`), on ne
+ * garde que le chemin. Ça évite qu'une URL collée dans Notion avec un domaine
+ * différent de celui actuellement en ligne (ex. futur domaine personnalisé
+ * saisi avant qu'il ne soit branché, ou `www.` vs sans `www.`) ne casse
+ * l'affichage : `next/image` refuse tout hostname externe non listé dans
+ * `next.config.ts`, et une URL vers un domaine injoignable ne charge jamais.
+ * En chemin relatif, l'image est servie depuis `public/` quel que soit le
+ * domaine du déploiement — aucune configuration `remotePatterns` requise.
+ */
+function toLocalPathIfSiteAsset(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.pathname.startsWith("/photos/")) {
+      return parsed.pathname;
+    }
+    return url;
+  } catch {
+    // URL déjà relative (ou invalide) : on la laisse telle quelle.
+    return url;
+  }
+}
+
+/**
  * Extrait une URL d'image depuis une propriété "Files & media" ou "URL".
  * Les fichiers hébergés par Notion ont des URL signées qui expirent.
  * Comme les pages qui utilisent cette URL sont en ISR (revalidate=600),
  * la valeur est régénérée régulièrement.
  */
 function readImageUrl(prop: unknown, coverFromPage?: string | null): string | null {
-  if (coverFromPage) return coverFromPage;
+  if (coverFromPage) return toLocalPathIfSiteAsset(coverFromPage);
   if (!prop || typeof prop !== "object") return null;
   const p = prop as NotionProperty;
   if (p.type === "url" && typeof p.url === "string" && p.url) {
-    return p.url;
+    return toLocalPathIfSiteAsset(p.url);
   }
   if (p.type === "files" && Array.isArray(p.files)) {
     const first = (p.files as Array<Record<string, unknown>>)[0];
     if (!first) return null;
     if (first.type === "external" && first.external && typeof first.external === "object") {
       const ext = first.external as { url?: string };
-      return ext.url ?? null;
+      return ext.url ? toLocalPathIfSiteAsset(ext.url) : null;
     }
     if (first.type === "file" && first.file && typeof first.file === "object") {
       const f = first.file as { url?: string };
