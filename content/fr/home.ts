@@ -313,6 +313,7 @@ export const home = {
       {
         name: "Antoine Lelièvre",
         role: "Gérant — prothésiste dentaire",
+        photoKey: "equipe:antoine-lelievre",
         tone: "deep",
       },
       {

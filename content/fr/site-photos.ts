@@ -14,6 +14,7 @@ export const sitePhotos = {
   "Contrôle dimensionnel": "/photos/controle-dimensionnel.jpg",
   "Zircone brute": "/photos/zircone-brute.jpg",
   "Équipe IMPLANTOLAB — atelier": "/photos/equipe-technique.jpg",
+  "equipe:antoine-lelievre": "/photos/antoine-lelievre.png",
   "Restauration implantaire — atelier": "/photos/restauration-implantaire.jpg",
   // Cas cliniques — clé composite caption + titre
   "cas:couronne-implantaire": "/photos/cas-couronne-implantaire.jpg",
