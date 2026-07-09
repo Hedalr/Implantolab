@@ -24,9 +24,9 @@ export const home = {
       "Depuis 2014, IMPLANTOLAB conjugue savoir-faire artisanal et outils CFAO pour accompagner les chirurgiens-dentistes dans leur pratique quotidienne.",
     items: [
       { value: 12, suffix: " ans +", label: "d’expérience" },
-      { value: 100, suffix: "", label: "cabinets dentaires partenaires" },
+      { value: 100, suffix: "+", label: "cabinets dentaires partenaires" },
       { value: 90, suffix: " %", label: "de cas en flux numérique" },
-      { value: 5, suffix: " j", label: "délai moyen de fabrication" },
+      { value: 5, suffix: " jours", label: "délai moyen de fabrication" },
     ],
   },
 
