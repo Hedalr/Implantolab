@@ -9,6 +9,16 @@ import type { Article, ArticleDetail } from "@/lib/notion";
 
 export const fallbackArticles: Article[] = [
   {
+    slug: "bridge-ancrage-dent-naturelle-bredent",
+    title:
+      "Bridge ancré sur dent naturelle : première réalisation 100 % numérique en France",
+    excerpt:
+      "En collaboration avec BREDENT, IMPLANTOLAB présente un bridge ancré sur dent naturelle entièrement conçu en flux numérique — avec rattrapage d’axe des préparations. Un cas publié dans Technologie Dentaire.",
+    date: "2026-07-09",
+    coverUrl: "/photos/protheses/bridge-transvisse-1.jpg",
+    category: "Innovation",
+  },
+  {
     slug: "zircone-monolithique-rac-0",
     title: "Zircone monolithique : intégration au panier RAC 0",
     excerpt:
@@ -45,6 +55,77 @@ export const fallbackArticles: Article[] = [
     category: "Événement",
   },
 ];
+
+const bridgeBredentHtml = `
+<p>IMPLANTOLAB et <strong>BREDENT</strong> ont réalisé un bridge ancré sur dent
+naturelle entièrement conçu en flux numérique — une première en France dans
+cette configuration. Ce cas, documenté par des photos cliniques et
+laboratoire, a fait l’objet d’un article dans le magazine
+<strong>Technologie Dentaire</strong>.</p>
+
+<h2>Un bridge ancré sur dent naturelle</h2>
+<p>L’indication repose sur un ancrage prothétique sur dents piliers saines,
+sans recours à des implants intermédiaires. La restauration conjointe
+permet de reconstituer plusieurs éléments tout en conservant le capital
+dentaire disponible, avec une intégration esthétique et fonctionnelle
+conforme aux exigences du secteur antérieur comme postérieur.</p>
+
+<h2>Le rattrapage d’axe des préparations</h2>
+<p>L’un des apports majeurs de ce workflow réside dans la capacité à
+<strong>rattraper l’axe des préparations</strong> lorsque celles-ci présentent
+des inclinaisons ou des désaxages difficiles à compenser en conventionnel.
+La conception CAO permet d’ajuster virtuellement les émergences, les
+contacts proximaux et l’occlusion avant usinage, pour une restauration
+finalisée avec un ajustage marginal maîtrisé.</p>
+
+<h2>Un flux entièrement numérique</h2>
+<p>De la prise d’empreinte numérique à la livraison de la prothèse, chaque
+étape s’inscrit dans une chaîne CFAO documentée : scan, modélisation,
+usinage et contrôle qualité. Aucune étape analogique intermédiaire n’a
+été nécessaire — ce qui garantit traçabilité, reproductibilité et
+délais maîtrisés.</p>
+
+<p>Ce protocole, développé en étroite collaboration avec les équipes
+techniques de BREDENT, illustre la maturité des flux numériques appliqués
+aux restaurations conjointes sur dents naturelles.</p>
+
+<h2>Photos du cas</h2>
+<p>Retrouvez ci-dessous les visuels du cas : restauration usinée, détails
+prothétiques et intégration sur modèle.</p>
+
+<figure>
+  <img src="/photos/protheses/bridge-transvisse-1.jpg" alt="Bridge ancré sur dent naturelle, vue générale de la restauration" />
+  <figcaption>Bridge ancré sur dent naturelle — vue générale de la restauration usinée.</figcaption>
+</figure>
+
+<figure>
+  <img src="/photos/protheses/bridge-transvisse-2.jpg" alt="Bridge ancré sur dent naturelle, vue occlusale" />
+  <figcaption>Vue occlusale — rattrapage d’axe des préparations intégré à la conception CAO.</figcaption>
+</figure>
+
+<figure>
+  <img src="/photos/protheses/bridge-transvisse-3.jpg" alt="Bridge ancré sur dent naturelle, détail prothétique" />
+  <figcaption>Détail prothétique — finition et continuité des émergences.</figcaption>
+</figure>
+
+<figure>
+  <img src="/photos/protheses/bridge-transvisse-4.jpg" alt="Bridge ancré sur dent naturelle, intégration sur modèle" />
+  <figcaption>Restauration finalisée sur modèle — contrôle d’ajustage avant expédition.</figcaption>
+</figure>
+
+<h2>Publication dans Technologie Dentaire</h2>
+<p>Ce cas a été retenu par la rédaction de <strong>Technologie Dentaire</strong>
+pour illustrer l’avancée des laboratoires français vers un flux 100 %
+numérique sur des indications conjointes classiques. Il confirme qu’un
+bridge sur dent naturelle peut aujourd’hui être entièrement conçu,
+usiné et validé dans un protocole CFAO abouti.</p>
+
+<h2>Pour adresser un cas similaire</h2>
+<p>Vous souhaitez nous adresser un bridge ancré sur dent naturelle ou
+en savoir plus sur nos flux numériques en collaboration avec BREDENT ?
+Contactez notre équipe technique via le formulaire de contact — nous
+validons l’indication et vous confirmons le protocole adapté à votre cas.</p>
+`;
 
 const zirconeHtml = `
 <p>La prise en charge élargie du Reste À Charge 0 (RAC 0) impose aux laboratoires
@@ -138,20 +219,24 @@ d’ajustage et d’intégration clinique.</p>
 `;
 
 export const fallbackArticleDetails: Record<string, ArticleDetail> = {
-  "zircone-monolithique-rac-0": {
+  "bridge-ancrage-dent-naturelle-bredent": {
     ...fallbackArticles[0],
+    contentHtml: bridgeBredentHtml,
+  },
+  "zircone-monolithique-rac-0": {
+    ...fallbackArticles[1],
     contentHtml: zirconeHtml,
   },
   "nouveau-scanner-intra-oral-compatible": {
-    ...fallbackArticles[1],
+    ...fallbackArticles[2],
     contentHtml: scannerHtml,
   },
   "portes-ouvertes-atelier-mars-2026": {
-    ...fallbackArticles[2],
+    ...fallbackArticles[3],
     contentHtml: portesOuvertesHtml,
   },
   "retour-jop-dentaires-2025": {
-    ...fallbackArticles[3],
+    ...fallbackArticles[4],
     contentHtml: jopHtml,
   },
 };
