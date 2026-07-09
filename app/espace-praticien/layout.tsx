@@ -57,6 +57,13 @@ export default async function EspacePraticienLayout({
         : practitionerNav;
   const showNav = Boolean(profile);
 
+  const spaceLabel =
+    profile?.role === "admin"
+      ? "Espace admin"
+      : profile?.role === "prosthetist"
+        ? "Espace collaborateur"
+        : "Espace praticien";
+
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-[var(--bg)]">
       <div className="sticky top-16 md:top-20 z-30 border-b border-[var(--line)] bg-[var(--bg-elevated)]">
@@ -65,7 +72,7 @@ export default async function EspacePraticienLayout({
             <div className="flex items-center gap-8">
               <Logo href="/espace-praticien" showWordmark={false} />
               <span className="text-eyebrow text-[var(--ink-discreet)] hidden sm:inline">
-                Espace praticien
+                {spaceLabel}
               </span>
 
               {showNav ? (

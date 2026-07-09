@@ -4,8 +4,33 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
+import { PageSummaryNav } from "@/components/sections/PageSummaryNav";
 import { recrutement } from "@/content/fr/recrutement";
 import { pageMetadata } from "@/lib/metadata";
+
+const summary = [
+  {
+    label: "Nos valeurs & nous rejoindre",
+    href: "/recrutement#valeurs",
+    eyebrow: "État d'esprit",
+    description:
+      "Ce qui nous anime et ce que nous vous offrons au quotidien.",
+  },
+  {
+    label: "Postes ouverts",
+    href: "/recrutement#postes",
+    eyebrow: "Opportunités",
+    description:
+      "Les postes actuellement disponibles dans notre atelier de Blois.",
+  },
+  {
+    label: "Stage & alternance",
+    href: "/recrutement#stage-alternance",
+    eyebrow: "Formation",
+    description:
+      "Rejoindre le laboratoire dans le cadre d'une formation en prothèse dentaire.",
+  },
+];
 
 export const metadata = pageMetadata({
   title: "Recrutement",
@@ -20,6 +45,12 @@ export default function RecrutementPage() {
         eyebrow={recrutement.eyebrow}
         title={recrutement.title}
         intro={recrutement.intro}
+      />
+
+      <PageSummaryNav
+        eyebrow="Sommaire"
+        title="Comment souhaitez-vous nous rejoindre ?"
+        items={summary}
       />
 
       <ValuesAndBenefitsSection />
@@ -112,9 +143,27 @@ function ValuesAndBenefitsSection() {
                       {benefit.title}
                     </h3>
                   </div>
-                  <p className="text-[var(--ink-muted)] leading-relaxed text-pretty">
-                    {benefit.description}
-                  </p>
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[var(--ink-muted)] leading-relaxed text-pretty">
+                      {benefit.description}
+                    </p>
+                    {benefit.highlights && benefit.highlights.length > 0 ? (
+                      <ul className="grid gap-2 sm:grid-cols-2">
+                        {benefit.highlights.map((highlight) => (
+                          <li
+                            key={highlight}
+                            className="flex items-start gap-2 text-sm text-[var(--ink)] leading-relaxed"
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="mt-2 h-px w-3 bg-[var(--accent-warm)] shrink-0"
+                            />
+                            <span>{highlight}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
                 </Reveal>
               ))}
             </ul>
@@ -264,13 +313,6 @@ function StageAlternanceSection() {
                   className="w-full sm:w-auto"
                 >
                   Postuler pour un stage
-                </Button>
-                <Button
-                  href="/recrutement/candidature?poste=Demande d’alternance"
-                  variant="secondary"
-                  className="w-full sm:w-auto"
-                >
-                  Postuler en alternance
                 </Button>
                 <Link
                   href="/contact"

@@ -6,6 +6,7 @@ export type RecrutementValue = {
 export type RecrutementBenefit = {
   title: string;
   description: string;
+  highlights?: string[];
 };
 
 export type RecrutementContract = "CDI" | "CDD" | "Alternance";
@@ -49,12 +50,12 @@ export const recrutement: RecrutementContent = {
     {
       title: "Précision quotidienne",
       description:
-        "Chaque geste compte : ajustage, finitions, contrôle qualité. Nous cultivons l’exigence à tous les postes de l’atelier.",
+        "Chaque geste compte : ajustage, finitions, contrôle qualité. Nous cultivons l’exigence à tous les postes du Laboratoire.",
     },
     {
       title: "Formation continue",
       description:
-        "Nous investissons dans la montée en compétences de l’équipe : formations CFAO, nouveaux matériaux, protocoles implantaires.",
+        "Nous investissons dans la montée en compétences de l’équipe : formations techniques, nouveaux matériaux et protocoles implantaires.",
     },
     {
       title: "Innovation numérique",
@@ -69,9 +70,9 @@ export const recrutement: RecrutementContent = {
   ],
   benefits: [
     {
-      title: "Formation CFAO",
+      title: "Accompagnement personnalisé",
       description:
-        "Accompagnement personnalisé sur nos logiciels de conception et nos équipements de fabrication.",
+        "Un accompagnement adapté à chaque poste de travail — prothèse amovible, prothèse conjointe, CFAO — pour vous faire progresser à votre rythme sur votre métier.",
     },
     {
       title: "Environnement technique moderne",
@@ -92,21 +93,29 @@ export const recrutement: RecrutementContent = {
       title: "Contrat CDI et rémunération",
       description:
         "Salaire selon expérience, mutuelle et perspectives d’évolution au sein d’une structure stable.",
+      highlights: [
+        "Primes de performance",
+        "Heures supplémentaires payées",
+        "Avantages CE via une entreprise partenaire",
+        "Partenariat avec AD Blois — équipe locale de basket",
+        "Séminaire annuel d’équipe",
+      ],
     },
   ],
   openings: [
     {
-      role: "Prothésiste dentaire senior — implantologie / CFAO",
+      role: "Prothésiste dentaire — CFAO / grattage de châssis métallique",
       contract: "CDI",
       location: "Blois (41)",
       summary:
-        "Vous prenez en charge des cas implantaires complexes, de la conception CAO à la finition céramique. Vous êtes un référent technique pour l’équipe.",
+        "Vous intervenez sur la prothèse amovible et la CFAO : conception numérique, usinage, métallurgie et grattage de châssis métallique. Vous rejoignez une équipe soudée et un plateau technique moderne.",
       skills: [
-        "Implantologie prothétique",
-        "Céramique stratifiée",
-        "Conception CAO (exocad, 3Shape)",
-        "5 ans d’expérience minimum",
-        "Autonomie et rigueur",
+        "Prothèse amovible",
+        "CFAO",
+        "Métallurgie",
+        "Grattage de châssis métallique",
+        "Autonomie",
+        "Rigueur",
       ],
     },
     {
@@ -139,11 +148,12 @@ export const recrutement: RecrutementContent = {
     },
   ],
   stageAlternance: {
-    title: "Demande de stage ou d’alternance",
+    title: "Demande de stage",
     description:
-      "Vous êtes étudiant(e) en prothèse dentaire, en BTM, BTMS ou en formation CFAO ? IMPLANTOLAB accueille chaque année des stagiaires et des alternants au sein de son atelier de Blois. Envoyez votre CV et quelques mots sur votre projet : nous étudions chaque candidature avec attention.",
+      "Vous êtes étudiant(e) en prothèse dentaire ou en bac professionnel (à partir de la 2ᵉ année) ? IMPLANTOLAB accueille chaque année des stagiaires au sein de son laboratoire de Blois. Envoyez votre CV et quelques mots sur votre projet : nous étudions chaque candidature avec attention.",
     highlights: [
-      "Stage conventionné ou alternance (contrat d’apprentissage / professionnalisation)",
+      "Stage conventionné",
+      "Ouvert aux étudiant(e)s en prothèse dentaire et bac pro (dès la 2ᵉ année)",
       "Encadrement par des prothésistes seniors",
       "Immersion sur l’ensemble de la chaîne CFAO",
       "Dépôt du CV et documents en pièces jointes",

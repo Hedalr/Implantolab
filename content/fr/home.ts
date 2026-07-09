@@ -1,3 +1,18 @@
+export type TeamMember = {
+  name: string;
+  role: string;
+  bio?: string;
+  photoKey?: string;
+  tone?: "warm" | "cool" | "deep";
+};
+
+export type EphemeralInfo = {
+  label: string;
+  title: string;
+  description?: string;
+  cta?: { label: string; href: string };
+};
+
 export const home = {
   hero: {
     slogan: {
@@ -285,5 +300,65 @@ export const home = {
     description:
       "Vous avez un cas à adresser, une question technique ou un besoin de devis ? Notre équipe vous répond rapidement pour vous orienter vers la solution la plus adaptée.",
     note: "Envoi de fichiers STL et espace praticien disponibles prochainement.",
+  },
+
+  team: {
+    eyebrow: "L’équipe",
+    title: "Les visages du laboratoire",
+    description:
+      "Une équipe de prothésistes, techniciens CFAO et coordinateurs, réunis à Blois autour d’une même exigence : la précision au service du patient.",
+    footnote:
+      "Photographies définitives à venir — séance photo prévue prochainement.",
+    members: [
+      {
+        name: "Antoine Lelièvre",
+        role: "Gérant — prothésiste dentaire",
+        tone: "deep",
+      },
+      {
+        name: "Prothésiste CFAO",
+        role: "Conception & usinage",
+        tone: "cool",
+      },
+      {
+        name: "Prothésiste conjointe",
+        role: "Céramique & finitions",
+        tone: "warm",
+      },
+      {
+        name: "Prothésiste amovible",
+        role: "Châssis & grattage",
+        tone: "cool",
+      },
+      {
+        name: "Coordination cabinets",
+        role: "Suivi des dossiers praticiens",
+        tone: "deep",
+      },
+      {
+        name: "Alternant(e) — prothèse",
+        role: "Formation en atelier",
+        tone: "warm",
+      },
+    ] as TeamMember[],
+  },
+
+  ephemeral: {
+    eyebrow: "À la une",
+    items: [
+      {
+        label: "Équipement",
+        title: "Micro-fusion iMES-iCore — installée en interne",
+        description:
+          "Fabrication métal complète sans sous-traitance, désormais opérationnelle à Blois.",
+      },
+      {
+        label: "Recrutement",
+        title: "Poste ouvert : prothésiste amovible / CFAO / grattage châssis",
+        description:
+          "Nous cherchons un prothésiste expérimenté pour rejoindre l’équipe.",
+        cta: { label: "Voir le poste", href: "/recrutement#postes" },
+      },
+    ] as EphemeralInfo[],
   },
 };
