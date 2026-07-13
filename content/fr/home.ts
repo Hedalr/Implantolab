@@ -16,11 +16,13 @@ export type EphemeralInfo = {
 export const home = {
   hero: {
     slogan: {
+      // Slogan officiel IMPLANTOLAB — ne pas modifier.
       line1: "Pour qu’un sourire",
       // Espace invisible reproduisant "Pour qu’un sour" pour que le "n" de
       // "ne se cache plus…" démarre exactement sous le "i" de "sourire".
       line2Offset: "Pour qu’un sour",
       line2: "ne se cache plus…",
+      emphasis: "sourire",
     },
     eyebrow: "Laboratoire de prothèse dentaire",
     title:

@@ -8,7 +8,11 @@ export function StatsBand() {
   const { eyebrow, title, description, items } = home.stats;
 
   return (
-    <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
+    <section className="relative bg-[var(--bg-elevated)]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--line)] to-transparent"
+      />
       <Container size="wide" className="py-16 md:py-24 lg:py-32">
         <div className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-end">
           <Reveal className="lg:col-span-6">

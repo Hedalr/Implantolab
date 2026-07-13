@@ -60,14 +60,14 @@ export function PageSummaryNav({ eyebrow, title, intro, items }: Props) {
           </div>
         ) : null}
 
-        <ul className="mt-10 grid gap-px bg-[var(--line)] border-y border-[var(--line)] md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 flex flex-wrap justify-center border-y border-[var(--line)]">
           {items.map((item, index) => (
             <Reveal
               as="li"
               key={item.href}
               delay={(index % 3) * 60}
               variant="rise"
-              className="bg-[var(--bg-elevated)]"
+              className="w-full bg-[var(--bg-elevated)] border-b border-[var(--line)] md:w-1/2 md:border-r md:even:border-r-0 lg:w-1/3 lg:even:border-r lg:[&:nth-child(3n)]:border-r-0"
             >
               <Link
                 href={item.href}
