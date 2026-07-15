@@ -2,6 +2,7 @@ import Link from "next/link";
 import { footerColumns, legalLinks, site } from "@/content/fr/site";
 import { Logo } from "@/components/ui/Logo";
 import { Container } from "@/components/ui/Container";
+import { LocationMap } from "@/components/layout/LocationMap";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -44,26 +45,29 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="lg:col-span-8 grid gap-10 sm:grid-cols-3">
-            {footerColumns.map((column) => (
-              <div key={column.title} className="flex flex-col gap-4">
-                <h3 className="text-eyebrow text-[var(--ink-invert-muted)]">
-                  {column.title}
-                </h3>
-                <ul className="flex flex-col gap-2.5 text-sm">
-                  {column.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          <div className="lg:col-span-8 flex flex-col gap-10">
+            <div className="grid gap-10 sm:grid-cols-3">
+              {footerColumns.map((column) => (
+                <div key={column.title} className="flex flex-col gap-4">
+                  <h3 className="text-eyebrow text-[var(--ink-invert-muted)]">
+                    {column.title}
+                  </h3>
+                  <ul className="flex flex-col gap-2.5 text-sm">
+                    {column.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <LocationMap compact />
           </div>
         </div>
 
