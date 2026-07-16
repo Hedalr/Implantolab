@@ -5,10 +5,9 @@ import { getServerSupabase, requireUser } from "@/lib/supabase/server";
  * Redirige vers une signed URL du bucket privé `request-media` valable
  * ~5 minutes, pour afficher les photos jointes à une demande praticien.
  *
- * Contrairement à /api/case-media (écritures service_role depuis le webhook
- * WhatsApp), ici tout se fait avec le client authentifié : les policies RLS
- * sur `storage.objects` vérifient déjà que l'utilisateur a le droit de voir
- * ce fichier (son propre cabinet, ou un admin).
+ * Les policies RLS sur `storage.objects` vérifient déjà que l'utilisateur
+ * a le droit de voir ce fichier (son propre cabinet, un admin, ou un
+ * prothésiste du secteur concerné).
  */
 
 export const runtime = "nodejs";

@@ -51,6 +51,7 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const email = readText(formData, "email").toLowerCase();
   const fullName = readText(formData, "full_name");
   const practiceId = readText(formData, "practice_id");
+  const sectorId = readText(formData, "sector_id");
   const rawRole = readText(formData, "role") || "practitioner";
   const role: "practitioner" | "prosthetist" =
     rawRole === "prosthetist" ? "prosthetist" : "practitioner";
@@ -59,9 +60,12 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     go({ error: "invite-validation" });
   }
   // Le cabinet n'est requis que pour un praticien ; un prothésiste n'y est
-  // pas rattaché.
+  // pas rattaché mais doit avoir un secteur.
   if (role === "practitioner" && !practiceId) {
     go({ error: "invite-validation" });
+  }
+  if (role === "prosthetist" && !sectorId) {
+    go({ error: "invite-sector" });
   }
 
   let admin;
@@ -131,6 +135,7 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     .from("profiles")
     .update({
       practice_id: role === "practitioner" ? practiceId : null,
+      sector_id: role === "prosthetist" ? sectorId : null,
       full_name: fullName.length > 0 ? fullName : null,
       role,
     })

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 import { REQUEST_CATEGORIES } from "@/lib/requests/types";
+import { listLabSectors } from "@/lib/requests/queries";
+import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { createRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -19,17 +21,21 @@ type RequestRow = {
   message: string;
   status: "open" | "closed";
   created_at: string;
+  sector_id: string | null;
+  sectors: { name: string | null; color: string | null } | null;
 };
 
 type RequestMediaRow = {
   id: string;
   request_id: string;
   original_filename: string | null;
+  mime_type: string | null;
 };
 
 const FEEDBACK_MESSAGES: Record<string, string> = {
   sent: "Votre demande a bien été transmise au laboratoire.",
   subject: "Merci de choisir une catégorie.",
+  sector: "Merci de choisir un secteur (Numérique, Amovible ou Conjoint).",
   message: "Le message doit contenir entre 10 et 2000 caractères.",
   save: "Une erreur est survenue lors de l’envoi. Merci de réessayer.",
   "no-practice":
@@ -99,13 +105,18 @@ export default async function DemandesPage({
   }
 
   const supabase = await getServerSupabase();
-  const { data } = await supabase
-    .from("requests")
-    .select("id, subject, message, status, created_at")
-    .eq("practice_id", profile.practiceId)
-    .order("created_at", { ascending: false });
+  const [sectors, requestsRes] = await Promise.all([
+    listLabSectors(supabase),
+    supabase
+      .from("requests")
+      .select(
+        "id, subject, message, status, created_at, sector_id, sectors ( name, color )",
+      )
+      .eq("practice_id", profile.practiceId)
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const rows = (data ?? []) as RequestRow[];
+  const rows = (requestsRes.data ?? []) as unknown as RequestRow[];
   const openRows = rows.filter((r) => r.status === "open");
   const closedRows = rows.filter((r) => r.status === "closed");
 
@@ -114,7 +125,7 @@ export default async function DemandesPage({
     requestIds.length > 0
       ? await supabase
           .from("request_media")
-          .select("id, request_id, original_filename")
+          .select("id, request_id, original_filename, mime_type")
           .in("request_id", requestIds)
       : { data: [] as RequestMediaRow[] };
   const mediaRows = (mediaData ?? []) as RequestMediaRow[];
@@ -156,6 +167,30 @@ export default async function DemandesPage({
                 {REQUEST_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
                     {category}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField
+              label="Secteur"
+              htmlFor="sector_id"
+              required
+              hint="Votre demande sera transmise à l’équipe du secteur choisi."
+            >
+              <select
+                id="sector_id"
+                name="sector_id"
+                required
+                defaultValue=""
+                className={inputStyle}
+              >
+                <option value="" disabled>
+                  Choisir un secteur…
+                </option>
+                {sectors.map((sector) => (
+                  <option key={sector.id} value={sector.id}>
+                    {sector.name}
                   </option>
                 ))}
               </select>
@@ -374,35 +409,28 @@ function RequestCard({
           <p className="text-eyebrow tabular-nums">
             {formatDateTime(row.created_at)}
           </p>
-          <CategoryBadge category={row.subject} />
+          <div className="flex flex-wrap items-center gap-2">
+            <CategoryBadge category={row.subject} />
+            {row.sectors?.name ? (
+              <SectorBadge
+                name={row.sectors.name}
+                color={row.sectors.color}
+              />
+            ) : null}
+          </div>
         </div>
         <StatusBadge status={row.status} />
       </header>
       <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed whitespace-pre-line">
         {row.message}
       </p>
-      {media.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {media.map((m) => (
-            <li key={m.id}>
-              <a
-                href={`/api/request-media/${m.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block h-16 w-16 overflow-hidden border border-[var(--line)] bg-[var(--bg)]"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/request-media/${m.id}`}
-                  alt={m.original_filename ?? "Photo jointe"}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <RequestMediaGallery
+        media={media.map((m) => ({
+          id: m.id,
+          filename: m.original_filename,
+          mimeType: m.mime_type,
+        }))}
+      />
     </article>
   );
 }
@@ -419,6 +447,25 @@ function CategoryBadge({ category }: { category: string }) {
       )}
     >
       {category}
+    </span>
+  );
+}
+
+function SectorBadge({
+  name,
+  color,
+}: {
+  name: string;
+  color: string | null;
+}) {
+  return (
+    <span className="inline-flex items-center gap-2 border border-[var(--line-strong)] px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] shrink-0 self-start text-[var(--ink)]">
+      <span
+        aria-hidden="true"
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: color ?? "var(--ink-discreet)" }}
+      />
+      {name}
     </span>
   );
 }

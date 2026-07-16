@@ -7,11 +7,9 @@ import {
   withAdminTimeout,
 } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
-import {
-  createPractice,
-  invitePractitioner,
-  linkPractitioner,
-} from "./actions";
+import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
+import { listLabSectors } from "@/lib/requests/queries";
+import { createPractice, linkPractitioner } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +59,13 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   },
   "invite-validation": {
     title: "Erreur",
-    message: "E-mail et cabinet sont obligatoires pour envoyer une invitation.",
+    message:
+      "E-mail et cabinet sont obligatoires pour inviter un praticien.",
+  },
+  "invite-sector": {
+    title: "Erreur",
+    message:
+      "Le secteur (Numérique, Amovible ou Conjoint) est obligatoire pour inviter un prothésiste.",
   },
   "service-role": {
     title: "Configuration requise",
@@ -119,16 +123,19 @@ export default async function AdminPraticiensPage({
   const canInvite = isServiceRoleConfigured();
 
   const supabase = await getServerSupabase();
-  const { data: practicesData } = await supabase
-    .from("practices")
-    .select("id, name, city, created_at")
-    .order("name", { ascending: true });
-
-  const { data: profilesData } = await supabase
-    .from("profiles")
-    .select("id, full_name, practice_id, created_at, practices ( name, city )")
-    .eq("role", "practitioner")
-    .order("created_at", { ascending: false });
+  const [{ data: practicesData }, { data: profilesData }, sectors] =
+    await Promise.all([
+      supabase
+        .from("practices")
+        .select("id, name, city, created_at")
+        .order("name", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("id, full_name, practice_id, created_at, practices ( name, city )")
+        .eq("role", "practitioner")
+        .order("created_at", { ascending: false }),
+      listLabSectors(supabase),
+    ]);
 
   const practices = (practicesData ?? []) as PracticeRow[];
   const profiles = (profilesData ?? []) as unknown as ProfileRow[];
@@ -232,100 +239,13 @@ export default async function AdminPraticiensPage({
             <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
               L’utilisateur reçoit un e-mail pour choisir son mot de passe.
               Choisissez le type de compte : praticien (dentiste, rattaché à
-              un cabinet) ou prothésiste du laboratoire.
+              un cabinet) ou prothésiste du laboratoire (avec secteur).
             </p>
-            <form
-              action={invitePractitioner}
-              className="mt-5 flex flex-col gap-5"
-            >
-              <fieldset className="flex flex-col gap-2">
-                <legend className="text-eyebrow mb-1">Type de compte *</legend>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="practitioner"
-                    defaultChecked
-                    disabled={!canInvite}
-                    className="mt-1 accent-[var(--accent-warm)]"
-                  />
-                  <span className="flex flex-col">
-                    <span className="text-sm text-[var(--ink)]">
-                      Praticien (dentiste)
-                    </span>
-                    <span className="text-xs text-[var(--ink-discreet)]">
-                      Accès à ses fermetures et demandes, rattaché à un cabinet.
-                    </span>
-                  </span>
-                </label>
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="prosthetist"
-                    disabled={!canInvite}
-                    className="mt-1 accent-[var(--accent-warm)]"
-                  />
-                  <span className="flex flex-col">
-                    <span className="text-sm text-[var(--ink)]">
-                      Prothésiste (collaborateur labo)
-                    </span>
-                    <span className="text-xs text-[var(--ink-discreet)]">
-                      Accès aux dossiers patient reçus par WhatsApp. Aucun
-                      cabinet à sélectionner.
-                    </span>
-                  </span>
-                </label>
-              </fieldset>
-
-              <Field label="E-mail" htmlFor="invite-email" required>
-                <input
-                  id="invite-email"
-                  name="email"
-                  type="email"
-                  required
-                  disabled={!canInvite}
-                  placeholder="dr.martin@cabinet.fr"
-                  className={inputStyle}
-                />
-              </Field>
-              <Field label="Nom complet" htmlFor="invite-name">
-                <input
-                  id="invite-name"
-                  name="full_name"
-                  disabled={!canInvite}
-                  placeholder="Dr. Jean Martin"
-                  className={inputStyle}
-                />
-              </Field>
-              <Field
-                label="Cabinet (praticiens uniquement)"
-                htmlFor="invite-practice"
-              >
-                <select
-                  id="invite-practice"
-                  name="practice_id"
-                  disabled={!canInvite || practices.length === 0}
-                  className={cn(inputStyle, "cursor-pointer")}
-                  defaultValue=""
-                >
-                  <option value="">
-                    {practices.length === 0
-                      ? "Créez d’abord un cabinet"
-                      : "Sélectionner un cabinet"}
-                  </option>
-                  {practices.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                      {p.city ? ` — ${p.city}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Button type="submit" variant="primary" disabled={!canInvite}>
-                Envoyer l’invitation
-              </Button>
-            </form>
+            <InviteUserForm
+              practices={practices}
+              sectors={sectors}
+              canInvite={canInvite}
+            />
           </Panel>
 
           {unlinkedProfiles.length > 0 ? (

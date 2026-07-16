@@ -1,19 +1,12 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { listAdminRequests } from "@/lib/requests/queries";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
 
-type RequestRow = {
-  id: string;
-  subject: string;
-  message: string;
-  status: "open" | "closed";
-  created_at: string;
-  practices: { name: string | null; city: string | null } | null;
-  profiles: { full_name: string | null } | null;
-};
+type RequestRow = Awaited<ReturnType<typeof listAdminRequests>>[number];
 
 type ClosureRow = {
   id: string;
@@ -77,13 +70,7 @@ export default async function AdminDashboardPage() {
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("role", "practitioner"),
-    supabase
-      .from("requests")
-      .select(
-        "id, subject, message, status, created_at, practices(name, city), profiles(full_name)",
-      )
-      .order("created_at", { ascending: false })
-      .limit(5),
+    listAdminRequests(supabase, "all", 5),
     supabase
       .from("closure_periods")
       .select("id, start_date, end_date, note, practices(name, city)")
@@ -96,7 +83,7 @@ export default async function AdminDashboardPage() {
   const openRequests = openRequestsRes.count ?? 0;
   const practicesCount = practicesRes.count ?? 0;
   const practitionersCount = practitionersRes.count ?? 0;
-  const recentRequests = (recentRequestsRes.data ?? []) as unknown as RequestRow[];
+  const recentRequests = recentRequestsRes;
   const upcomingClosures = (upcomingClosuresRes.data ?? []) as unknown as ClosureRow[];
 
   const displayName = profile.fullName ?? profile.email;
@@ -173,7 +160,7 @@ export default async function AdminDashboardPage() {
                   </div>
                   <p className="mt-1 text-xs text-[var(--ink-discreet)]">
                     {r.practices?.name ?? "Cabinet inconnu"}
-                    {r.profiles?.full_name ? ` • ${r.profiles.full_name}` : ""} •{" "}
+                    {r.creatorName ? ` • ${r.creatorName}` : ""} •{" "}
                     {dateTimeFormatter.format(new Date(r.created_at))}
                   </p>
                 </li>

@@ -37,9 +37,14 @@ export async function createRequest(formData: FormData): Promise<void> {
 
   const subject = String(formData.get("subject") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
+  const sectorId = String(formData.get("sector_id") ?? "").trim();
 
   if (!isRequestCategory(subject)) {
     fail("subject");
+  }
+
+  if (!sectorId) {
+    fail("sector");
   }
 
   if (message.length < 10 || message.length > 2000) {
@@ -64,6 +69,17 @@ export async function createRequest(formData: FormData): Promise<void> {
   }
 
   const supabase = await getServerSupabase();
+
+  const { data: sectorRow, error: sectorError } = await supabase
+    .from("sectors")
+    .select("id")
+    .eq("id", sectorId)
+    .maybeSingle();
+
+  if (sectorError || !sectorRow) {
+    fail("sector");
+  }
+
   const { data: inserted, error } = await supabase
     .from("requests")
     .insert({
@@ -72,6 +88,7 @@ export async function createRequest(formData: FormData): Promise<void> {
       message,
       status: "open",
       created_by: userId,
+      sector_id: sectorId,
     })
     .select("id")
     .single();

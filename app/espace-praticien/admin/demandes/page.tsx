@@ -1,25 +1,20 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { listAdminRequests } from "@/lib/requests/queries";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
+import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-type RequestRow = {
-  id: string;
-  subject: string;
-  message: string;
-  status: "open" | "closed";
-  created_at: string;
-  practices: { name: string | null; city: string | null } | null;
-  profiles: { full_name: string | null; email: string | null } | null;
-};
+type RequestRow = Awaited<ReturnType<typeof listAdminRequests>>[number];
 
 type RequestMediaRow = {
   id: string;
   request_id: string;
   original_filename: string | null;
+  mime_type: string | null;
 };
 
 type StatusFilter = "all" | "open" | "closed";
@@ -48,26 +43,14 @@ export default async function AdminRequestsPage({
   const status = parseStatus(rawStatus);
 
   const supabase = await getServerSupabase();
-  let query = supabase
-    .from("requests")
-    .select(
-      "id, subject, message, status, created_at, practices(name, city), profiles(full_name, email)",
-    )
-    .order("created_at", { ascending: false });
-
-  if (status !== "all") {
-    query = query.eq("status", status);
-  }
-
-  const { data } = await query;
-  const requests = (data ?? []) as unknown as RequestRow[];
+  const requests = await listAdminRequests(supabase, status);
 
   const requestIds = requests.map((r) => r.id);
   const { data: mediaData } =
     requestIds.length > 0
       ? await supabase
           .from("request_media")
-          .select("id, request_id, original_filename")
+          .select("id, request_id, original_filename, mime_type")
           .in("request_id", requestIds)
       : { data: [] as RequestMediaRow[] };
   const mediaRows = (mediaData ?? []) as RequestMediaRow[];
@@ -114,6 +97,7 @@ export default async function AdminRequestsPage({
                 <Th>Cabinet</Th>
                 <Th>Praticien</Th>
                 <Th>Catégorie</Th>
+                <Th>Secteur</Th>
                 <Th className="w-28">Statut</Th>
                 <Th className="w-40 text-right">Action</Th>
               </tr>
@@ -190,8 +174,7 @@ function RequestRowView({
   statusFilter: StatusFilter;
 }) {
   const practiceLabel = row.practices?.name ?? "—";
-  const practitionerLabel =
-    row.profiles?.full_name ?? row.profiles?.email ?? "—";
+  const practitionerLabel = row.creatorName ?? "—";
 
   return (
     <>
@@ -224,29 +207,17 @@ function RequestRowView({
             <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--ink-muted)] max-w-2xl">
               {row.message}
             </p>
-            {media.length > 0 ? (
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {media.map((m) => (
-                  <li key={m.id}>
-                    <a
-                      href={`/api/request-media/${m.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block h-16 w-16 overflow-hidden border border-[var(--line)] bg-[var(--bg)]"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`/api/request-media/${m.id}`}
-                        alt={m.original_filename ?? "Photo jointe"}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <RequestMediaGallery
+              media={media.map((m) => ({
+                id: m.id,
+                filename: m.original_filename,
+                mimeType: m.mime_type,
+              }))}
+            />
           </details>
+        </td>
+        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
+          {row.sectorName ?? "—"}
         </td>
         <td className="px-4 py-3 border-b border-[var(--line)]">
           <StatusBadge status={row.status} />

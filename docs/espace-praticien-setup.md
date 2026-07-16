@@ -98,7 +98,8 @@ la **Site URL** sur `https://implantolab.vercel.app` (ou votre domaine final).
    - **Praticien (dentiste)** : rattaché à un cabinet, accès à ses fermetures
      et demandes.
    - **Prothésiste (collaborateur labo)** : accès au module Laboratoire
-     (dossiers patient WhatsApp). Aucun cabinet à sélectionner.
+     (demandes de son secteur : Numérique, Amovible ou Conjoint). Le secteur
+     est obligatoire à l’invitation. Aucun cabinet à sélectionner.
 5. L’utilisateur reçoit un lien « You've been invited ». En cliquant, il
    arrive sur `/espace-praticien/set-password` où il choisit son mot de
    passe, puis est automatiquement redirigé vers son espace selon son

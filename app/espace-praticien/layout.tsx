@@ -28,7 +28,7 @@ const adminNav: NavItem[] = [
 ];
 
 const prosthetistNav: NavItem[] = [
-  { href: "/espace-praticien/laboratoire", label: "Dossiers patient" },
+  { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
   { href: "/espace-praticien/conges", label: "Mes congés" },
 ];
 
