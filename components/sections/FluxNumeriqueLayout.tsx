@@ -2,6 +2,7 @@ import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
+import { FluxNumeriqueWorkflow } from "@/components/sections/FluxNumeriqueWorkflow";
 import type { SimplePageContent } from "@/content/fr/pages";
 
 type Props = {
@@ -31,7 +32,9 @@ export function FluxNumeriqueLayout({ content }: Props) {
       />
 
       {formatsSection ? <FormatsBlock section={formatsSection} /> : null}
-      {workflowSection ? <WorkflowTimeline section={workflowSection} /> : null}
+      {workflowSection ? (
+        <FluxNumeriqueWorkflow section={workflowSection} />
+      ) : null}
       {toolsSection ? <ToolsGrid section={toolsSection} /> : null}
       {securitySection ? <SecurityBlock section={securitySection} /> : null}
 
@@ -86,71 +89,6 @@ function FormatsBlock({ section }: SectionProps) {
             </ul>
           </Reveal>
         </div>
-      </Container>
-    </section>
-  );
-}
-
-function WorkflowTimeline({ section }: SectionProps) {
-  const steps = section.items ?? [];
-
-  return (
-    <section
-      id="workflow"
-      className="bg-[var(--bg)] border-b border-[var(--line)] scroll-mt-24"
-    >
-      <Container size="wide" className="py-14 md:py-20 lg:py-28">
-        <div className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-end">
-          <Reveal className="lg:col-span-7 flex flex-col gap-4">
-            <span className="text-numeral text-eyebrow text-[var(--accent-warm)]">
-              02 — {section.eyebrow}
-            </span>
-            <h2 className="text-display text-2xl md:text-3xl lg:text-[2.25rem] text-balance">
-              {section.title}
-            </h2>
-          </Reveal>
-          <Reveal delay={100} className="lg:col-span-5">
-            <p className="text-[var(--ink-muted)] leading-relaxed text-pretty">
-              {section.body}
-            </p>
-          </Reveal>
-        </div>
-
-        <ol className="mt-14 md:mt-16 grid gap-4 md:gap-0 md:grid-cols-4 md:items-stretch">
-          {steps.map((step, index) => (
-            <Reveal
-              as="li"
-              key={step.title}
-              delay={index * 90}
-              className="relative flex flex-col gap-3 border md:border-r-0 last:md:border-r border-[var(--line)] bg-[var(--bg-elevated)] p-6 md:p-7"
-            >
-              <span className="text-numeral text-display text-2xl sm:text-3xl md:text-4xl text-[var(--accent)] leading-none">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <h3 className="font-serif text-lg text-[var(--ink)] transition-colors hover:text-[var(--accent)]">
-                {step.title}
-              </h3>
-              <p className="text-sm text-[var(--ink-muted)] leading-relaxed">
-                {step.description}
-              </p>
-              {index < steps.length - 1 ? (
-                <span
-                  aria-hidden="true"
-                  className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 items-center justify-center bg-[var(--bg)] border border-[var(--line)] rounded-full text-[var(--accent)]"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path
-                      d="M2 5H8M8 5L5 2M8 5L5 8"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                      strokeLinecap="square"
-                    />
-                  </svg>
-                </span>
-              ) : null}
-            </Reveal>
-          ))}
-        </ol>
       </Container>
     </section>
   );

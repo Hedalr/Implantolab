@@ -2,6 +2,7 @@ import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
+import { ParallaxImage } from "@/components/ui/ParallaxImage";
 import { HeroVideo } from "@/components/sections/HeroVideo";
 import { HeroSlogan } from "@/components/sections/HeroSlogan";
 
@@ -63,26 +64,30 @@ export function Hero() {
           <div className="lg:col-span-6 flex flex-col gap-5 sm:gap-6">
             <div className="grid grid-cols-2 gap-4 sm:gap-5">
               <Reveal variant="rise">
-                <figure className="photo-lift relative">
-                  <HeroVideo
-                    src="/videos/hero-implanto.mp4"
-                    className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
-                  />
-                  <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
-                    Réf. ATL—001
-                  </figcaption>
-                </figure>
+                <ParallaxImage offset={22}>
+                  <figure className="photo-lift relative">
+                    <HeroVideo
+                      src="/videos/hero-implanto.mp4"
+                      className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
+                    />
+                    <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                      Réf. ATL—001
+                    </figcaption>
+                  </figure>
+                </ParallaxImage>
               </Reveal>
               <Reveal variant="rise" delay={120} className="mt-4 sm:mt-6">
-                <figure className="photo-lift relative">
-                  <HeroVideo
-                    src="/videos/hero-implanto-2.mp4"
-                    className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
-                  />
-                  <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
-                    Blois, FR
-                  </figcaption>
-                </figure>
+                <ParallaxImage offset={28}>
+                  <figure className="photo-lift relative">
+                    <HeroVideo
+                      src="/videos/hero-implanto-2.mp4"
+                      className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
+                    />
+                    <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                      Blois, FR
+                    </figcaption>
+                  </figure>
+                </ParallaxImage>
               </Reveal>
             </div>
 

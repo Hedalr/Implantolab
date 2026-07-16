@@ -125,10 +125,10 @@ export function PhotoGallery() {
                     key={active.caption}
                     id={`atelier-stage-${index}`}
                     role="tabpanel"
-                    initial={{ opacity: 0, scale: 1.03 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    initial={{ opacity: 0, scale: 1.04, y: 8 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, y: -6 }}
+                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                   >
                     <VisualPlaceholder
                       caption={active.step}
@@ -163,9 +163,22 @@ export function PhotoGallery() {
               </div>
 
               <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-[var(--ink-muted)] leading-relaxed lg:hidden">
-                  {active.description}
-                </p>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.p
+                    key={active.caption}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{
+                      duration: 0.45,
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: 0.1,
+                    }}
+                    className="text-sm text-[var(--ink-muted)] leading-relaxed lg:hidden"
+                  >
+                    {active.description}
+                  </motion.p>
+                </AnimatePresence>
                 <div className="flex gap-1 self-center sm:self-auto" role="presentation">
                   {photos.map((photo, i) => (
                     <button

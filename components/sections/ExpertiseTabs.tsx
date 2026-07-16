@@ -2,12 +2,36 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/cn";
+
+const springTransition = { type: "spring", stiffness: 320, damping: 32 } as const;
+
+const panelTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] } as const;
+
+const textStagger: Variants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const textItem: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
+};
 
 export function ExpertiseTabs() {
   const { eyebrow, title, description, tabs } = home.expertises;
@@ -31,7 +55,7 @@ export function ExpertiseTabs() {
           <div
             role="tablist"
             aria-label="Choisissez une expertise"
-            className="mt-12 flex flex-wrap gap-x-2 gap-y-2 border-b border-[var(--line)]"
+            className="relative mt-12 flex flex-wrap gap-x-2 gap-y-2 border-b border-[var(--line)]"
           >
             {tabs.map((tab) => {
               const selected = tab.key === activeKey;
@@ -51,80 +75,98 @@ export function ExpertiseTabs() {
                       : "text-[var(--ink-discreet)] hover:text-[var(--ink)]",
                   )}
                 >
-                  {tab.label}
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "absolute left-4 right-4 bottom-[-1px] h-px transition-colors",
-                      selected ? "bg-[var(--ink)]" : "bg-transparent",
-                    )}
-                  />
+                  <span className="relative z-10">{tab.label}</span>
+                  {selected ? (
+                    <motion.span
+                      layoutId="expertise-underline"
+                      aria-hidden="true"
+                      className="absolute left-4 right-4 bottom-[-1px] h-px bg-[var(--ink)]"
+                      transition={springTransition}
+                    />
+                  ) : null}
                 </button>
               );
             })}
           </div>
         </Reveal>
 
-        <div
-          role="tabpanel"
-          id={`expertise-panel-${active.key}`}
-          aria-labelledby={`expertise-tab-${active.key}`}
-          key={active.key}
-          className="mt-14 grid gap-12 lg:gap-16 lg:grid-cols-12 items-start"
-        >
-          <div className="lg:col-span-5 order-2 lg:order-1">
-            <div className="reveal reveal--active" data-reveal-variant="scale" data-revealed="true">
-              <VisualPlaceholder
-                caption={active.photo}
-                ratio="portrait"
-                tone={active.tone}
-              />
-            </div>
-          </div>
-
-          <div className="lg:col-span-7 order-1 lg:order-2 flex flex-col gap-8">
-            <div>
-              <h3 className="text-display text-2xl sm:text-3xl md:text-4xl text-[var(--ink)] text-balance">
-                {active.title}
-              </h3>
-              <p className="mt-5 text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty max-w-2xl">
-                {active.body}
-              </p>
-            </div>
-
-            <ul className="grid gap-4 sm:grid-cols-2 border-t border-[var(--line)] pt-6">
-              {active.bullets.map((bullet) => (
-                <li
-                  key={bullet}
-                  className="flex items-start gap-3 text-sm text-[var(--ink)] leading-relaxed"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="mt-2 h-px w-4 bg-[var(--accent-warm)] shrink-0"
+        <div className="relative mt-14 min-h-0 lg:min-h-[420px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={active.key}
+              role="tabpanel"
+              id={`expertise-panel-${active.key}`}
+              aria-labelledby={`expertise-tab-${active.key}`}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={panelTransition}
+              className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-start"
+            >
+              <div className="lg:col-span-5 order-2 lg:order-1">
+                <motion.div layoutId="expertise-visual" transition={springTransition}>
+                  <VisualPlaceholder
+                    caption={active.photo}
+                    photoKey={active.photo}
+                    ratio="portrait"
+                    tone={active.tone}
                   />
-                  <span>{bullet}</span>
-                </li>
-              ))}
-            </ul>
+                </motion.div>
+              </div>
 
-            <div>
-              <Link
-                href={active.href}
-                className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start"
+              <motion.div
+                variants={textStagger}
+                initial="hidden"
+                animate="show"
+                className="lg:col-span-7 order-1 lg:order-2 flex flex-col gap-8"
               >
-                <span className="inline-flex items-center gap-3 border-b border-current pb-1">
-                  En savoir plus sur {active.label.toLowerCase()}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
-                    <path
-                      d="M0 5H12M12 5L8 1M12 5L8 9"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                  </svg>
-                </span>
-              </Link>
-            </div>
-          </div>
+                <motion.div variants={textItem}>
+                  <h3 className="text-display text-2xl sm:text-3xl md:text-4xl text-[var(--ink)] text-balance">
+                    {active.title}
+                  </h3>
+                  <p className="mt-5 text-[var(--ink-muted)] text-base sm:text-lg leading-relaxed text-pretty max-w-2xl">
+                    {active.body}
+                  </p>
+                </motion.div>
+
+                <motion.ul
+                  variants={textItem}
+                  className="grid gap-4 sm:grid-cols-2 border-t border-[var(--line)] pt-6"
+                >
+                  {active.bullets.map((bullet) => (
+                    <li
+                      key={bullet}
+                      className="flex items-start gap-3 text-sm text-[var(--ink)] leading-relaxed"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 h-px w-4 bg-[var(--accent-warm)] shrink-0"
+                      />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </motion.ul>
+
+                <motion.div variants={textItem}>
+                  <Link
+                    href={active.href}
+                    className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start"
+                  >
+                    <span className="inline-flex items-center gap-3 border-b border-current pb-1">
+                      En savoir plus sur {active.label.toLowerCase()}
+                      <svg width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+                        <path
+                          d="M0 5H12M12 5L8 1M12 5L8 9"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                        />
+                      </svg>
+                    </span>
+                  </Link>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </Container>
     </section>

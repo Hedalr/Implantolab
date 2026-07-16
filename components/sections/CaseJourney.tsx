@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -9,7 +9,22 @@ import { Reveal } from "@/components/ui/Reveal";
 import { caseJourney } from "@/content/fr/pages";
 import { cn } from "@/lib/cn";
 
-const springTransition = { type: "spring", stiffness: 320, damping: 32 } as const;
+const springTransition = { type: "spring", stiffness: 300, damping: 30 } as const;
+
+const panelVariants = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction * 32,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -32,
+  }),
+} as const;
 
 /**
  * CaseJourney — Parcours cas clinique interactif.
@@ -17,12 +32,29 @@ const springTransition = { type: "spring", stiffness: 320, damping: 32 } as cons
  * Tabs "Scan → Design → Usinage → Livraison" avec un indicateur d'étape et
  * un visuel qui se morphent d'une étape à l'autre via des layoutId
  * framer-motion (shared layout animation), plutôt qu'un simple crossfade.
+ * La direction du slide du panneau suit le sens de progression (avant /
+ * arrière) pour renforcer la sensation de parcours.
  */
 export function CaseJourney() {
   const { eyebrow, title, description, steps } = caseJourney;
-  const [activeKey, setActiveKey] = useState(steps[0].key);
+  const [{ activeKey, direction }, setState] = useState({
+    activeKey: steps[0].key,
+    direction: 1,
+  });
   const activeIndex = steps.findIndex((step) => step.key === activeKey);
   const active = steps[activeIndex] ?? steps[0];
+
+  const goTo = useCallback(
+    (nextKey: string) => {
+      const nextIndex = steps.findIndex((step) => step.key === nextKey);
+      if (nextIndex < 0 || nextIndex === activeIndex) return;
+      setState({
+        activeKey: nextKey,
+        direction: nextIndex > activeIndex ? 1 : -1,
+      });
+    },
+    [activeIndex, steps],
+  );
 
   return (
     <section className="relative bg-[var(--bg-elevated)] border-b border-[var(--line)] overflow-hidden">
@@ -62,7 +94,7 @@ export function CaseJourney() {
                   aria-selected={selected}
                   aria-controls={`journey-panel-${step.key}`}
                   id={`journey-tab-${step.key}`}
-                  onClick={() => setActiveKey(step.key)}
+                  onClick={() => goTo(step.key)}
                   className="group relative z-10 flex flex-col items-center gap-3 text-center px-2 py-3 min-h-[44px]"
                 >
                   <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line-strong)] bg-[var(--bg-elevated)] transition-colors group-hover:border-[var(--accent)]">
@@ -97,16 +129,18 @@ export function CaseJourney() {
         </Reveal>
 
         <div className="relative mt-12 md:mt-16 min-h-0 md:min-h-[380px]">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={active.key}
               id={`journey-panel-${active.key}`}
               role="tabpanel"
               aria-labelledby={`journey-tab-${active.key}`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              custom={direction}
+              variants={panelVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="grid gap-10 lg:gap-16 lg:grid-cols-12 items-start"
             >
               <div className="lg:col-span-5 order-2 lg:order-1">
@@ -144,7 +178,7 @@ export function CaseJourney() {
                 <div className="flex items-center gap-2 sm:gap-4 pt-2">
                   <button
                     type="button"
-                    onClick={() => setActiveKey(steps[Math.max(activeIndex - 1, 0)].key)}
+                    onClick={() => goTo(steps[Math.max(activeIndex - 1, 0)].key)}
                     disabled={activeIndex === 0}
                     className="tap-link gap-2 px-3 sm:px-4 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"
                   >
@@ -156,7 +190,7 @@ export function CaseJourney() {
                   <button
                     type="button"
                     onClick={() =>
-                      setActiveKey(steps[Math.min(activeIndex + 1, steps.length - 1)].key)
+                      goTo(steps[Math.min(activeIndex + 1, steps.length - 1)].key)
                     }
                     disabled={activeIndex === steps.length - 1}
                     className="tap-link gap-2 px-3 sm:px-4 text-sm tracking-wide text-[var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed hover:text-[var(--accent)] transition-colors"

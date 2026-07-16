@@ -36,9 +36,10 @@ export function CtaTriptych() {
               delay={index * 100}
               key={item.title}
               className={cn(
-                "group relative flex flex-col justify-between gap-8 md:gap-10 p-6 sm:p-8 md:p-10 min-h-0 md:min-h-[16rem] transition-transform duration-500",
+                "group relative flex flex-col justify-between gap-8 md:gap-10 p-6 sm:p-8 md:p-10 min-h-0 md:min-h-[16rem]",
+                "transition duration-200 ease-out will-change-transform",
+                "hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
                 toneMap[item.tone],
-                "hover:-translate-y-1",
               )}
             >
               <div className="flex flex-col gap-4">

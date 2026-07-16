@@ -3,6 +3,7 @@ import { PageHero } from "@/components/sections/PageHero";
 import { PageCta } from "@/components/sections/PageCta";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
+import { ParallaxImage } from "@/components/ui/ParallaxImage";
 import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import {
   implantologie,
@@ -78,11 +79,13 @@ export default function ExpertisesPage() {
                     }
                     variant={reversed ? "reveal-x" : "scale"}
                   >
-                    <VisualPlaceholder
-                      caption={item.photoCaption}
-                      ratio="landscape"
-                      tone={item.tone}
-                    />
+                    <ParallaxImage offset={24}>
+                      <VisualPlaceholder
+                        caption={item.photoCaption}
+                        ratio="landscape"
+                        tone={item.tone}
+                      />
+                    </ParallaxImage>
                   </Reveal>
 
                   <div

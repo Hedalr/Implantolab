@@ -7,7 +7,11 @@ export type SimplePageContent = {
     eyebrow?: string;
     title: string;
     body: string;
-    items?: { title: string; description: string }[];
+    items?: {
+      title: string;
+      description: string;
+      photoKey?: string;
+    }[];
   }[];
   cta: {
     title: string;
@@ -156,21 +160,25 @@ export const fluxNumerique: SimplePageContent = {
           title: "Réception sécurisée",
           description:
             "Transfert via plateforme sécurisée ou portail praticien.",
+          photoKey: "Contrôle dimensionnel",
         },
         {
           title: "Conception CAO",
           description:
             "Conception CAO validée par un technicien qualifié.",
+          photoKey: "Conception CAO — poste technique",
         },
         {
           title: "Production CFAO",
           description:
             "Usinage et impression sur équipements professionnels.",
+          photoKey: "Atelier CFAO",
         },
         {
           title: "Finitions atelier",
           description:
             "Maquillage, polissage et contrôle manuel par des prothésistes qualifiés.",
+          photoKey: "Finition manuelle",
         },
       ],
     },
