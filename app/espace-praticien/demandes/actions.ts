@@ -36,6 +36,7 @@ export async function createRequest(formData: FormData): Promise<void> {
   }
 
   const subject = String(formData.get("subject") ?? "").trim();
+  const patientName = String(formData.get("patient_name") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
   const sectorId = String(formData.get("sector_id") ?? "").trim();
 
@@ -45,6 +46,10 @@ export async function createRequest(formData: FormData): Promise<void> {
 
   if (!sectorId) {
     fail("sector");
+  }
+
+  if (patientName.length < 2 || patientName.length > 120) {
+    fail("patient");
   }
 
   if (message.length < 10 || message.length > 2000) {
@@ -85,6 +90,7 @@ export async function createRequest(formData: FormData): Promise<void> {
     .insert({
       practice_id: profile.practiceId,
       subject,
+      patient_name: patientName,
       message,
       status: "open",
       created_by: userId,

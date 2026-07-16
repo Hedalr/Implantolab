@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { listAdminRequests } from "@/lib/requests/queries";
+import { formatRequestCategory } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 
@@ -154,14 +155,17 @@ export default async function AdminDashboardPage() {
                 <li key={r.id} className="py-3">
                   <div className="flex items-baseline justify-between gap-4">
                     <p className="text-sm font-medium text-[var(--ink)] truncate">
-                      {r.subject}
+                      {formatRequestCategory(r.subject)}
                     </p>
                     <StatusBadge status={r.status} />
                   </div>
                   <p className="mt-1 text-xs text-[var(--ink-discreet)]">
-                    {r.practices?.name ?? "Cabinet inconnu"}
-                    {r.creatorName ? ` • ${r.creatorName}` : ""} •{" "}
-                    {dateTimeFormatter.format(new Date(r.created_at))}
+                    {r.creatorName ?? r.practices?.name ?? "Cabinet inconnu"}
+                    {r.patientName ? ` • ${r.patientName}` : ""}
+                    {r.practices?.name && r.creatorName
+                      ? ` • ${r.practices.name}`
+                      : ""}{" "}
+                    • {dateTimeFormatter.format(new Date(r.created_at))}
                   </p>
                 </li>
               ))}

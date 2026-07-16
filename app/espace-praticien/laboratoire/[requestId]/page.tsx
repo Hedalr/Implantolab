@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 import { getLabRequestById } from "@/lib/requests/queries";
+import { formatRequestCategory } from "@/lib/requests/types";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
@@ -87,15 +88,24 @@ export default async function LabRequestDetailPage({
           Laboratoire
         </span>
         <h1 className="font-serif text-2xl md:text-3xl text-[var(--ink)] leading-tight">
-          {request.practices?.name ?? "Cabinet"}
+          {request.creatorName ?? request.practices?.name ?? "Dentiste"}
+          {request.patientName ? (
+            <span className="text-[var(--ink-muted)] font-sans text-xl md:text-2xl">
+              {" "}
+              · {request.patientName}
+            </span>
+          ) : null}
         </h1>
         <p className="text-sm text-[var(--ink-muted)]">
           {dateTimeFormatter.format(new Date(request.created_at))}
-          {request.creatorName ? ` · ${request.creatorName}` : ""}
+          {request.practices?.name ? ` · ${request.practices.name}` : ""}
           {request.practices?.city ? ` · ${request.practices.city}` : ""}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Badge label={request.subject} warm={request.subject === "Urgence"} />
+          <Badge
+            label={formatRequestCategory(request.subject)}
+            warm={request.subject === "Urgence"}
+          />
           {request.sectorName ? (
             <Badge label={request.sectorName} color={request.sectorColor} />
           ) : null}
@@ -105,6 +115,13 @@ export default async function LabRequestDetailPage({
           />
         </div>
       </header>
+
+      {request.patientName ? (
+        <section className="bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-8">
+          <h2 className="text-eyebrow mb-3">Patient</h2>
+          <p className="text-[var(--ink)] leading-relaxed">{request.patientName}</p>
+        </section>
+      ) : null}
 
       <section className="bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-8">
         <h2 className="text-eyebrow mb-3">Message</h2>

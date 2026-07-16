@@ -3,7 +3,10 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
-import { REQUEST_CATEGORIES } from "@/lib/requests/types";
+import {
+  REQUEST_CATEGORIES,
+  formatRequestCategory,
+} from "@/lib/requests/types";
 import { listLabSectors } from "@/lib/requests/queries";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { createRequest } from "./actions";
@@ -21,6 +24,7 @@ type RequestRow = {
   message: string;
   status: "open" | "closed";
   created_at: string;
+  patient_name: string | null;
   sector_id: string | null;
   sectors: { name: string | null; color: string | null } | null;
 };
@@ -36,6 +40,7 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   sent: "Votre demande a bien été transmise au laboratoire.",
   subject: "Merci de choisir une catégorie.",
   sector: "Merci de choisir un secteur (Numérique, Amovible ou Conjoint).",
+  patient: "Merci d’indiquer le nom du patient (2 à 120 caractères).",
   message: "Le message doit contenir entre 10 et 2000 caractères.",
   save: "Une erreur est survenue lors de l’envoi. Merci de réessayer.",
   "no-practice":
@@ -110,7 +115,7 @@ export default async function DemandesPage({
     supabase
       .from("requests")
       .select(
-        "id, subject, message, status, created_at, sector_id, sectors ( name, color )",
+        "id, subject, message, status, created_at, patient_name, sector_id, sectors ( name, color )",
       )
       .eq("practice_id", profile.practiceId)
       .order("created_at", { ascending: false }),
@@ -197,6 +202,25 @@ export default async function DemandesPage({
             </FormField>
 
             <FormField
+              label="Patient"
+              htmlFor="patient_name"
+              required
+              hint="Nom du patient concerné par cette demande."
+            >
+              <input
+                id="patient_name"
+                name="patient_name"
+                type="text"
+                required
+                minLength={2}
+                maxLength={120}
+                autoComplete="off"
+                placeholder="Nom du patient…"
+                className={inputStyle}
+              />
+            </FormField>
+
+            <FormField
               label="Message"
               htmlFor="message"
               required
@@ -277,7 +301,10 @@ export default async function DemandesPage({
                       <span className="text-[var(--ink-discreet)] tabular-nums">
                         {formatShortDate(row.created_at)}
                       </span>
-                      <span className="text-[var(--ink)]">{row.subject}</span>
+                      <span className="text-[var(--ink)]">
+                        {formatRequestCategory(row.subject)}
+                        {row.patient_name ? ` · ${row.patient_name}` : ""}
+                      </span>
                     </div>
                     <StatusBadge status="closed" />
                   </li>
@@ -418,6 +445,11 @@ function RequestCard({
               />
             ) : null}
           </div>
+          {row.patient_name ? (
+            <p className="text-sm text-[var(--ink)]">
+              Patient : <span className="font-medium">{row.patient_name}</span>
+            </p>
+          ) : null}
         </div>
         <StatusBadge status={row.status} />
       </header>
@@ -436,6 +468,7 @@ function RequestCard({
 }
 
 function CategoryBadge({ category }: { category: string }) {
+  const label = formatRequestCategory(category);
   const isUrgent = category === "Urgence";
   return (
     <span
@@ -446,7 +479,7 @@ function CategoryBadge({ category }: { category: string }) {
           : "border-[var(--line-strong)] text-[var(--ink)]",
       )}
     >
-      {category}
+      {label}
     </span>
   );
 }

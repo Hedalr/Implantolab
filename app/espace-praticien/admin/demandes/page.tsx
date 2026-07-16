@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { listAdminRequests } from "@/lib/requests/queries";
+import { formatRequestCategory } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
@@ -36,14 +37,22 @@ const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
 export default async function AdminRequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string | string[] }>;
+  searchParams: Promise<{ status?: string | string[]; patient?: string | string[] }>;
 }) {
   await requireAdmin();
-  const { status: rawStatus } = await searchParams;
+  const { status: rawStatus, patient: rawPatient } = await searchParams;
   const status = parseStatus(rawStatus);
+  const patientQuery = (
+    Array.isArray(rawPatient) ? rawPatient[0] : rawPatient
+  )?.trim() ?? "";
 
   const supabase = await getServerSupabase();
-  const requests = await listAdminRequests(supabase, status);
+  const requests = await listAdminRequests(
+    supabase,
+    status,
+    undefined,
+    patientQuery || undefined,
+  );
 
   const requestIds = requests.map((r) => r.id);
   const { data: mediaData } =
@@ -73,19 +82,58 @@ export default async function AdminRequestsPage({
         </p>
       </header>
 
+      <form
+        method="get"
+        className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3"
+      >
+        {status !== "open" ? (
+          <input type="hidden" name="status" value={status} />
+        ) : null}
+        <label className="flex flex-col gap-1.5 flex-1 max-w-md">
+          <span className="text-eyebrow">Patient</span>
+          <input
+            type="search"
+            name="patient"
+            defaultValue={patientQuery}
+            placeholder="Début du nom du patient…"
+            autoComplete="off"
+            className={cn(
+              "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
+              "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
+            )}
+          />
+        </label>
+        <button
+          type="submit"
+          className="self-start sm:self-auto px-4 py-2.5 text-xs uppercase tracking-[0.16em] border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)] transition-colors"
+        >
+          Rechercher
+        </button>
+        {patientQuery ? (
+          <Link
+            href={`/espace-praticien/admin/demandes?status=${status}`}
+            className="self-start sm:self-auto px-3 py-2.5 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors"
+          >
+            Effacer
+          </Link>
+        ) : null}
+      </form>
+
       <nav
         aria-label="Filtrer par statut"
         className="mb-6 flex flex-wrap gap-2 border-b border-[var(--line)] pb-3"
       >
-        <TabLink current={status} target="open" label="Ouvertes" />
-        <TabLink current={status} target="closed" label="Traitées" />
-        <TabLink current={status} target="all" label="Toutes" />
+        <TabLink current={status} target="open" label="Ouvertes" patient={patientQuery} />
+        <TabLink current={status} target="closed" label="Traitées" patient={patientQuery} />
+        <TabLink current={status} target="all" label="Toutes" patient={patientQuery} />
       </nav>
 
       {requests.length === 0 ? (
         <div className="bg-[var(--bg-elevated)] border border-[var(--line)] p-10 text-center">
           <p className="text-sm text-[var(--ink-discreet)]">
-            Aucune demande à afficher pour ce filtre.
+            {patientQuery
+              ? `Aucune demande pour un patient commençant par « ${patientQuery} ».`
+              : "Aucune demande à afficher pour ce filtre."}
           </p>
         </div>
       ) : (
@@ -96,6 +144,7 @@ export default async function AdminRequestsPage({
                 <Th className="w-32">Date</Th>
                 <Th>Cabinet</Th>
                 <Th>Praticien</Th>
+                <Th>Patient</Th>
                 <Th>Catégorie</Th>
                 <Th>Secteur</Th>
                 <Th className="w-28">Statut</Th>
@@ -123,15 +172,19 @@ function TabLink({
   current,
   target,
   label,
+  patient,
 }: {
   current: StatusFilter;
   target: StatusFilter;
   label: string;
+  patient?: string;
 }) {
   const active = current === target;
+  const params = new URLSearchParams({ status: target });
+  if (patient?.trim()) params.set("patient", patient.trim());
   return (
     <Link
-      href={`/espace-praticien/admin/demandes?status=${target}`}
+      href={`/espace-praticien/admin/demandes?${params.toString()}`}
       className={cn(
         "px-3 py-1.5 text-sm border transition-colors",
         active
@@ -193,6 +246,9 @@ function RequestRowView({
         <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
           {practitionerLabel}
         </td>
+        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
+          {row.patientName ?? "—"}
+        </td>
         <td className="px-4 py-3 border-b border-[var(--line)]">
           <CategoryBadge category={row.subject} />
           <details className="group mt-2">
@@ -241,7 +297,7 @@ function CategoryBadge({ category }: { category: string }) {
           : "bg-[var(--ink-discreet)]/10 text-[var(--ink-discreet)]",
       )}
     >
-      {category}
+      {formatRequestCategory(category)}
     </span>
   );
 }

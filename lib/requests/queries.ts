@@ -12,6 +12,7 @@ export type AdminRequestRow = {
   status: "open" | "closed";
   created_at: string;
   created_by: string | null;
+  patientName: string | null;
   sectorId: string | null;
   sectorName: string | null;
   sectorColor: string | null;
@@ -26,6 +27,7 @@ type RequestQueryRow = {
   status: "open" | "closed";
   created_at: string;
   created_by: string | null;
+  patient_name: string | null;
   sector_id: string | null;
   practices:
     | { name: string | null; city: string | null }
@@ -76,6 +78,7 @@ async function mapRequestRows(
       status: row.status,
       created_at: row.created_at,
       created_by: row.created_by,
+      patientName: row.patient_name,
       sectorId: row.sector_id,
       sectorName: sectorRow?.name ?? null,
       sectorColor: sectorRow?.color ?? null,
@@ -88,7 +91,7 @@ async function mapRequestRows(
 }
 
 const REQUEST_SELECT =
-  "id, subject, message, status, created_at, created_by, sector_id, practices(name, city), sectors(name, color)";
+  "id, subject, message, status, created_at, created_by, patient_name, sector_id, practices(name, city), sectors(name, color)";
 
 export async function listLabSectors(
   supabase: SupabaseClient,
@@ -112,6 +115,8 @@ export async function listLabSectors(
 export type LabRequestFilters = {
   status?: "all" | "open" | "closed";
   sectorId?: string | "all";
+  /** Préfixe du nom patient (insensible à la casse). */
+  patientQuery?: string;
   limit?: number;
 };
 
@@ -121,6 +126,7 @@ export async function listLabRequests(
 ): Promise<AdminRequestRow[]> {
   const status = filters.status ?? "all";
   const sectorId = filters.sectorId ?? "all";
+  const patientQuery = filters.patientQuery?.trim() ?? "";
 
   let query = supabase
     .from("requests")
@@ -132,6 +138,10 @@ export async function listLabRequests(
   }
   if (sectorId !== "all") {
     query = query.eq("sector_id", sectorId);
+  }
+  if (patientQuery) {
+    // Recherche par début de nom patient (ex. "dup" → "Dupont").
+    query = query.ilike("patient_name", `${patientQuery}%`);
   }
   if (filters.limit) {
     query = query.limit(filters.limit);
@@ -146,8 +156,9 @@ export async function listAdminRequests(
   supabase: SupabaseClient,
   status: "all" | "open" | "closed" = "all",
   limit?: number,
+  patientQuery?: string,
 ): Promise<AdminRequestRow[]> {
-  return listLabRequests(supabase, { status, limit });
+  return listLabRequests(supabase, { status, limit, patientQuery });
 }
 
 export async function getLabRequestById(

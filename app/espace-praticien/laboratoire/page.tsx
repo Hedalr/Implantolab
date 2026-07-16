@@ -5,6 +5,7 @@ import {
   listLabRequests,
   listLabSectors,
 } from "@/lib/requests/queries";
+import { formatRequestCategory } from "@/lib/requests/types";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 type SearchParams = Promise<{
   sector?: string;
   status?: string;
+  patient?: string;
 }>;
 
 type StatusFilter = "all" | "open" | "closed";
@@ -37,8 +39,13 @@ export default async function LaboratoireIndex({
   searchParams: SearchParams;
 }) {
   const { profile } = await requireLaboStaff();
-  const { sector: rawSector, status: rawStatus } = await searchParams;
+  const {
+    sector: rawSector,
+    status: rawStatus,
+    patient: rawPatient,
+  } = await searchParams;
   const status = parseStatus(rawStatus);
+  const patientQuery = (rawPatient ?? "").trim();
 
   const supabase = await getServerSupabase();
   const sectors = await listLabSectors(supabase);
@@ -64,6 +71,7 @@ export default async function LaboratoireIndex({
   const requests = await listLabRequests(supabase, {
     status,
     sectorId: sectorFilter,
+    patientQuery: patientQuery || undefined,
   });
 
   const activeSector = sectors.find((s) => s.id === sectorFilter) ?? null;
@@ -104,14 +112,14 @@ export default async function LaboratoireIndex({
           className="flex flex-wrap gap-2 border-b border-[var(--line)] pb-3"
         >
           <SectorTab
-            href={buildHref("all", status)}
+            href={buildHref("all", status, patientQuery)}
             label="Tous"
             active={sectorFilter === "all"}
           />
           {sectors.map((s) => (
             <SectorTab
               key={s.id}
-              href={buildHref(s.id, status)}
+              href={buildHref(s.id, status, patientQuery)}
               label={s.name}
               color={s.color}
               active={sectorFilter === s.id}
@@ -120,22 +128,62 @@ export default async function LaboratoireIndex({
         </nav>
       ) : null}
 
+      <form
+        method="get"
+        className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3"
+      >
+        {sectorFilter !== "all" ? (
+          <input type="hidden" name="sector" value={sectorFilter} />
+        ) : null}
+        {status !== "open" ? (
+          <input type="hidden" name="status" value={status} />
+        ) : null}
+        <label className="flex flex-col gap-1.5 flex-1 max-w-md">
+          <span className="text-eyebrow">Patient</span>
+          <input
+            type="search"
+            name="patient"
+            defaultValue={patientQuery}
+            placeholder="Début du nom du patient…"
+            autoComplete="off"
+            className={cn(
+              "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
+              "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
+            )}
+          />
+        </label>
+        <button
+          type="submit"
+          className="self-start sm:self-auto px-4 py-2.5 text-xs uppercase tracking-[0.16em] border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)] transition-colors"
+        >
+          Rechercher
+        </button>
+        {patientQuery ? (
+          <Link
+            href={buildHref(sectorFilter, status, "")}
+            className="self-start sm:self-auto px-3 py-2.5 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors"
+          >
+            Effacer
+          </Link>
+        ) : null}
+      </form>
+
       <nav
         aria-label="Filtrer par statut"
         className="flex flex-wrap gap-2"
       >
         <StatusTab
-          href={buildHref(sectorFilter, "open")}
+          href={buildHref(sectorFilter, "open", patientQuery)}
           label="Ouvertes"
           active={status === "open"}
         />
         <StatusTab
-          href={buildHref(sectorFilter, "closed")}
+          href={buildHref(sectorFilter, "closed", patientQuery)}
           label="Traitées"
           active={status === "closed"}
         />
         <StatusTab
-          href={buildHref(sectorFilter, "all")}
+          href={buildHref(sectorFilter, "all", patientQuery)}
           label="Toutes"
           active={status === "all"}
         />
@@ -143,61 +191,81 @@ export default async function LaboratoireIndex({
 
       {requests.length === 0 ? (
         <div className="border border-dashed border-[var(--line-strong)] px-5 py-10 text-center text-sm text-[var(--ink-muted)] bg-[var(--bg-elevated)]">
-          Aucune demande à afficher pour ce filtre.
+          {patientQuery
+            ? `Aucune demande pour un patient commençant par « ${patientQuery} ».`
+            : "Aucune demande à afficher pour ce filtre."}
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {requests.map((r) => (
-            <li key={r.id}>
-              <Link
-                href={`/espace-praticien/laboratoire/${r.id}`}
-                className="block bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6 hover:border-[var(--line-strong)] transition-colors"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex flex-col gap-2 min-w-0">
-                    <p className="text-eyebrow tabular-nums">
-                      {dateTimeFormatter.format(new Date(r.created_at))}
-                    </p>
-                    <p className="font-serif text-lg text-[var(--ink)] truncate">
-                      {r.practices?.name ?? "Cabinet inconnu"}
-                      {r.creatorName ? (
-                        <span className="text-base text-[var(--ink-muted)] font-sans">
-                          {" "}
-                          · {r.creatorName}
-                        </span>
+          {requests.map((r) => {
+            const dentistLabel =
+              r.creatorName ?? r.practices?.name ?? "Dentiste inconnu";
+            return (
+              <li key={r.id}>
+                <Link
+                  href={`/espace-praticien/laboratoire/${r.id}`}
+                  className="block bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6 hover:border-[var(--line-strong)] transition-colors"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-2 min-w-0">
+                      <p className="text-eyebrow tabular-nums">
+                        {dateTimeFormatter.format(new Date(r.created_at))}
+                      </p>
+                      <p className="font-serif text-lg text-[var(--ink)] truncate">
+                        {dentistLabel}
+                        {r.patientName ? (
+                          <span className="text-base text-[var(--ink-muted)] font-sans">
+                            {" "}
+                            · {r.patientName}
+                          </span>
+                        ) : null}
+                      </p>
+                      {r.practices?.name && r.creatorName ? (
+                        <p className="text-xs text-[var(--ink-discreet)] truncate">
+                          {r.practices.name}
+                          {r.practices.city ? ` · ${r.practices.city}` : ""}
+                        </p>
                       ) : null}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge label={r.subject} warm={r.subject === "Urgence"} />
-                      {r.sectorName ? (
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge
-                          label={r.sectorName}
-                          color={r.sectorColor}
+                          label={formatRequestCategory(r.subject)}
+                          warm={r.subject === "Urgence"}
                         />
-                      ) : null}
+                        {r.sectorName ? (
+                          <Badge
+                            label={r.sectorName}
+                            color={r.sectorColor}
+                          />
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
+                        {r.message}
+                      </p>
                     </div>
-                    <p className="text-sm text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
-                      {r.message}
-                    </p>
+                    <Badge
+                      label={r.status === "open" ? "Ouverte" : "Traitée"}
+                      warm={r.status === "open"}
+                    />
                   </div>
-                  <Badge
-                    label={r.status === "open" ? "Ouverte" : "Traitée"}
-                    warm={r.status === "open"}
-                  />
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
   );
 }
 
-function buildHref(sector: string, status: StatusFilter): string {
+function buildHref(
+  sector: string,
+  status: StatusFilter,
+  patient: string,
+): string {
   const params = new URLSearchParams();
   if (sector !== "all") params.set("sector", sector);
   if (status !== "open") params.set("status", status);
+  if (patient.trim()) params.set("patient", patient.trim());
   const q = params.toString();
   return q
     ? `/espace-praticien/laboratoire?${q}`
