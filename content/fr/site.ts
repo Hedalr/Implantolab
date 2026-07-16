@@ -15,7 +15,6 @@ export const site = {
     phone: "+33967359779",
     phoneDisplay: "09 67 35 97 79",
     email: "contact@implantolab.fr",
-    emailSecondary: "implatolab.pro@gmail.com",
     address: {
       line1: "84 avenue de Châteaudun",
       line2: "",

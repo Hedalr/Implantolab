@@ -7,8 +7,16 @@ import { HeroVideo } from "@/components/sections/HeroVideo";
 import { HeroSlogan } from "@/components/sections/HeroSlogan";
 
 export function Hero() {
-  const { slogan, eyebrow, title, subtitle, primaryCta, secondaryCta } =
-    home.hero;
+  const {
+    slogan,
+    eyebrow,
+    title,
+    subtitle,
+    primaryCta,
+    secondaryCta,
+    visualCaption,
+    visualCaptionSecondary,
+  } = home.hero;
 
   return (
     <section className="grain relative overflow-hidden bg-[var(--bg)]">
@@ -71,7 +79,7 @@ export function Hero() {
                       className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
                     />
                     <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
-                      Réf. ATL—001
+                      {visualCaption}
                     </figcaption>
                   </figure>
                 </ParallaxImage>
@@ -84,7 +92,7 @@ export function Hero() {
                       className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
                     />
                     <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
-                      Blois, FR
+                      {visualCaptionSecondary}
                     </figcaption>
                   </figure>
                 </ParallaxImage>

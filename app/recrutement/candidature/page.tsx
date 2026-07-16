@@ -60,12 +60,6 @@ export default async function CandidaturePage({
                   >
                     {site.contact.email}
                   </a>
-                  <a
-                    href={`mailto:${site.contact.emailSecondary}?subject=Candidature IMPLANTOLAB`}
-                    className="font-serif text-sm sm:text-base text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors break-all"
-                  >
-                    {site.contact.emailSecondary}
-                  </a>
                 </li>
                 <li className="flex flex-col gap-1">
                   <span className="text-eyebrow">Retour</span>

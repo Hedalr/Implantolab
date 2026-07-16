@@ -1,4 +1,12 @@
-import type { CSSProperties, ReactNode } from "react";
+"use client";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/cn";
 
 type HeroSloganProps = {
@@ -46,8 +54,11 @@ function renderWords(
 
 /**
  * HeroSlogan — Accroche émotionnelle du hero.
- * Deux lignes avec décalage typographique : le "n" de la ligne 2
- * s'aligne sous le "i" de "sourire" via un offset invisible (md+).
+ * Deux lignes avec décalage typographique : le "n" de la ligne 2 s'aligne
+ * sous le "i" de "sourire" via un indent calculé en JS (md+), sans jamais
+ * dupliquer de texte dans le DOM (contrairement à une astuce "texte invisible
+ * de même largeur", qui reste lisible par les crawlers, lecteurs d'écran mal
+ * configurés ou tout outil qui lit le HTML brut sans exécuter le CSS).
  */
 export function HeroSlogan({
   line1,
@@ -58,10 +69,31 @@ export function HeroSlogan({
   layout = "stacked",
   className,
 }: HeroSloganProps) {
+  const line1Ref = useRef<HTMLSpanElement | null>(null);
+  const [indent, setIndent] = useState(0);
+
   const baseStyles =
     variant === "signature"
       ? "text-signature text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-tight tracking-tight"
       : "font-serif italic text-xl sm:text-2xl md:text-[1.85rem] lg:text-[2.125rem] text-[var(--accent)] leading-snug tracking-tight";
+
+  useEffect(() => {
+    const node = line1Ref.current;
+    if (!node || !line2Offset || layout !== "stacked") return;
+
+    const measure = () => {
+      const font = window.getComputedStyle(node).font;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.font = font;
+      setIndent(ctx.measureText(line2Offset).width);
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [line2Offset, layout]);
 
   if (layout === "inline") {
     const fullText = `${line1} ${line2}`;
@@ -78,13 +110,13 @@ export function HeroSlogan({
 
   return (
     <p className={cn(baseStyles, layout === "stacked" && "w-full", className)}>
-      <span className="block">{line1Rendered.nodes}</span>
-      <span className="block">
-        {line2Offset ? (
-          <span aria-hidden="true" className="hidden md:inline invisible">
-            {line2Offset}
-          </span>
-        ) : null}
+      <span ref={line1Ref} className="block">
+        {line1Rendered.nodes}
+      </span>
+      <span
+        className="block md:pl-(--slogan-indent)"
+        style={{ "--slogan-indent": `${indent}px` } as CSSProperties}
+      >
         {line2Rendered.nodes}
       </span>
     </p>

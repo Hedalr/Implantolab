@@ -32,6 +32,7 @@ export const home = {
     primaryCta: { label: "Découvrir le laboratoire", href: "/laboratoire" },
     secondaryCta: { label: "Espace praticien", href: "/espace-praticien" },
     visualCaption: "Atelier IMPLANTOLAB — Blois",
+    visualCaptionSecondary: "Savoir-faire artisanal — Blois",
   },
 
   stats: {
