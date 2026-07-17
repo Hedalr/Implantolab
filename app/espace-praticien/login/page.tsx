@@ -108,7 +108,8 @@ export default async function LoginPage({
             <button
               type="submit"
               className={cn(
-                "inline-flex items-center gap-3 px-7 py-3.5 text-sm tracking-wide transition-colors border",
+                "inline-flex items-center gap-3 px-7 py-3.5 text-sm tracking-wide border",
+                "transition-[color,background-color,border-color,transform] duration-160 ease-out active:scale-[0.97]",
                 "bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)]",
                 "hover:bg-[var(--accent-warm)] hover:border-[var(--accent-warm)]",
               )}

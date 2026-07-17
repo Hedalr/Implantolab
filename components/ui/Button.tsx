@@ -21,7 +21,7 @@ type ButtonAsButton = BaseProps & {
 type ButtonProps = ButtonAsLink | ButtonAsButton;
 
 const baseStyles =
-  "inline-flex items-center justify-center gap-2 px-6 py-3 min-h-11 text-sm tracking-wide transition-colors duration-200 border";
+  "inline-flex items-center justify-center gap-2 px-6 py-3 min-h-11 text-sm tracking-wide border transition-[color,background-color,border-color,transform] duration-160 ease-out active:scale-[0.97]";
 
 const variants: Record<Variant, string> = {
   primary:

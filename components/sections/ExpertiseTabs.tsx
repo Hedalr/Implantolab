@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  type Variants,
+} from "framer-motion";
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -12,7 +17,8 @@ import { cn } from "@/lib/cn";
 
 const springTransition = { type: "spring", stiffness: 320, damping: 32 } as const;
 
-const panelTransition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] } as const;
+const panelTransition = { duration: 0.28, ease: [0.22, 1, 0.36, 1] } as const;
+const reducedPanelTransition = { duration: 0.18, ease: [0.22, 1, 0.36, 1] } as const;
 
 const textStagger: Variants = {
   hidden: {},
@@ -29,14 +35,37 @@ const textItem: Variants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const reducedTextItem: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export function ExpertiseTabs() {
   const { eyebrow, title, description, tabs } = home.expertises;
   const [activeKey, setActiveKey] = useState(tabs[0].key);
+  const reduceMotion = useReducedMotion();
   const active = tabs.find((tab) => tab.key === activeKey) ?? tabs[0];
+  const panelMotion = reduceMotion
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: reducedPanelTransition,
+      }
+    : {
+        initial: { opacity: 0, y: 12 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -12 },
+        transition: panelTransition,
+      };
+  const itemVariants = reduceMotion ? reducedTextItem : textItem;
 
   return (
     <section className="bg-[var(--bg)] border-b border-[var(--line)]">
@@ -78,7 +107,7 @@ export function ExpertiseTabs() {
                   <span className="relative z-10">{tab.label}</span>
                   {selected ? (
                     <motion.span
-                      layoutId="expertise-underline"
+                      layoutId={reduceMotion ? undefined : "expertise-underline"}
                       aria-hidden="true"
                       className="absolute left-4 right-4 bottom-[-1px] h-px bg-[var(--ink)]"
                       transition={springTransition}
@@ -97,14 +126,17 @@ export function ExpertiseTabs() {
               role="tabpanel"
               id={`expertise-panel-${active.key}`}
               aria-labelledby={`expertise-tab-${active.key}`}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={panelTransition}
+              initial={panelMotion.initial}
+              animate={panelMotion.animate}
+              exit={panelMotion.exit}
+              transition={panelMotion.transition}
               className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-start"
             >
               <div className="lg:col-span-5 order-2 lg:order-1">
-                <motion.div layoutId="expertise-visual" transition={springTransition}>
+                <motion.div
+                  layoutId={reduceMotion ? undefined : "expertise-visual"}
+                  transition={springTransition}
+                >
                   <VisualPlaceholder
                     caption={active.photo}
                     photoKey={active.photo}
@@ -120,7 +152,7 @@ export function ExpertiseTabs() {
                 animate="show"
                 className="lg:col-span-7 order-1 lg:order-2 flex flex-col gap-8"
               >
-                <motion.div variants={textItem}>
+                <motion.div variants={itemVariants}>
                   <h3 className="text-display text-2xl sm:text-3xl md:text-4xl text-[var(--ink)] text-balance">
                     {active.title}
                   </h3>
@@ -130,7 +162,7 @@ export function ExpertiseTabs() {
                 </motion.div>
 
                 <motion.ul
-                  variants={textItem}
+                  variants={itemVariants}
                   className="grid gap-4 sm:grid-cols-2 border-t border-[var(--line)] pt-6"
                 >
                   {active.bullets.map((bullet) => (
@@ -147,7 +179,7 @@ export function ExpertiseTabs() {
                   ))}
                 </motion.ul>
 
-                <motion.div variants={textItem}>
+                <motion.div variants={itemVariants}>
                   <Link
                     href={active.href}
                     className="tap-link gap-3 text-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] transition-colors self-start"

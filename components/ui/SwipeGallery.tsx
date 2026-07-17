@@ -241,7 +241,7 @@ export function SwipeGallery({
             >
               <span
                 className={cn(
-                  "block h-1.5 rounded-full transition-all",
+                  "block h-1.5 rounded-full transition-[width,background-color] duration-200 ease-out",
                   i === index ? "w-6 bg-[var(--accent)]" : "w-1.5 bg-[var(--line-strong)]",
                 )}
               />

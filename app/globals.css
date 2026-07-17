@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Hover motion only on devices that can truly hover (avoid sticky tap on touch). */
+@custom-variant fine-hover (@media (hover: hover) and (pointer: fine));
+
 /* =========================================================================
    IMPLANTOLAB — Design tokens
    Direction : charte laboratoire — noir / rose / blanc.
@@ -235,8 +238,20 @@ body {
   will-change: transform;
 }
 
-.photo-lift:hover {
-  transform: scale(1.02);
+@media (hover: hover) and (pointer: fine) {
+  .photo-lift:hover {
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo-lift {
+    transition: none;
+  }
+
+  .photo-lift:hover {
+    transform: none;
+  }
 }
 
 /* =========================================================================

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -10,6 +10,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/cn";
 
 const AUTOPLAY_DELAY = 5000;
+const SLIDE_EASE = [0.22, 1, 0.36, 1] as const;
 
 /**
  * PhotoGallery — "L'atelier" en images.
@@ -23,22 +24,16 @@ export function PhotoGallery() {
   const { eyebrow, title, description, photos } = home.gallery;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const reducedMotionRef = useRef(false);
+  const reduceMotion = useReducedMotion();
   const active = photos[index];
 
   useEffect(() => {
-    reducedMotionRef.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-  }, []);
-
-  useEffect(() => {
-    if (paused || reducedMotionRef.current) return;
+    if (paused || reduceMotion) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % photos.length);
     }, AUTOPLAY_DELAY);
     return () => window.clearInterval(timer);
-  }, [paused, photos.length]);
+  }, [paused, photos.length, reduceMotion]);
 
   const goTo = useCallback((next: number) => {
     setIndex(((next % photos.length) + photos.length) % photos.length);
@@ -125,10 +120,25 @@ export function PhotoGallery() {
                     key={active.caption}
                     id={`atelier-stage-${index}`}
                     role="tabpanel"
-                    initial={{ opacity: 0, scale: 1.04, y: 8 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98, y: -6 }}
-                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                    initial={
+                      reduceMotion
+                        ? { opacity: 0 }
+                        : { opacity: 0, scale: 1.02, y: 6 }
+                    }
+                    animate={
+                      reduceMotion
+                        ? { opacity: 1 }
+                        : { opacity: 1, scale: 1, y: 0 }
+                    }
+                    exit={
+                      reduceMotion
+                        ? { opacity: 0 }
+                        : { opacity: 0, scale: 0.99, y: -4 }
+                    }
+                    transition={{
+                      duration: reduceMotion ? 0.18 : 0.28,
+                      ease: SLIDE_EASE,
+                    }}
                   >
                     <VisualPlaceholder
                       caption={active.step}
@@ -166,13 +176,13 @@ export function PhotoGallery() {
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.p
                     key={active.caption}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                    animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                    exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
                     transition={{
-                      duration: 0.45,
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: 0.1,
+                      duration: reduceMotion ? 0.16 : 0.22,
+                      ease: SLIDE_EASE,
+                      delay: reduceMotion ? 0 : 0.06,
                     }}
                     className="text-sm text-[var(--ink-muted)] leading-relaxed lg:hidden"
                   >
@@ -190,7 +200,7 @@ export function PhotoGallery() {
                     >
                       <span
                         className={cn(
-                          "block h-1.5 rounded-full transition-all",
+                          "block h-1.5 rounded-full transition-[width,background-color] duration-200 ease-out",
                           i === index
                             ? "w-6 bg-[var(--accent)]"
                             : "w-1.5 bg-[var(--line-strong)]",

@@ -37,8 +37,8 @@ export function CtaTriptych() {
               key={item.title}
               className={cn(
                 "group relative flex flex-col justify-between gap-8 md:gap-10 p-6 sm:p-8 md:p-10 min-h-0 md:min-h-[16rem]",
-                "transition duration-200 ease-out will-change-transform",
-                "hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
+                "transition-[transform,box-shadow] duration-200 ease-out will-change-transform",
+                "fine-hover:hover:-translate-y-0.5 fine-hover:hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
                 toneMap[item.tone],
               )}
             >
