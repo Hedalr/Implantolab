@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 import {
+  LAB_REQUESTS_PAGE_SIZE,
   listLabRequests,
   listLabSectors,
 } from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
+import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = {
@@ -17,6 +19,7 @@ type SearchParams = Promise<{
   sector?: string;
   status?: string;
   patient?: string;
+  page?: string;
 }>;
 
 type StatusFilter = "all" | "open" | "closed";
@@ -24,6 +27,11 @@ type StatusFilter = "all" | "open" | "closed";
 function parseStatus(value: string | undefined): StatusFilter {
   if (value === "all" || value === "open" || value === "closed") return value;
   return "open";
+}
+
+function parsePage(value: string | undefined): number {
+  const n = Number.parseInt(value ?? "1", 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -43,9 +51,11 @@ export default async function LaboratoireIndex({
     sector: rawSector,
     status: rawStatus,
     patient: rawPatient,
+    page: rawPage,
   } = await searchParams;
   const status = parseStatus(rawStatus);
   const patientQuery = (rawPatient ?? "").trim();
+  const page = parsePage(rawPage);
 
   const supabase = await getServerSupabase();
   const sectors = await listLabSectors(supabase);
@@ -68,11 +78,14 @@ export default async function LaboratoireIndex({
         ? "all"
         : activeSectorId;
 
-  const requests = await listLabRequests(supabase, {
-    status,
-    sectorId: sectorFilter,
-    patientQuery: patientQuery || undefined,
-  });
+  const { rows: requests, total, pageSize, totalPages, page: currentPage } =
+    await listLabRequests(supabase, {
+      status,
+      sectorId: sectorFilter,
+      patientQuery: patientQuery || undefined,
+      page,
+      pageSize: LAB_REQUESTS_PAGE_SIZE,
+    });
 
   const activeSector = sectors.find((s) => s.id === sectorFilter) ?? null;
 
@@ -196,62 +209,74 @@ export default async function LaboratoireIndex({
             : "Aucune demande à afficher pour ce filtre."}
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {requests.map((r) => {
-            const dentistLabel =
-              r.creatorName ?? r.practices?.name ?? "Dentiste inconnu";
-            return (
-              <li key={r.id}>
-                <Link
-                  href={`/espace-praticien/laboratoire/${r.id}`}
-                  className="block bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6 hover:border-[var(--line-strong)] transition-colors"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex flex-col gap-2 min-w-0">
-                      <p className="text-eyebrow tabular-nums">
-                        {dateTimeFormatter.format(new Date(r.created_at))}
-                      </p>
-                      <p className="font-serif text-lg text-[var(--ink)] truncate">
-                        {dentistLabel}
-                        {r.patientName ? (
-                          <span className="text-base text-[var(--ink-muted)] font-sans">
-                            {" "}
-                            · {r.patientName}
-                          </span>
-                        ) : null}
-                      </p>
-                      {r.practices?.name && r.creatorName ? (
-                        <p className="text-xs text-[var(--ink-discreet)] truncate">
-                          {r.practices.name}
-                          {r.practices.city ? ` · ${r.practices.city}` : ""}
+        <>
+          <ul className="flex flex-col gap-3">
+            {requests.map((r) => {
+              const dentistLabel =
+                r.creatorName ?? r.practices?.name ?? "Dentiste inconnu";
+              return (
+                <li key={r.id}>
+                  <Link
+                    href={`/espace-praticien/laboratoire/${r.id}`}
+                    className="block bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6 hover:border-[var(--line-strong)] transition-colors"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex flex-col gap-2 min-w-0">
+                        <p className="text-eyebrow tabular-nums">
+                          {dateTimeFormatter.format(new Date(r.created_at))}
                         </p>
-                      ) : null}
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          label={formatRequestCategory(r.subject)}
-                          warm={r.subject === "Urgence"}
-                        />
-                        {r.sectorName ? (
-                          <Badge
-                            label={r.sectorName}
-                            color={r.sectorColor}
-                          />
+                        <p className="font-serif text-lg text-[var(--ink)] truncate">
+                          {dentistLabel}
+                          {r.patientName ? (
+                            <span className="text-base text-[var(--ink-muted)] font-sans">
+                              {" "}
+                              · {r.patientName}
+                            </span>
+                          ) : null}
+                        </p>
+                        {r.practices?.name && r.creatorName ? (
+                          <p className="text-xs text-[var(--ink-discreet)] truncate">
+                            {r.practices.name}
+                            {r.practices.city ? ` · ${r.practices.city}` : ""}
+                          </p>
                         ) : null}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            label={formatRequestCategory(r.subject)}
+                            warm={r.subject === "Urgence"}
+                          />
+                          {r.sectorName ? (
+                            <Badge
+                              label={r.sectorName}
+                              color={r.sectorColor}
+                            />
+                          ) : null}
+                        </div>
+                        <p className="text-sm text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
+                          {r.message}
+                        </p>
                       </div>
-                      <p className="text-sm text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
-                        {r.message}
-                      </p>
+                      <Badge
+                        label={r.status === "open" ? "Ouverte" : "Traitée"}
+                        warm={r.status === "open"}
+                      />
                     </div>
-                    <Badge
-                      label={r.status === "open" ? "Ouverte" : "Traitée"}
-                      warm={r.status === "open"}
-                    />
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            hrefForPage={(p) =>
+              buildHref(sectorFilter, status, patientQuery, p)
+            }
+          />
+        </>
       )}
     </div>
   );
@@ -261,11 +286,13 @@ function buildHref(
   sector: string,
   status: StatusFilter,
   patient: string,
+  page = 1,
 ): string {
   const params = new URLSearchParams();
   if (sector !== "all") params.set("sector", sector);
   if (status !== "open") params.set("status", status);
   if (patient.trim()) params.set("patient", patient.trim());
+  if (page > 1) params.set("page", String(page));
   const q = params.toString();
   return q
     ? `/espace-praticien/laboratoire?${q}`

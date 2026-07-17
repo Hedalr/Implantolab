@@ -112,26 +112,44 @@ export async function listLabSectors(
   );
 }
 
+/** Taille de page par défaut pour les listes labo / admin. */
+export const LAB_REQUESTS_PAGE_SIZE = 30;
+
 export type LabRequestFilters = {
   status?: "all" | "open" | "closed";
   sectorId?: string | "all";
   /** Préfixe du nom patient (insensible à la casse). */
   patientQuery?: string;
-  limit?: number;
+  /** Page 1-indexée. */
+  page?: number;
+  pageSize?: number;
+};
+
+export type LabRequestsPage = {
+  rows: AdminRequestRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };
 
 export async function listLabRequests(
   supabase: SupabaseClient,
   filters: LabRequestFilters = {},
-): Promise<AdminRequestRow[]> {
+): Promise<LabRequestsPage> {
   const status = filters.status ?? "all";
   const sectorId = filters.sectorId ?? "all";
   const patientQuery = filters.patientQuery?.trim() ?? "";
+  const pageSize = Math.max(1, filters.pageSize ?? LAB_REQUESTS_PAGE_SIZE);
+  const page = Math.max(1, filters.page ?? 1);
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
   let query = supabase
     .from("requests")
-    .select(REQUEST_SELECT)
-    .order("created_at", { ascending: false });
+    .select(REQUEST_SELECT, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (status !== "all") {
     query = query.eq("status", status);
@@ -143,22 +161,27 @@ export async function listLabRequests(
     // Recherche par début de nom patient (ex. "dup" → "Dupont").
     query = query.ilike("patient_name", `${patientQuery}%`);
   }
-  if (filters.limit) {
-    query = query.limit(filters.limit);
+
+  const { data, error, count } = await query;
+  if (error || !data) {
+    return { rows: [], total: 0, page, pageSize, totalPages: 0 };
   }
 
-  const { data, error } = await query;
-  if (error || !data) return [];
-  return mapRequestRows(supabase, data as unknown as RequestQueryRow[]);
+  const total = count ?? 0;
+  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+  const rows = await mapRequestRows(
+    supabase,
+    data as unknown as RequestQueryRow[],
+  );
+
+  return { rows, total, page, pageSize, totalPages };
 }
 
 export async function listAdminRequests(
   supabase: SupabaseClient,
-  status: "all" | "open" | "closed" = "all",
-  limit?: number,
-  patientQuery?: string,
-): Promise<AdminRequestRow[]> {
-  return listLabRequests(supabase, { status, limit, patientQuery });
+  filters: LabRequestFilters = {},
+): Promise<LabRequestsPage> {
+  return listLabRequests(supabase, filters);
 }
 
 export async function getLabRequestById(

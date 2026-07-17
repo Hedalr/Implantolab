@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
-import { listAdminRequests } from "@/lib/requests/queries";
+import {
+  listAdminRequests,
+  type AdminRequestRow,
+} from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
 
-type RequestRow = Awaited<ReturnType<typeof listAdminRequests>>[number];
+type RequestRow = AdminRequestRow;
 
 type ClosureRow = {
   id: string;
@@ -71,7 +74,7 @@ export default async function AdminDashboardPage() {
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("role", "practitioner"),
-    listAdminRequests(supabase, "all", 5),
+    listAdminRequests(supabase, { status: "all", page: 1, pageSize: 5 }),
     supabase
       .from("closure_periods")
       .select("id, start_date, end_date, note, practices(name, city)")
@@ -84,7 +87,7 @@ export default async function AdminDashboardPage() {
   const openRequests = openRequestsRes.count ?? 0;
   const practicesCount = practicesRes.count ?? 0;
   const practitionersCount = practitionersRes.count ?? 0;
-  const recentRequests = recentRequestsRes;
+  const recentRequests = recentRequestsRes.rows;
   const upcomingClosures = (upcomingClosuresRes.data ?? []) as unknown as ClosureRow[];
 
   const displayName = profile.fullName ?? profile.email;

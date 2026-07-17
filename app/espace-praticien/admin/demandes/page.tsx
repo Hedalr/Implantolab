@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
-import { listAdminRequests } from "@/lib/requests/queries";
+import {
+  LAB_REQUESTS_PAGE_SIZE,
+  listAdminRequests,
+  type AdminRequestRow,
+} from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
+import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-type RequestRow = Awaited<ReturnType<typeof listAdminRequests>>[number];
+type RequestRow = AdminRequestRow;
 
 type RequestMediaRow = {
   id: string;
@@ -26,6 +31,27 @@ function parseStatus(value: string | string[] | undefined): StatusFilter {
   return "open";
 }
 
+function parsePage(value: string | string[] | undefined): number {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const n = Number.parseInt(raw ?? "1", 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
+function buildAdminDemandesHref(
+  status: StatusFilter,
+  patient: string,
+  page = 1,
+): string {
+  const params = new URLSearchParams();
+  if (status !== "open") params.set("status", status);
+  if (patient.trim()) params.set("patient", patient.trim());
+  if (page > 1) params.set("page", String(page));
+  const q = params.toString();
+  return q
+    ? `/espace-praticien/admin/demandes?${q}`
+    : "/espace-praticien/admin/demandes";
+}
+
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "short",
@@ -37,22 +63,36 @@ const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
 export default async function AdminRequestsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string | string[]; patient?: string | string[] }>;
+  searchParams: Promise<{
+    status?: string | string[];
+    patient?: string | string[];
+    page?: string | string[];
+  }>;
 }) {
   await requireAdmin();
-  const { status: rawStatus, patient: rawPatient } = await searchParams;
+  const {
+    status: rawStatus,
+    patient: rawPatient,
+    page: rawPage,
+  } = await searchParams;
   const status = parseStatus(rawStatus);
-  const patientQuery = (
-    Array.isArray(rawPatient) ? rawPatient[0] : rawPatient
-  )?.trim() ?? "";
+  const patientQuery =
+    (Array.isArray(rawPatient) ? rawPatient[0] : rawPatient)?.trim() ?? "";
+  const page = parsePage(rawPage);
 
   const supabase = await getServerSupabase();
-  const requests = await listAdminRequests(
-    supabase,
+  const {
+    rows: requests,
+    total,
+    pageSize,
+    totalPages,
+    page: currentPage,
+  } = await listAdminRequests(supabase, {
     status,
-    undefined,
-    patientQuery || undefined,
-  );
+    patientQuery: patientQuery || undefined,
+    page,
+    pageSize: LAB_REQUESTS_PAGE_SIZE,
+  });
 
   const requestIds = requests.map((r) => r.id);
   const { data: mediaData } =
@@ -111,7 +151,7 @@ export default async function AdminRequestsPage({
         </button>
         {patientQuery ? (
           <Link
-            href={`/espace-praticien/admin/demandes?status=${status}`}
+            href={buildAdminDemandesHref(status, "")}
             className="self-start sm:self-auto px-3 py-2.5 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors"
           >
             Effacer
@@ -123,9 +163,24 @@ export default async function AdminRequestsPage({
         aria-label="Filtrer par statut"
         className="mb-6 flex flex-wrap gap-2 border-b border-[var(--line)] pb-3"
       >
-        <TabLink current={status} target="open" label="Ouvertes" patient={patientQuery} />
-        <TabLink current={status} target="closed" label="Traitées" patient={patientQuery} />
-        <TabLink current={status} target="all" label="Toutes" patient={patientQuery} />
+        <TabLink
+          current={status}
+          target="open"
+          label="Ouvertes"
+          patient={patientQuery}
+        />
+        <TabLink
+          current={status}
+          target="closed"
+          label="Traitées"
+          patient={patientQuery}
+        />
+        <TabLink
+          current={status}
+          target="all"
+          label="Toutes"
+          patient={patientQuery}
+        />
       </nav>
 
       {requests.length === 0 ? (
@@ -137,31 +192,43 @@ export default async function AdminRequestsPage({
           </p>
         </div>
       ) : (
-        <div className="bg-[var(--bg-elevated)] border border-[var(--line)]">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr>
-                <Th className="w-32">Date</Th>
-                <Th>Cabinet</Th>
-                <Th>Praticien</Th>
-                <Th>Patient</Th>
-                <Th>Catégorie</Th>
-                <Th>Secteur</Th>
-                <Th className="w-28">Statut</Th>
-                <Th className="w-40 text-right">Action</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((r) => (
-                <RequestRowView
-                  key={r.id}
-                  row={r}
-                  media={mediaByRequest.get(r.id) ?? []}
-                  statusFilter={status}
-                />
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-4">
+          <div className="bg-[var(--bg-elevated)] border border-[var(--line)]">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr>
+                  <Th className="w-32">Date</Th>
+                  <Th>Cabinet</Th>
+                  <Th>Praticien</Th>
+                  <Th>Patient</Th>
+                  <Th>Catégorie</Th>
+                  <Th>Secteur</Th>
+                  <Th className="w-28">Statut</Th>
+                  <Th className="w-40 text-right">Action</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((r) => (
+                  <RequestRowView
+                    key={r.id}
+                    row={r}
+                    media={mediaByRequest.get(r.id) ?? []}
+                    statusFilter={status}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            total={total}
+            pageSize={pageSize}
+            hrefForPage={(p) =>
+              buildAdminDemandesHref(status, patientQuery, p)
+            }
+          />
         </div>
       )}
     </Container>
@@ -180,11 +247,9 @@ function TabLink({
   patient?: string;
 }) {
   const active = current === target;
-  const params = new URLSearchParams({ status: target });
-  if (patient?.trim()) params.set("patient", patient.trim());
   return (
     <Link
-      href={`/espace-praticien/admin/demandes?${params.toString()}`}
+      href={buildAdminDemandesHref(target, patient ?? "")}
       className={cn(
         "px-3 py-1.5 text-sm border transition-colors",
         active
@@ -254,7 +319,10 @@ function RequestRowView({
           <details className="group mt-2">
             <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
               <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
-                Voir le message{media.length > 0 ? ` (${media.length} photo${media.length > 1 ? "s" : ""})` : ""}
+                Voir le message
+                {media.length > 0
+                  ? ` (${media.length} photo${media.length > 1 ? "s" : ""})`
+                  : ""}
               </span>
               <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
                 Masquer
