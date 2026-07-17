@@ -2,17 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * Middleware Edge (convention historique Next.js).
- *
- * On conserve volontairement `middleware.ts` plutôt que `proxy.ts` (Next 16) :
- * le runtime Node du proxy provoque un MIDDLEWARE_INVOCATION_FAILED /
- * EnvFileReadError sur Vercel pour /espace-praticien. Edge contourne ce bug.
+ * Proxy Next.js 16 (ex-middleware).
+ * Protège uniquement la section /espace-praticien.
  *
  * - Rafraîchit la session Supabase.
  * - Redirige vers /espace-praticien/login si aucune session valide,
  *   sauf sur login / callback auth / logout.
+ *
+ * Note : rester sur `proxy.ts` (convention Next 16). Le runtime Node
+ * nécessite `outputFileTracingIncludes` dans next.config pour éviter
+ * MIDDLEWARE_INVOCATION_FAILED sur Vercel.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   try {
     const { response, user } = await updateSession(request);
 
@@ -30,7 +31,7 @@ export async function middleware(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[middleware] échec session:", error);
+    console.error("[proxy] échec session:", error);
     return NextResponse.next({ request });
   }
 }
