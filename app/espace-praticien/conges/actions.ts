@@ -80,7 +80,8 @@ export async function deleteLeaveRequest(formData: FormData): Promise<void> {
     .from("leave_requests")
     .delete()
     .eq("id", id)
-    .eq("profile_id", userId);
+    .eq("profile_id", userId)
+    .in("status", ["pending", "rejected"]);
 
   if (error) {
     go({ error: "delete" });

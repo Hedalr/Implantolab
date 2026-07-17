@@ -14,22 +14,31 @@ export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ ok?: string; error?: string; detail?: string }>;
 
+type LeaveStatus = "pending" | "approved" | "rejected";
+
 type LeaveRow = {
   id: string;
   start_date: string;
   end_date: string;
   days_count: number;
   note: string | null;
+  status: LeaveStatus;
+};
+
+const STATUS_LABEL: Record<LeaveStatus, string> = {
+  pending: "En attente",
+  approved: "Confirmé",
+  rejected: "Refusé",
 };
 
 const FEEDBACK: Record<string, string> = {
-  added: "Congé enregistré.",
-  deleted: "Congé supprimé.",
+  added: "Demande envoyée. Elle sera prise en compte après validation de l’administrateur.",
+  deleted: "Demande de congé annulée.",
   validation: "Les dates saisies sont incomplètes ou invalides.",
   order: "La date de fin doit être postérieure ou égale à la date de début.",
   note: "La note doit contenir au plus 500 caractères.",
   save: "Une erreur est survenue lors de l’enregistrement. Merci de réessayer.",
-  delete: "Impossible de supprimer ce congé. Merci de réessayer.",
+  delete: "Impossible d’annuler cette demande. Merci de réessayer.",
   profile: "Votre profil est incomplet. Contactez l’administrateur.",
 };
 
@@ -85,7 +94,7 @@ export default async function CongesPage({
   const supabase = await getServerSupabase();
   const { data } = await supabase
     .from("leave_requests")
-    .select("id, start_date, end_date, days_count, note")
+    .select("id, start_date, end_date, days_count, note, status")
     .eq("profile_id", userId)
     .order("start_date", { ascending: true });
 
@@ -95,29 +104,36 @@ export default async function CongesPage({
   today.setHours(0, 0, 0, 0);
   const todayTime = today.getTime();
 
-  const upcoming = rows.filter(
+  const activeRows = rows.filter((r) => r.status !== "rejected");
+  const upcoming = activeRows.filter(
     (r) => parseDateOnly(r.end_date).getTime() >= todayTime,
   );
-  const past = rows
+  const past = activeRows
     .filter((r) => parseDateOnly(r.end_date).getTime() < todayTime)
     .reverse();
 
-  const used = rows.reduce((acc, r) => acc + r.days_count, 0);
+  const approvedDays = rows
+    .filter((r) => r.status === "approved")
+    .reduce((acc, r) => acc + r.days_count, 0);
+  const pendingDays = rows
+    .filter((r) => r.status === "pending")
+    .reduce((acc, r) => acc + r.days_count, 0);
   const balance = profile.leaveBalanceDays;
-  const remaining = Math.max(balance - used, 0);
+  const remaining = Math.max(balance - approvedDays - pendingDays, 0);
 
   return (
     <Container size="wide" className="py-12 md:py-16">
       <PageHeader
         title="Mes congés"
-        intro="Consultez votre solde de congés et posez vos absences. Deux employés du même secteur ne peuvent pas être en congé simultanément."
+        intro="Consultez votre solde et déposez une demande de congé. Elle reste en attente jusqu’à validation par l’administrateur. Deux employés du même secteur ne peuvent pas être en congé simultanément."
       />
 
       <FeedbackBanner ok={ok} error={error} detail={detail} />
 
       <SummaryCard
         balance={balance}
-        used={used}
+        approved={approvedDays}
+        pending={pendingDays}
         remaining={remaining}
         sectorName={profile.sectorName}
         sectorColor={profile.sectorColor}
@@ -139,7 +155,7 @@ export default async function CongesPage({
             <CardHeader
               eyebrow="Formulaire"
               title="Poser un congé"
-              description="Sélectionnez une plage de dates. Le total sera déduit de votre solde après validation."
+              description="Sélectionnez une plage de dates. La demande sera examinée par l’administrateur avant confirmation."
             />
             <form
               action={addLeaveRequest}
@@ -190,7 +206,7 @@ export default async function CongesPage({
                   type="submit"
                   disabled={balance === 0}
                 >
-                  Enregistrer
+                  Envoyer la demande
                 </Button>
               </div>
             </form>
@@ -204,13 +220,13 @@ export default async function CongesPage({
               title="Prochains congés"
               description={
                 upcoming.length === 0
-                  ? "Aucun congé à venir n’est déclaré."
-                  : `${upcoming.length} congé${upcoming.length > 1 ? "s" : ""} programmé${upcoming.length > 1 ? "s" : ""}.`
+                  ? "Aucune demande à venir."
+                  : `${upcoming.length} demande${upcoming.length > 1 ? "s" : ""} à venir.`
               }
             />
 
             {upcoming.length === 0 ? (
-              <EmptyState label="Aucun congé déclaré pour l’instant." />
+              <EmptyState label="Aucune demande pour l’instant." />
             ) : (
               <ul className="mt-6 flex flex-col divide-y divide-[var(--line)] border-t border-[var(--line)]">
                 {upcoming.map((row) => (
@@ -219,9 +235,12 @@ export default async function CongesPage({
                     className="flex flex-col gap-3 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
                   >
                     <div className="flex flex-col gap-1.5">
-                      <p className="font-serif text-lg text-[var(--ink)]">
-                        {formatRange(row.start_date, row.end_date)}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-serif text-lg text-[var(--ink)]">
+                          {formatRange(row.start_date, row.end_date)}
+                        </p>
+                        <StatusBadge status={row.status} />
+                      </div>
                       <p className="text-xs text-[var(--ink-discreet)] tracking-wide uppercase">
                         {row.days_count} jour{row.days_count > 1 ? "s" : ""}
                       </p>
@@ -231,18 +250,20 @@ export default async function CongesPage({
                         </p>
                       ) : null}
                     </div>
-                    <form
-                      action={deleteLeaveRequest}
-                      className="shrink-0 self-start"
-                    >
-                      <input type="hidden" name="id" value={row.id} />
-                      <button
-                        type="submit"
-                        className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors"
+                    {row.status === "pending" || row.status === "rejected" ? (
+                      <form
+                        action={deleteLeaveRequest}
+                        className="shrink-0 self-start"
                       >
-                        Supprimer
-                      </button>
-                    </form>
+                        <input type="hidden" name="id" value={row.id} />
+                        <button
+                          type="submit"
+                          className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors"
+                        >
+                          Annuler
+                        </button>
+                      </form>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -282,7 +303,8 @@ export default async function CongesPage({
                         {formatRange(row.start_date, row.end_date)}
                       </span>
                       <span className="text-[var(--ink-discreet)] sm:text-right">
-                        {row.days_count} jour{row.days_count > 1 ? "s" : ""}
+                        {STATUS_LABEL[row.status]} · {row.days_count} jour
+                        {row.days_count > 1 ? "s" : ""}
                         {row.note ? ` — ${row.note}` : ""}
                       </span>
                     </li>
@@ -297,21 +319,41 @@ export default async function CongesPage({
   );
 }
 
+function StatusBadge({ status }: { status: LeaveStatus }) {
+  return (
+    <span
+      className={cn(
+        "text-[10px] tracking-wide uppercase px-2 py-0.5 border",
+        status === "pending" &&
+          "border-[var(--accent-warm)] text-[var(--accent-warm)]",
+        status === "approved" &&
+          "border-[var(--line-strong)] text-[var(--ink-muted)]",
+        status === "rejected" &&
+          "border-[var(--line)] text-[var(--ink-discreet)]",
+      )}
+    >
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
 function SummaryCard({
   balance,
-  used,
+  approved,
+  pending,
   remaining,
   sectorName,
   sectorColor,
 }: {
   balance: number;
-  used: number;
+  approved: number;
+  pending: number;
   remaining: number;
   sectorName: string | null;
   sectorColor: string | null;
 }) {
   return (
-    <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6">
+    <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5 bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6">
       <SummaryItem label="Secteur">
         <div className="mt-1 flex items-center gap-2">
           <span
@@ -329,13 +371,18 @@ function SummaryCard({
           {balance} jour{balance > 1 ? "s" : ""}
         </p>
       </SummaryItem>
-      <SummaryItem label="Utilisés">
+      <SummaryItem label="Confirmés">
         <p className="mt-1 text-lg text-[var(--ink)] text-numeral">
-          {used} jour{used > 1 ? "s" : ""}
+          {approved} jour{approved > 1 ? "s" : ""}
+        </p>
+      </SummaryItem>
+      <SummaryItem label="En attente">
+        <p className="mt-1 text-lg text-[var(--accent-warm)] text-numeral">
+          {pending} jour{pending > 1 ? "s" : ""}
         </p>
       </SummaryItem>
       <SummaryItem label="Restants">
-        <p className="mt-1 text-lg text-[var(--accent-warm)] text-numeral">
+        <p className="mt-1 text-lg text-[var(--ink)] text-numeral">
           {remaining} jour{remaining > 1 ? "s" : ""}
         </p>
       </SummaryItem>

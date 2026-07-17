@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 
+type LeaveStatus = "pending" | "approved" | "rejected";
+
 type Leave = {
   id: string;
   profileId: string;
@@ -14,6 +16,7 @@ type Leave = {
   endDate: string;
   daysCount: number;
   note: string | null;
+  status: LeaveStatus;
 };
 
 type Employee = {
@@ -494,15 +497,19 @@ export function AdminLeaveCalendar({ leaves, employees }: Props) {
                 <div className="flex flex-col gap-0.5 min-h-0">
                   {visible.map((l) => {
                     const bg = l.sectorColor ?? DEFAULT_COLOR;
-                    const title = `${l.employeeName}${l.sectorName ? ` (${l.sectorName})` : ""} • ${humanDate.format(l.start)} → ${humanDate.format(l.end)}${l.note ? ` • ${l.note}` : ""}`;
+                    const isPending = l.status === "pending";
+                    const title = `${l.employeeName}${l.sectorName ? ` (${l.sectorName})` : ""} • ${isPending ? "en attente • " : ""}${humanDate.format(l.start)} → ${humanDate.format(l.end)}${l.note ? ` • ${l.note}` : ""}`;
                     return (
                       <span
                         key={`${cell.key}-${l.id}`}
                         title={title}
-                        className="block truncate text-[10px] leading-4 px-1.5 py-0.5 text-black"
+                        className={cn(
+                          "block truncate text-[10px] leading-4 px-1.5 py-0.5 text-black",
+                          isPending && "opacity-55 border border-dashed border-black/40",
+                        )}
                         style={{ backgroundColor: bg }}
                       >
-                        {l.employeeName}
+                        {isPending ? `… ${l.employeeName}` : l.employeeName}
                       </span>
                     );
                   })}
@@ -569,6 +576,7 @@ function EmployeeSummary({
   todayIso: string;
 }) {
   const upcoming = leaves.filter((l) => l.endDate >= todayIso);
+  const pendingCount = leaves.filter((l) => l.status === "pending").length;
 
   return (
     <section className="bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6">
@@ -597,10 +605,12 @@ function EmployeeSummary({
         </div>
         <p className="text-sm text-[var(--ink-muted)]">
           {leaves.length === 0
-            ? "Aucun congé déclaré"
-            : upcoming.length > 0
-              ? `${upcoming.length} congé${upcoming.length > 1 ? "s" : ""} à venir`
-              : "Tous les congés sont passés"}
+            ? "Aucune demande"
+            : pendingCount > 0
+              ? `${pendingCount} en attente · ${upcoming.length} à venir`
+              : upcoming.length > 0
+                ? `${upcoming.length} congé${upcoming.length > 1 ? "s" : ""} à venir`
+                : "Tous les congés sont passés"}
         </p>
       </div>
     </section>
