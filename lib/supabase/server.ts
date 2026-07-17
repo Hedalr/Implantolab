@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
@@ -39,10 +40,13 @@ export function isSupabaseConfigured(): boolean {
  * Crée un client Supabase pour un composant / route server, connecté au
  * cookie store de la requête Next.js courante.
  *
+ * Mis en `cache()` pour réutiliser le même client dans une même requête
+ * (layout + page + require*).
+ *
  * @throws si les variables d'environnement Supabase ne sont pas définies.
  *         Utilisez `isSupabaseConfigured()` en amont pour tester.
  */
-export async function getServerSupabase(): Promise<SupabaseClient> {
+export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -72,17 +76,20 @@ export async function getServerSupabase(): Promise<SupabaseClient> {
       },
     },
   });
-}
+});
 
 /**
  * Retourne l'utilisateur authentifié via `auth.getUser()` (vérifié côté
  * Auth server) ou `null` s'il n'y a pas de session valide / si Supabase
  * n'est pas configuré.
+ *
+ * Mis en `cache()` : un seul appel Auth par requête HTTP, même si le layout
+ * et la page appellent tous les deux `requireUser` / `getCurrentProfile`.
  */
-export async function getSessionUser(): Promise<{
+export const getSessionUser = cache(async (): Promise<{
   id: string;
   email: string;
-} | null> {
+} | null> => {
   if (!isSupabaseConfigured()) {
     return null;
   }
@@ -98,13 +105,16 @@ export async function getSessionUser(): Promise<{
   }
 
   return { id: user.id, email: user.email };
-}
+});
 
 /**
  * Récupère le profil applicatif complet de l'utilisateur courant,
  * en joignant la ligne `practices` associée.
+ *
+ * Mis en `cache()` pour éviter les doubles lectures profil dans la même
+ * requête (layout espace praticien + page).
  */
-export async function getCurrentProfile(): Promise<Profile | null> {
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const user = await getSessionUser();
   if (!user) return null;
 
@@ -154,7 +164,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     sectorColor: sectorRow?.color ?? null,
     leaveBalanceDays: row.leave_balance_days ?? 0,
   };
-}
+});
 
 /**
  * Redirige vers /espace-praticien/login si l'utilisateur n'est pas
@@ -171,17 +181,14 @@ export async function requireUser(): Promise<{
     redirect(LOGIN_PATH);
   }
 
-  const user = await getSessionUser();
-  if (!user) {
-    redirect(LOGIN_PATH);
-  }
-
+  // getCurrentProfile() réutilise getSessionUser() via cache() — un seul
+  // aller-retour Auth + une seule lecture profil pour toute la requête.
   const profile = await getCurrentProfile();
   if (!profile) {
     redirect(LOGIN_PATH);
   }
 
-  return { userId: user.id, email: user.email, profile };
+  return { userId: profile.id, email: profile.email, profile };
 }
 
 /**
