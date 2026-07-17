@@ -1,8 +1,7 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
+import type { NavLink } from "@/content/fr/site";
 import { Container } from "@/components/ui/Container";
-import { Logo } from "@/components/ui/Logo";
-import { cn } from "@/lib/cn";
+import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
 import {
   getCurrentProfile,
   getSessionUser,
@@ -10,24 +9,35 @@ import {
   type Profile,
 } from "@/lib/supabase/server";
 
-type NavItem = { href: string; label: string };
-
-const practitionerNav: NavItem[] = [
+const practitionerNav: NavLink[] = [
   { href: "/espace-praticien/fermetures", label: "Mes fermetures" },
   { href: "/espace-praticien/demandes", label: "Demandes" },
 ];
 
-const adminNav: NavItem[] = [
+const adminNav: NavLink[] = [
   { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
-  { href: "/espace-praticien/admin/praticiens", label: "Praticiens" },
-  { href: "/espace-praticien/admin/employes", label: "Employés" },
-  { href: "/espace-praticien/admin/calendrier", label: "Fermetures dentistes" },
-  { href: "/espace-praticien/admin/conges", label: "Congés employés" },
+  {
+    href: "/espace-praticien/admin/praticiens",
+    label: "Praticiens",
+    children: [
+      {
+        href: "/espace-praticien/admin/calendrier",
+        label: "Fermetures dentistes",
+      },
+    ],
+  },
+  {
+    href: "/espace-praticien/admin/employes",
+    label: "Employés",
+    children: [
+      { href: "/espace-praticien/admin/conges", label: "Congés employés" },
+    ],
+  },
   { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
 ];
 
-const prosthetistNav: NavItem[] = [
+const prosthetistNav: NavLink[] = [
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
   { href: "/espace-praticien/conges", label: "Mes congés" },
 ];
@@ -70,28 +80,12 @@ export default async function EspacePraticienLayout({
         <Container size="wide">
           <div className="flex h-14 items-center justify-between gap-6">
             <div className="flex items-center gap-8">
-              <Logo href="/espace-praticien" showWordmark={false} />
               <span className="text-eyebrow text-[var(--ink-discreet)] hidden sm:inline">
                 {spaceLabel}
               </span>
 
               {showNav ? (
-                <nav
-                  aria-label="Navigation praticien"
-                  className="hidden md:flex items-center gap-6"
-                >
-                  {nav.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        "text-sm text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors",
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
+                <EspacePraticienNav items={nav} variant="desktop" />
               ) : null}
             </div>
 
@@ -118,20 +112,7 @@ export default async function EspacePraticienLayout({
           </div>
 
           {showNav ? (
-            <nav
-              aria-label="Navigation praticien (mobile)"
-              className="flex md:hidden items-center gap-5 overflow-x-auto pb-3 pt-1 -mx-6 px-6"
-            >
-              {nav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-xs text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors whitespace-nowrap"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <EspacePraticienNav items={nav} variant="mobile" />
           ) : null}
         </Container>
       </div>
