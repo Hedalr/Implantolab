@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 import { AdminLeaveCalendar } from "@/components/espace-praticien/AdminLeaveCalendar";
+import { LeaveRangePreview } from "@/components/espace-praticien/LeaveRangePreview";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
   adminApproveLeaveRequest,
@@ -214,41 +215,47 @@ export default async function AdminCongesPage({
             {pendingLeaves.map((l) => (
               <li
                 key={l.id}
-                className="py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                className="py-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8"
               >
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <span
-                      aria-hidden="true"
-                      className="inline-block h-3 w-3 shrink-0 border border-[var(--line-strong)]"
-                      style={{
-                        backgroundColor: l.sectorColor ?? "#94a3b8",
-                      }}
-                    />
-                    <span className="text-[var(--ink)] font-medium">
-                      {l.employeeName}
-                    </span>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6 min-w-0">
+                  <LeaveRangePreview
+                    startDate={l.startDate}
+                    endDate={l.endDate}
+                  />
+                  <div className="flex flex-col gap-1.5 pt-0.5">
+                    <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-3 w-3 shrink-0 border border-[var(--line-strong)]"
+                        style={{
+                          backgroundColor: l.sectorColor ?? "#94a3b8",
+                        }}
+                      />
+                      <span className="text-[var(--ink)] font-medium">
+                        {l.employeeName}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[var(--ink-muted)]">
+                      {formatRange(l.startDate, l.endDate)} · {l.daysCount}{" "}
+                      jour{l.daysCount > 1 ? "s" : ""}
+                    </p>
+                    {l.sectorName ? (
+                      <p className="text-xs text-[var(--ink-discreet)]">
+                        Secteur : {l.sectorName}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-[var(--accent-warm)]">
+                        Non classé
+                      </p>
+                    )}
+                    {l.note ? (
+                      <p className="text-xs text-[var(--ink-muted)] leading-relaxed">
+                        {l.note}
+                      </p>
+                    ) : null}
                   </div>
-                  <p className="text-sm text-[var(--ink-muted)]">
-                    {formatRange(l.startDate, l.endDate)} · {l.daysCount} jour
-                    {l.daysCount > 1 ? "s" : ""}
-                  </p>
-                  {l.sectorName ? (
-                    <p className="text-xs text-[var(--ink-discreet)]">
-                      Secteur : {l.sectorName}
-                    </p>
-                  ) : (
-                    <p className="text-xs text-[var(--accent-warm)]">
-                      Non classé
-                    </p>
-                  )}
-                  {l.note ? (
-                    <p className="text-xs text-[var(--ink-muted)] leading-relaxed">
-                      {l.note}
-                    </p>
-                  ) : null}
                 </div>
-                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center gap-3 shrink-0 lg:pt-1">
                   <form action={adminApproveLeaveRequest}>
                     <input type="hidden" name="id" value={l.id} />
                     <button
