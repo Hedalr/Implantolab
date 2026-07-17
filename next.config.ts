@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Contourne un bug NFT/@swc/helpers sur les lambdas Node Vercel (Next 16.2.x)
+  // qui peut provoquer MIDDLEWARE_INVOCATION_FAILED.
+  outputFileTracingIncludes: {
+    "*": ["./node_modules/@swc/helpers/esm/**"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
