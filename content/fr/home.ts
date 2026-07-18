@@ -18,9 +18,9 @@ export const home = {
     slogan: {
       // Slogan officiel IMPLANTOLAB — ne pas modifier.
       line1: "Pour qu’un sourire",
-      // Espace invisible reproduisant "Pour qu’un sour" pour que le "n" de
-      // "ne se cache plus…" démarre exactement sous le "i" de "sourire".
-      line2Offset: "Pour qu’un sour",
+      // Indent reproduisant "Pour qu’un so" pour que le "n" de
+      // "ne se cache plus…" démarre exactement sous le "u" de "sourire".
+      line2Offset: "Pour qu’un so",
       line2: "ne se cache plus…",
       emphasis: "sourire",
     },

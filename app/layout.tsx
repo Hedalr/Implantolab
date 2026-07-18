@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Fraunces, Source_Sans_3 } from "next/font/google";
+import {
+  Bodoni_Moda,
+  Caveat,
+  Fraunces,
+  Source_Sans_3,
+} from "next/font/google";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
 import { AuthHashRecovery } from "@/components/auth/AuthHashRecovery";
@@ -25,6 +30,14 @@ const caveat = Caveat({
   display: "swap",
   variable: "--font-signature",
   weight: ["500", "600"],
+});
+
+const bodoniModa = Bodoni_Moda({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-slogan",
+  weight: ["400", "500"],
+  style: ["italic"],
 });
 
 export const metadata: Metadata = {
@@ -109,7 +122,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${fraunces.variable} ${sourceSans.variable} ${caveat.variable}`}
+      className={`${fraunces.variable} ${sourceSans.variable} ${caveat.variable} ${bodoniModa.variable}`}
     >
       <body className="min-h-screen flex flex-col antialiased">
         <script

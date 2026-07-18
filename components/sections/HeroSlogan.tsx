@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -75,7 +76,7 @@ export function HeroSlogan({
   const baseStyles =
     variant === "signature"
       ? "text-signature text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] leading-tight tracking-tight"
-      : "font-serif italic text-xl sm:text-2xl md:text-[1.85rem] lg:text-[2.125rem] text-[var(--accent)] leading-snug tracking-tight";
+      : "text-slogan text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] xl:text-[4rem]";
 
   useEffect(() => {
     const node = line1Ref.current;
@@ -95,11 +96,31 @@ export function HeroSlogan({
     return () => window.removeEventListener("resize", measure);
   }, [line2Offset, layout]);
 
+  const hasVeil = variant === "italic";
+  const [revealed, setRevealed] = useState(false);
+  const reveal = useCallback(() => {
+    setRevealed(true);
+  }, []);
+  const veilClass = hasVeil
+    ? cn("slogan-veil", revealed && "slogan-veil--revealed")
+    : undefined;
+  const veilProps = hasVeil
+    ? {
+        tabIndex: revealed ? undefined : 0,
+        onMouseEnter: reveal,
+        onFocus: reveal,
+        "aria-label": revealed ? undefined : `${line1} ${line2}`,
+      }
+    : undefined;
+
   if (layout === "inline") {
     const fullText = `${line1} ${line2}`;
     const rendered = renderWords(fullText, 0, emphasis);
     return (
-      <p className={cn(baseStyles, "w-full text-center", className)}>
+      <p
+        className={cn(baseStyles, veilClass, "w-full text-center", className)}
+        {...veilProps}
+      >
         {rendered.nodes}
       </p>
     );
@@ -109,7 +130,15 @@ export function HeroSlogan({
   const line2Rendered = renderWords(line2, line1Rendered.nextIndex);
 
   return (
-    <p className={cn(baseStyles, layout === "stacked" && "w-full", className)}>
+    <p
+      className={cn(
+        baseStyles,
+        veilClass,
+        layout === "stacked" && "w-full",
+        className,
+      )}
+      {...veilProps}
+    >
       <span ref={line1Ref} className="block">
         {line1Rendered.nodes}
       </span>
