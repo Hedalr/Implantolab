@@ -46,7 +46,10 @@ export function Hero() {
 
               <Reveal delay={160}>
                 <p className="text-lg md:text-xl text-[var(--ink-muted)] leading-relaxed max-w-xl text-pretty">
-                  {subtitle}
+                  <strong className="font-semibold text-[var(--ink)]">
+                    IMPLANTOLAB
+                  </strong>
+                  {subtitle.replace(/^IMPLANTOLAB/, "")}
                 </p>
               </Reveal>
 

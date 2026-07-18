@@ -22,8 +22,8 @@ export default function HomePage() {
       <StatsBand />
       <EphemeralInfoBanner />
       <ExpertiseTabs />
-      <TeamShowcase />
       <PhotoGallery />
+      <TeamShowcase />
       <ContactCta />
       <CtaTriptych />
     </>
