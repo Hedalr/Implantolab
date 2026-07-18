@@ -35,6 +35,56 @@ export const home = {
     visualCaptionSecondary: "Savoir-faire artisanal — Blois",
   },
 
+  solutions: {
+    eyebrow: "Nos solutions",
+    title: "Ce que nous fabriquons pour vos patients",
+    description:
+      "Une gamme complète pour couvrir vos indications quotidiennes : implantologie, prothèse conjointe, prothèse amovible, restauration esthétique et flux numérique de bout en bout.",
+    items: [
+      {
+        key: "implantologie",
+        number: "01",
+        title: "Implantologie",
+        description:
+          "Couronnes transvissées, bridges implantaires, piliers personnalisés et guides chirurgicaux.",
+        href: "/implantologie",
+      },
+      {
+        key: "prothese-conjointe",
+        number: "02",
+        title: "Prothèse conjointe",
+        description:
+          "Couronnes céramiques, zircone monolithique, métal-céramique, bridges, inlays et onlays.",
+        href: "/protheses#prothese-conjointe",
+      },
+      {
+        key: "prothese-amovible",
+        number: "03",
+        title: "Prothèse amovible",
+        description:
+          "Châssis métalliques, PEEK, prothèses hybrides et résines définitives ou provisoires.",
+        href: "/protheses#prothese-amovible",
+      },
+      {
+        key: "esthetique",
+        number: "04",
+        title: "Esthétique",
+        description:
+          "Facettes, stratifications céramiques et restauration antérieure : teinte, translucidité, morphologie.",
+        href: "/protheses#esthetique",
+      },
+      {
+        key: "flux-numerique",
+        number: "05",
+        title: "Flux numérique",
+        description:
+          "CFAO de bout en bout : STL, PLY, OBJ, conception CAO, usinage 5 axes et impression 3D.",
+        href: "/flux-numerique",
+      },
+    ],
+    linkLabel: "Voir",
+  },
+
   stats: {
     eyebrow: "IMPLANTOLAB en chiffres",
     title: "Un laboratoire ancré dans la précision et le numérique",
@@ -49,10 +99,10 @@ export const home = {
   },
 
   expertises: {
-    eyebrow: "Expertises",
-    title: "Une gamme complète, un seul interlocuteur",
+    eyebrow: "Approfondir",
+    title: "Notre approche, expertise par expertise",
     description:
-      "Implantologie, prothèse amovible, prothèse conjointe et flux numérique complet : une gamme complète, un seul interlocuteur. Sélectionnez une expertise pour découvrir notre approche.",
+      "Pour chaque famille, la même exigence : matériaux sélectionnés, protocole documenté et interlocuteur unique. Parcourez nos approches détaillées.",
     tabs: [
       {
         key: "implantologie",

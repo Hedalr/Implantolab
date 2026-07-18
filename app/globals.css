@@ -275,6 +275,65 @@ body {
 }
 
 /* =========================================================================
+   Atmosphere — habille les bords latéraux avec un lavis rose pleine largeur.
+   À appliquer sur une <section> (avec `position: relative`). Le contenu reste
+   contraint par le Container ; seul le fond bord à bord change.
+   ========================================================================= */
+
+.atmosphere-rose {
+  position: relative;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(
+      ellipse 60% 55% at 0% 40%,
+      color-mix(in oklab, var(--accent-warm-soft) 55%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 55% 55% at 100% 65%,
+      color-mix(in oklab, var(--accent-warm) 32%, transparent) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 80% 60% at 50% 100%,
+      color-mix(in oklab, var(--accent-warm-soft) 30%, transparent) 0%,
+      transparent 70%
+    );
+  background-repeat: no-repeat;
+}
+
+/* Variante plus douce pour les sections où le lavis doit rester discret. */
+.atmosphere-rose--soft {
+  background-image:
+    radial-gradient(
+      ellipse 55% 55% at 0% 50%,
+      color-mix(in oklab, var(--accent-warm-soft) 32%, transparent) 0%,
+      transparent 65%
+    ),
+    radial-gradient(
+      ellipse 55% 60% at 100% 50%,
+      color-mix(in oklab, var(--accent-warm-soft) 22%, transparent) 0%,
+      transparent 65%
+    );
+}
+
+/* Séparateur "hairline" rose — remplace la ligne grise sur les fonds atmosphere. */
+.atmosphere-divider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--accent-warm) 55%, transparent) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* =========================================================================
    Form base
    ========================================================================= */
 

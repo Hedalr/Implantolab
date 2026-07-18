@@ -67,6 +67,7 @@ export const primaryNav: NavLink[] = [
       { label: "Implantologie", href: "/implantologie" },
       { label: "Prothèse conjointe", href: "/protheses#prothese-conjointe" },
       { label: "Prothèse amovible", href: "/protheses#prothese-amovible" },
+      { label: "Esthétique", href: "/protheses#esthetique" },
     ],
   },
   { label: "Flux numérique", href: "/flux-numerique" },
@@ -93,7 +94,9 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     title: "Expertises",
     links: [
       { label: "Implantologie", href: "/implantologie" },
-      { label: "Prothèse conjointe et amovible", href: "/protheses" },
+      { label: "Prothèse conjointe", href: "/protheses#prothese-conjointe" },
+      { label: "Prothèse amovible", href: "/protheses#prothese-amovible" },
+      { label: "Esthétique", href: "/protheses#esthetique" },
       { label: "Flux numérique et CFAO", href: "/flux-numerique" },
     ],
   },

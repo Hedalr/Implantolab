@@ -8,12 +8,9 @@ export function StatsBand() {
   const { eyebrow, title, description, items } = home.stats;
 
   return (
-    <section className="relative bg-[var(--bg-elevated)]">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--line)] to-transparent"
-      />
-      <Container size="wide" className="py-16 md:py-24 lg:py-32">
+    <section className="atmosphere-rose relative overflow-hidden">
+      <div aria-hidden="true" className="atmosphere-divider" />
+      <Container size="wide" className="relative py-16 md:py-24 lg:py-32">
         <div className="grid gap-12 lg:gap-16 lg:grid-cols-12 items-end">
           <Reveal className="lg:col-span-6">
             <SectionHeading
@@ -35,7 +32,7 @@ export function StatsBand() {
               as="li"
               key={item.label}
               delay={index * 80}
-              className="bg-[var(--bg-elevated)] p-6 sm:p-8 md:p-10 flex flex-col gap-3"
+              className="bg-[var(--bg)] p-6 sm:p-8 md:p-10 flex flex-col gap-3"
             >
               <span
                 aria-hidden="true"

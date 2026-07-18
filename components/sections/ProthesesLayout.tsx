@@ -12,6 +12,20 @@ type Props = {
 };
 
 /**
+ * Génère un slug ancre stable à partir de l'eyebrow d'une section — même
+ * logique que PageSections, dupliquée volontairement pour rester local.
+ */
+function sectionAnchor(eyebrow: string | undefined, index: number): string {
+  if (!eyebrow) return `section-${index + 1}`;
+  return eyebrow
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
  * ProthesesLayout — variante de SimplePage qui injecte une galerie swipe de
  * réalisations réelles dans les sections dont l'eyebrow correspond à une clé
  * de `prothesesGalleries` (prothèse conjointe, prothèse amovible).
@@ -34,6 +48,7 @@ export function ProthesesLayout({ content }: Props) {
           return (
             <section
               key={`${section.title}-${index}`}
+              id={sectionAnchor(section.eyebrow, index)}
               className="border-b border-[var(--line)] scroll-mt-24"
             >
               <Container size="wide" className="py-20 md:py-24">

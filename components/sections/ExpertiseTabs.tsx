@@ -68,8 +68,9 @@ export function ExpertiseTabs() {
   const itemVariants = reduceMotion ? reducedTextItem : textItem;
 
   return (
-    <section className="bg-[var(--bg)] border-b border-[var(--line)]">
-      <Container size="wide" className="py-16 md:py-24 lg:py-32">
+    <section className="atmosphere-rose relative overflow-hidden">
+      <div aria-hidden="true" className="atmosphere-divider" />
+      <Container size="wide" className="relative py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl">
           <Reveal>
             <SectionHeading
@@ -83,7 +84,7 @@ export function ExpertiseTabs() {
         <Reveal delay={100}>
           <div
             role="tablist"
-            aria-label="Choisissez une expertise"
+            aria-label="Parcourir nos approches par expertise"
             className="relative mt-12 flex flex-wrap gap-x-2 gap-y-2 border-b border-[var(--line)]"
           >
             {tabs.map((tab) => {

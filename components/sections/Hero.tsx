@@ -20,7 +20,7 @@ export function Hero() {
   } = home.hero;
 
   return (
-    <section className="grain relative overflow-hidden bg-[var(--bg)]">
+    <section className="grain atmosphere-rose relative overflow-hidden">
       <Container
         size="wide"
         className="relative pt-8 md:pt-10 lg:pt-12 pb-20 md:pb-28 lg:pb-36"
@@ -108,10 +108,7 @@ export function Hero() {
         />
       </Container>
 
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--line)] to-transparent"
-      />
+      <div aria-hidden="true" className="atmosphere-divider" />
     </section>
   );
 }

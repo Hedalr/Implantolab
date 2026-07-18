@@ -27,12 +27,9 @@ export function TeamShowcase() {
   ));
 
   return (
-    <section className="relative bg-[var(--bg)] overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--line)] to-transparent"
-      />
-      <Container size="wide" className="py-16 md:py-24 lg:py-32">
+    <section className="atmosphere-rose relative overflow-hidden">
+      <div aria-hidden="true" className="atmosphere-divider" />
+      <Container size="wide" className="relative py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl">
           <Reveal>
             <SectionHeading

@@ -1,4 +1,5 @@
 import { Hero } from "@/components/sections/Hero";
+import { SolutionsGrid } from "@/components/sections/SolutionsGrid";
 import { StatsBand } from "@/components/sections/StatsBand";
 import { EphemeralInfoBanner } from "@/components/sections/EphemeralInfoBanner";
 import { ExpertiseTabs } from "@/components/sections/ExpertiseTabs";
@@ -19,6 +20,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <SolutionsGrid />
       <StatsBand />
       <EphemeralInfoBanner />
       <ExpertiseTabs />
