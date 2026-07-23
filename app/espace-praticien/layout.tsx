@@ -4,7 +4,6 @@ import { Container } from "@/components/ui/Container";
 import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
 import {
   getCurrentProfile,
-  getSessionUser,
   isSupabaseConfigured,
   type Profile,
 } from "@/lib/supabase/server";
@@ -48,16 +47,9 @@ export default async function EspacePraticienLayout({
   children: ReactNode;
 }) {
   const configured = isSupabaseConfigured();
-  let profile: Profile | null = null;
-  let email: string | null = null;
-
-  if (configured) {
-    const user = await getSessionUser();
-    if (user) {
-      email = user.email;
-      profile = await getCurrentProfile();
-    }
-  }
+  const profile: Profile | null = configured
+    ? await getCurrentProfile()
+    : null;
 
   const nav =
     profile?.role === "admin"
@@ -89,11 +81,11 @@ export default async function EspacePraticienLayout({
               ) : null}
             </div>
 
-            {showNav && email ? (
+            {showNav && profile ? (
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex flex-col items-end leading-tight">
-                  <span className="text-xs text-[var(--ink)]">{email}</span>
-                  {profile?.practiceName ? (
+                  <span className="text-xs text-[var(--ink)]">{profile.email}</span>
+                  {profile.practiceName ? (
                     <span className="text-[11px] text-[var(--ink-discreet)]">
                       {profile.practiceName}
                     </span>

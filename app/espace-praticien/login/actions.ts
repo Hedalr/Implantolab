@@ -6,13 +6,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 
-/**
- * Server action de connexion email + mot de passe.
- * Appelée depuis le formulaire de /espace-praticien/login.
- *
- * Erreurs : on ne renvoie jamais de message technique à l'utilisateur ;
- * on redirige vers /login?error=1 pour afficher un message générique.
- */
+/** Connexion email + mot de passe. Erreurs → `/login?error=1` (message générique). */
 export async function signIn(formData: FormData): Promise<void> {
   if (!isSupabaseConfigured()) {
     redirect("/espace-praticien/login?error=config");

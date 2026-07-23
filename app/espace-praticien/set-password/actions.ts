@@ -7,14 +7,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 
-/**
- * Server action de première définition du mot de passe (post-invitation)
- * ou de changement de mot de passe pour un utilisateur déjà connecté.
- *
- * Nécessite une session active : le lien d'invitation Supabase établit la
- * session automatiquement via /espace-praticien/auth/callback, ce qui permet
- * ensuite à cette page d'appeler `auth.updateUser({ password })`.
- */
+/** Première définition / changement de mot de passe (session invite requise). */
 export async function setPassword(formData: FormData): Promise<void> {
   if (!isSupabaseConfigured()) {
     redirect("/espace-praticien/login?error=config");
@@ -22,7 +15,7 @@ export async function setPassword(formData: FormData): Promise<void> {
 
   const user = await getSessionUser();
   if (!user) {
-    redirect("/espace-praticien/login?error=session");
+    redirect("/espace-praticien/login?error=invite");
   }
 
   const password = String(formData.get("password") ?? "");

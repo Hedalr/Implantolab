@@ -60,7 +60,8 @@ export async function processAuthRedirect(
     }
 
     return { ok: true, target };
-  } catch {
+  } catch (error) {
+    console.error("[processAuthRedirect]", error);
     return { ok: false, reason: "error" };
   }
 }

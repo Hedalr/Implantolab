@@ -1,4 +1,8 @@
 import Link from "next/link";
+import {
+  authFieldClassName,
+  authLabelClassName,
+} from "@/components/auth/authFormStyles";
 import { signIn } from "./actions";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { cn } from "@/lib/cn";
@@ -17,14 +21,6 @@ export default async function LoginPage({
   const configError = params.error === "config" || !configured;
   const credentialsError = params.error === "1";
   const inviteError = params.error === "invite";
-
-  const fieldBase = cn(
-    "w-full bg-transparent border-b py-3 text-base transition-colors",
-    "placeholder:text-[var(--ink-discreet)] focus:outline-none",
-    "text-[var(--ink)] border-[var(--line-strong)] focus:border-[var(--ink)]",
-  );
-
-  const labelBase = "text-eyebrow text-[var(--ink-discreet)]";
 
   return (
     <div className="mx-auto max-w-md py-10">
@@ -63,24 +59,24 @@ export default async function LoginPage({
       ) : (
         <form action={signIn} className="mt-10 flex flex-col gap-7" noValidate>
           <label className="flex flex-col gap-3">
-            <span className={labelBase}>Email</span>
+            <span className={authLabelClassName}>Email</span>
             <input
               type="email"
               name="email"
               required
               autoComplete="email"
-              className={fieldBase}
+              className={authFieldClassName}
             />
           </label>
 
           <label className="flex flex-col gap-3">
-            <span className={labelBase}>Mot de passe</span>
+            <span className={authLabelClassName}>Mot de passe</span>
             <input
               type="password"
               name="password"
               required
               autoComplete="current-password"
-              className={fieldBase}
+              className={authFieldClassName}
             />
           </label>
 

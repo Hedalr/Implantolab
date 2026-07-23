@@ -4,19 +4,14 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 
-/**
- * POST /espace-praticien/logout — déconnecte l'utilisateur puis redirige
- * vers la page de login.
- * Le formulaire de la topbar cible cette route en méthode POST.
- */
+/** POST logout → login (303). Échec signOut ignoré : on redirige quand même. */
 export async function POST(request: NextRequest) {
   if (isSupabaseConfigured()) {
     try {
       const supabase = await getServerSupabase();
       await supabase.auth.signOut();
     } catch {
-      // On ignore : dans tous les cas on redirige vers login,
-      // le middleware nettoiera la session si nécessaire.
+      // Middleware nettoiera la session si besoin.
     }
   }
 

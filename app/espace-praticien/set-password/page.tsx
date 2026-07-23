@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import {
+  authFieldClassName,
+  authLabelClassName,
+} from "@/components/auth/authFormStyles";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/cn";
 import { getSessionUser, isSupabaseConfigured } from "@/lib/supabase/server";
 import { setPassword } from "./actions";
 
@@ -12,7 +15,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ error?: string; welcome?: string }>;
+type SearchParams = Promise<{ error?: string }>;
 
 const ERROR_MESSAGES: Record<string, string> = {
   short: "Le mot de passe doit contenir au moins 8 caractères.",
@@ -39,14 +42,6 @@ export default async function SetPasswordPage({
   const { error } = await searchParams;
   const errorMessage = error ? ERROR_MESSAGES[error] ?? null : null;
 
-  const fieldBase = cn(
-    "w-full bg-transparent border-b py-3 text-base transition-colors",
-    "placeholder:text-[var(--ink-discreet)] focus:outline-none",
-    "text-[var(--ink)] border-[var(--line-strong)] focus:border-[var(--ink)]",
-  );
-
-  const labelBase = "text-eyebrow text-[var(--ink-discreet)]";
-
   return (
     <div className="mx-auto max-w-md py-10">
       <p className="text-eyebrow text-[var(--ink-discreet)]">Bienvenue</p>
@@ -60,27 +55,27 @@ export default async function SetPasswordPage({
 
       <form action={setPassword} className="mt-10 flex flex-col gap-7" noValidate>
         <label className="flex flex-col gap-3">
-          <span className={labelBase}>Nouveau mot de passe</span>
+          <span className={authLabelClassName}>Nouveau mot de passe</span>
           <input
             type="password"
             name="password"
             required
             minLength={8}
             autoComplete="new-password"
-            className={fieldBase}
+            className={authFieldClassName}
             placeholder="Au moins 8 caractères"
           />
         </label>
 
         <label className="flex flex-col gap-3">
-          <span className={labelBase}>Confirmer le mot de passe</span>
+          <span className={authLabelClassName}>Confirmer le mot de passe</span>
           <input
             type="password"
             name="confirm"
             required
             minLength={8}
             autoComplete="new-password"
-            className={fieldBase}
+            className={authFieldClassName}
           />
         </label>
 

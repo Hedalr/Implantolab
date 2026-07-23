@@ -2,22 +2,20 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { User } from "@supabase/supabase-js";
 
-/**
- * Résultat de `updateSession` : la réponse à retourner (avec les cookies
- * Supabase potentiellement rafraîchis) et l'utilisateur courant (ou `null`).
- */
 export type UpdateSessionResult = {
   response: NextResponse;
   user: User | null;
 };
 
+function hasSupabaseAuthCookie(request: NextRequest): boolean {
+  return request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.includes("auth-token"));
+}
+
 /**
  * Rafraîchit la session Supabase depuis le middleware Next.js.
- * Suit le pattern officiel Supabase pour Next.js App Router :
- * https://supabase.com/docs/guides/auth/server-side/nextjs
- *
- * Retourne systématiquement une NextResponse — si Supabase n'est pas
- * configuré, on renvoie un no-op (`NextResponse.next()`).
+ * Pattern officiel : https://supabase.com/docs/guides/auth/server-side/nextjs
  */
 export async function updateSession(
   request: NextRequest,
@@ -26,6 +24,11 @@ export async function updateSession(
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
+    return { response: NextResponse.next({ request }), user: null };
+  }
+
+  // Pas de cookie auth → pas d'appel Auth réseau (login froid, etc.).
+  if (!hasSupabaseAuthCookie(request)) {
     return { response: NextResponse.next({ request }), user: null };
   }
 

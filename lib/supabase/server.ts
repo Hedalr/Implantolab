@@ -28,7 +28,11 @@ const LOGIN_PATH = "/espace-praticien/login";
 const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/demandes";
 const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
 
-/** Vérifie que les variables d'environnement Supabase sont bien définies. */
+function firstRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (value == null) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -37,14 +41,9 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * Crée un client Supabase pour un composant / route server, connecté au
- * cookie store de la requête Next.js courante.
- *
- * Mis en `cache()` pour réutiliser le même client dans une même requête
- * (layout + page + require*).
- *
- * @throws si les variables d'environnement Supabase ne sont pas définies.
- *         Utilisez `isSupabaseConfigured()` en amont pour tester.
+ * Client Supabase server lié aux cookies de la requête.
+ * Mis en `cache()` pour partager le client dans une même requête RSC.
+ * @throws si Supabase n'est pas configuré — tester avec `isSupabaseConfigured()`.
  */
 export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -69,23 +68,15 @@ export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
             cookieStore.set(name, value, options as CookieOptions);
           }
         } catch {
-          // `cookies().set` peut échouer si appelé depuis un Server Component
-          // en dehors d'une Server Action ou d'une Route Handler. Ce cas est
-          // couvert par le middleware qui rafraîchit la session côté requête.
+          // `cookies().set` échoue hors Server Action / Route Handler ;
+          // le middleware rafraîchit la session côté requête.
         }
       },
     },
   });
 });
 
-/**
- * Retourne l'utilisateur authentifié via `auth.getUser()` (vérifié côté
- * Auth server) ou `null` s'il n'y a pas de session valide / si Supabase
- * n'est pas configuré.
- *
- * Mis en `cache()` : un seul appel Auth par requête HTTP, même si le layout
- * et la page appellent tous les deux `requireUser` / `getCurrentProfile`.
- */
+/** Utilisateur Auth vérifié, ou null. `cache()` = un getUser par requête. */
 export const getSessionUser = cache(async (): Promise<{
   id: string;
   email: string;
@@ -108,11 +99,8 @@ export const getSessionUser = cache(async (): Promise<{
 });
 
 /**
- * Récupère le profil applicatif complet de l'utilisateur courant,
- * en joignant la ligne `practices` associée.
- *
- * Mis en `cache()` pour éviter les doubles lectures profil dans la même
- * requête (layout espace praticien + page).
+ * Profil applicatif + jointures practices/sectors.
+ * Mis en `cache()` pour éviter les doubles lectures dans layout + page.
  */
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const user = await getSessionUser();
@@ -129,9 +117,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 
   if (error || !data) return null;
 
-  // Le join `practices ( name )` peut être typé comme objet ou tableau
-  // selon la version des types Supabase. On normalise sans dépendre
-  // d'une génération de types dédiée.
+  // Join typé objet ou tableau selon les types Supabase — on normalise.
   const row = data as unknown as {
     id: string;
     role: Profile["role"] | null;
@@ -145,12 +131,8 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
       | { name: string | null; color: string | null }[]
       | null;
   };
-  const practiceRow = Array.isArray(row.practices)
-    ? row.practices[0] ?? null
-    : row.practices;
-  const sectorRow = Array.isArray(row.sectors)
-    ? row.sectors[0] ?? null
-    : row.sectors;
+  const practiceRow = firstRelation(row.practices);
+  const sectorRow = firstRelation(row.sectors);
 
   return {
     id: row.id,
@@ -166,12 +148,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   };
 });
 
-/**
- * Redirige vers /espace-praticien/login si l'utilisateur n'est pas
- * authentifié ou si son profil ne peut pas être chargé.
- * Redirige également vers login si Supabase n'est pas configuré
- * (la page login affichera un message expliquant la situation).
- */
+/** Redirige vers login si non authentifié / profil introuvable / Supabase off. */
 export async function requireUser(): Promise<{
   userId: string;
   email: string;
@@ -181,8 +158,6 @@ export async function requireUser(): Promise<{
     redirect(LOGIN_PATH);
   }
 
-  // getCurrentProfile() réutilise getSessionUser() via cache() — un seul
-  // aller-retour Auth + une seule lecture profil pour toute la requête.
   const profile = await getCurrentProfile();
   if (!profile) {
     redirect(LOGIN_PATH);
@@ -191,10 +166,7 @@ export async function requireUser(): Promise<{
   return { userId: profile.id, email: profile.email, profile };
 }
 
-/**
- * Comme `requireUser` mais s'assure que le profil a le rôle admin.
- * En cas contraire, redirige vers l'accueil praticien.
- */
+/** Comme `requireUser`, rôle admin requis. */
 export async function requireAdmin(): Promise<{
   userId: string;
   email: string;
@@ -207,10 +179,7 @@ export async function requireAdmin(): Promise<{
   return session;
 }
 
-/**
- * Comme `requireUser` mais s'assure que le profil est admin ou prothésiste
- * (personnel du labo). Utilisé par les routes /espace-praticien/laboratoire.
- */
+/** Comme `requireUser`, admin ou prothésiste (labo). */
 export async function requireLaboStaff(): Promise<{
   userId: string;
   email: string;
@@ -224,9 +193,7 @@ export async function requireLaboStaff(): Promise<{
 }
 
 /**
- * Comme `requireUser` mais s'assure que le profil est prothésiste (employé
- * du labo, périmètre du module congés). Un admin qui souhaite voir la page
- * n'est pas concerné : il passe par /espace-praticien/admin/conges.
+ * Prothésiste uniquement — les admins passent par /espace-praticien/admin/conges.
  */
 export async function requireProsthetist(): Promise<{
   userId: string;
