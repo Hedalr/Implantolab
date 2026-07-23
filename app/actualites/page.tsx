@@ -8,6 +8,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import { pageMetadata } from "@/lib/metadata";
 import { getLatestArticles } from "@/lib/notion";
+import { formatArticleDate } from "@/lib/utils/date";
+import { actualitesCta } from "./cta";
 
 export const revalidate = 600;
 
@@ -20,25 +22,7 @@ export const metadata = pageMetadata({
   path: "/actualites",
 });
 
-const cta = {
-  title: "Un cas à adresser ?",
-  description:
-    "Vous avez un cas à adresser, une question technique ou un besoin de devis ? Notre équipe vous répond rapidement pour vous orienter vers la solution la plus adaptée.",
-  primary: { label: "Nous contacter", href: "/contact" },
-  secondary: { label: "Envoyer un cas", href: "/contact?sujet=cas" },
-};
-
 const placeholderTones = ["warm", "cool", "deep"] as const;
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
 
 export default async function ActualitesPage() {
   const articles = await getLatestArticles();
@@ -117,7 +101,7 @@ export default async function ActualitesPage() {
                           dateTime={article.date}
                           className="text-[var(--ink-discreet)]"
                         >
-                          {formatDate(article.date)}
+                          {formatArticleDate(article.date)}
                         </time>
                       </div>
                       <h2 className="font-serif text-2xl leading-snug text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors text-balance">
@@ -155,7 +139,7 @@ export default async function ActualitesPage() {
         </Container>
       </section>
 
-      <PageCta cta={cta} />
+      <PageCta cta={actualitesCta} />
     </>
   );
 }

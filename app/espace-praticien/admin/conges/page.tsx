@@ -4,6 +4,8 @@ import { cn } from "@/lib/cn";
 import { AdminLeaveCalendar } from "@/components/espace-praticien/AdminLeaveCalendar";
 import { LeaveRangePreview } from "@/components/espace-praticien/LeaveRangePreview";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { firstRelation } from "@/lib/supabase/relation";
+import { formatDateRange, parseDateOnly } from "@/lib/utils/date";
 import {
   adminApproveLeaveRequest,
   adminDeleteLeaveRequest,
@@ -57,31 +59,6 @@ const FEEDBACK: Record<string, string> = {
     "Cette période chevauche déjà un congé confirmé ou en attente dans le même secteur.",
 };
 
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
-function parseDateOnly(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
-function formatDate(iso: string): string {
-  return dateFormatter.format(parseDateOnly(iso));
-}
-
-function formatRange(start: string, end: string): string {
-  if (start === end) return `Le ${formatDate(start)}`;
-  return `Du ${formatDate(start)} au ${formatDate(end)}`;
-}
-
-function extractRelation<T>(rel: T | T[] | null): T | null {
-  if (rel == null) return null;
-  return Array.isArray(rel) ? rel[0] ?? null : rel;
-}
-
 export default async function AdminCongesPage({
   searchParams,
 }: {
@@ -95,24 +72,25 @@ export default async function AdminCongesPage({
 
   const supabase = await getServerSupabase();
 
-  const { data: employeesData } = await supabase
-    .from("profiles")
-    .select(
-      "id, full_name, sector_id, leave_balance_days, sectors ( name, color )",
-    )
-    .eq("role", "prosthetist")
-    .order("full_name", { ascending: true });
-
-  const { data: leavesData } = await supabase
-    .from("leave_requests")
-    .select(
-      "id, profile_id, start_date, end_date, days_count, note, status, created_at, profiles ( full_name, sector_id, sectors ( name, color ) )",
-    )
-    .order("start_date", { ascending: true });
+  const [{ data: employeesData }, { data: leavesData }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(
+        "id, full_name, sector_id, leave_balance_days, sectors ( name, color )",
+      )
+      .eq("role", "prosthetist")
+      .order("full_name", { ascending: true }),
+    supabase
+      .from("leave_requests")
+      .select(
+        "id, profile_id, start_date, end_date, days_count, note, status, created_at, profiles ( full_name, sector_id, sectors ( name, color ) )",
+      )
+      .order("start_date", { ascending: true }),
+  ]);
 
   const employees = ((employeesData ?? []) as unknown as EmployeeRow[]).map(
     (e) => {
-      const sector = extractRelation(e.sectors);
+      const sector = firstRelation(e.sectors);
       return {
         id: e.id,
         fullName: e.full_name,
@@ -125,7 +103,7 @@ export default async function AdminCongesPage({
 
   const leaves = ((leavesData ?? []) as unknown as LeaveRow[]).map((l) => {
     const profile = l.profiles;
-    const sector = extractRelation(profile?.sectors ?? null);
+    const sector = firstRelation(profile?.sectors ?? null);
     return {
       id: l.id,
       profileId: l.profile_id,
@@ -236,7 +214,7 @@ export default async function AdminCongesPage({
                       </span>
                     </div>
                     <p className="text-sm text-[var(--ink-muted)]">
-                      {formatRange(l.startDate, l.endDate)} · {l.daysCount}{" "}
+                      {formatDateRange(l.startDate, l.endDate)} · {l.daysCount}{" "}
                       jour{l.daysCount > 1 ? "s" : ""}
                     </p>
                     {l.sectorName ? (
@@ -313,7 +291,7 @@ export default async function AdminCongesPage({
                       </span>
                     </div>
                     <p className="text-sm text-[var(--ink-muted)]">
-                      {formatRange(l.startDate, l.endDate)} · {l.daysCount} jour
+                      {formatDateRange(l.startDate, l.endDate)} · {l.daysCount} jour
                       {l.daysCount > 1 ? "s" : ""}
                     </p>
                     {l.sectorName ? (

@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { firstRelation } from "@/lib/supabase/relation";
 
 /**
  * Profil applicatif exposé aux composants server et aux routes.
@@ -27,11 +28,6 @@ export type Profile = {
 const LOGIN_PATH = "/espace-praticien/login";
 const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/demandes";
 const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
-
-function firstRelation<T>(value: T | T[] | null | undefined): T | null {
-  if (value == null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(

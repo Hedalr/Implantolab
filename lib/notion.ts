@@ -123,13 +123,6 @@ function readSelect(prop: unknown): string | undefined {
   return undefined;
 }
 
-function readCheckbox(prop: unknown): boolean {
-  if (!prop || typeof prop !== "object") return false;
-  const p = prop as NotionProperty;
-  if (p.type === "checkbox") return Boolean(p.checkbox);
-  return false;
-}
-
 /**
  * Ramène une URL d'image « propre » — quand elle pointe vers un fichier local
  * du site (convention `/photos/...`, voir `content/fr/site-photos.ts`), on ne

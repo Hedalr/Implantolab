@@ -164,11 +164,20 @@ export function FluxNumeriqueWorkflow({ section }: Props) {
       if (node) observer.observe(node);
     });
 
-    window.addEventListener("scroll", pickStepFromViewport, { passive: true });
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        pickStepFromViewport();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", pickStepFromViewport);
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
     };
   }, [steps.length, selectStepFromScroll]);
 

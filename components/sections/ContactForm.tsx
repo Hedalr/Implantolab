@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
+import { UnderlineField } from "@/components/ui/UnderlineField";
 
 type ContactFormProps = {
   theme?: "light" | "dark";
@@ -51,9 +52,9 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
       )}
     >
       <div className="grid gap-7 sm:grid-cols-2">
-        <Field label="Nom du praticien" name="name" required labelClass={labelBase} fieldClass={fieldBase} />
-        <Field label="Cabinet" name="cabinet" labelClass={labelBase} fieldClass={fieldBase} />
-        <Field
+        <UnderlineField label="Nom du praticien" name="name" required labelClass={labelBase} fieldClass={fieldBase} />
+        <UnderlineField label="Cabinet" name="cabinet" labelClass={labelBase} fieldClass={fieldBase} />
+        <UnderlineField
           label="Email"
           name="email"
           type="email"
@@ -62,7 +63,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
           fieldClass={fieldBase}
         />
         {!compact ? (
-          <Field
+          <UnderlineField
             label="Téléphone"
             name="phone"
             type="tel"
@@ -73,7 +74,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
       </div>
 
       {!compact ? (
-        <Field
+        <UnderlineField
           label="Sujet"
           name="subject"
           labelClass={labelBase}
@@ -83,7 +84,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
           <option value="devis">Demande de devis</option>
           <option value="technique">Question technique</option>
           <option value="autre">Autre</option>
-        </Field>
+        </UnderlineField>
       ) : null}
 
       <label className="flex flex-col gap-3">
@@ -160,56 +161,4 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
       </div>
     </form>
   );
-}
-
-type FieldProps = {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  labelClass: string;
-  fieldClass: string;
-  as?: "input" | "select";
-  children?: React.ReactNode;
-};
-
-function Field({
-  label,
-  name,
-  type = "text",
-  required,
-  labelClass,
-  fieldClass,
-  as = "input",
-  children,
-}: FieldProps) {
-  return (
-    <label className="flex flex-col gap-3">
-      <span className={labelClass}>
-        {label}
-        {required ? <span aria-hidden="true"> *</span> : null}
-      </span>
-      {as === "select" ? (
-        <select name={name} required={required} className={fieldClass}>
-          {children}
-        </select>
-      ) : (
-        <input
-          type={type}
-          name={name}
-          required={required}
-          autoComplete={autoCompleteFor(name, type)}
-          className={fieldClass}
-        />
-      )}
-    </label>
-  );
-}
-
-function autoCompleteFor(name: string, type: string): string | undefined {
-  if (type === "email") return "email";
-  if (type === "tel") return "tel";
-  if (name === "name") return "name";
-  if (name === "cabinet") return "organization";
-  return undefined;
 }

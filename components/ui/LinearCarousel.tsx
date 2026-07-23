@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -30,14 +23,6 @@ type CarouselProps = {
   className?: string;
 };
 
-export const CarouselContext = createContext<{
-  onCardClose: (index: number) => void;
-  currentIndex: number;
-}>({
-  onCardClose: () => {},
-  currentIndex: 0,
-});
-
 const CARD_WIDTH_MOBILE = 224;
 const CARD_WIDTH_DESKTOP = 320;
 const GAP = 16;
@@ -58,7 +43,6 @@ export function Carousel({
   const animationRef = useRef<number | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const reduceMotion = useReducedMotion();
   const loopedItems = items.length > 1 ? [...items, ...items] : items;
@@ -91,7 +75,6 @@ export function Carousel({
       if (node.scrollLeft >= node.scrollWidth / 2) {
         node.scrollLeft = 0;
       }
-      checkScrollability();
       animationRef.current = requestAnimationFrame(scroll);
     };
 
@@ -99,7 +82,7 @@ export function Carousel({
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [autoplay, autoplaySpeed, isPaused, reduceMotion, items.length, checkScrollability]);
+  }, [autoplay, autoplaySpeed, isPaused, reduceMotion, items.length]);
 
   const scrollByCards = (direction: -1 | 1) => {
     const node = carouselRef.current;
@@ -107,24 +90,14 @@ export function Carousel({
     node.scrollBy({ left: direction * getCardStep(), behavior: "smooth" });
   };
 
-  const handleCardClose = (index: number) => {
-    const node = carouselRef.current;
-    if (!node) return;
-    node.scrollTo({ left: getCardStep() * index, behavior: "smooth" });
-    setCurrentIndex(index);
-  };
-
   return (
-    <CarouselContext.Provider
-      value={{ onCardClose: handleCardClose, currentIndex }}
+    <div
+      className={cn("relative w-full", className)}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={() => setIsPaused(true)}
+      onTouchEnd={() => setIsPaused(false)}
     >
-      <div
-        className={cn("relative w-full", className)}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
-      >
         <div
           ref={carouselRef}
           onScroll={checkScrollability}
@@ -197,24 +170,20 @@ export function Carousel({
           </button>
         </div>
       </div>
-    </CarouselContext.Provider>
   );
 }
 
 export function Card({
   card,
   index,
-  layout = false,
   priority = false,
 }: {
   card: CardData;
   index: number;
-  layout?: boolean;
   priority?: boolean;
 }) {
   return (
     <motion.article
-      layoutId={layout ? `card-${card.title}` : undefined}
       className="relative z-10 w-56 overflow-hidden border border-[var(--line)] bg-[var(--bg-elevated)] md:w-80"
     >
       <VisualPlaceholder
@@ -235,14 +204,12 @@ export function Card({
       <div className="absolute inset-x-0 bottom-0 z-30 w-full p-5 md:p-7">
         {card.category ? (
           <motion.p
-            layoutId={layout ? `category-${card.title}` : undefined}
             className="text-left text-[0.65rem] uppercase tracking-[0.16em] text-white/85 md:text-xs"
           >
             {card.category}
           </motion.p>
         ) : null}
         <motion.h3
-          layoutId={layout ? `title-${card.title}` : undefined}
           className="mt-2 max-w-xs text-left font-serif text-xl text-white md:text-2xl [text-wrap:balance]"
         >
           {card.title}

@@ -209,82 +209,6 @@ export const home = {
     ],
   },
 
-  reassurance: {
-    intro:
-      "Nous mettons à votre disposition un savoir-faire technique, une organisation rigoureuse et des outils numériques performants pour garantir des restaurations précises, des échanges fluides et des délais maîtrisés.",
-    pillars: [
-      {
-        title: "Fabrication sur mesure",
-        description:
-          "Chaque restauration est conçue et ajustée selon les spécificités cliniques du cas.",
-      },
-      {
-        title: "Expertise implantaire",
-        description:
-          "Protocoles adaptés aux contraintes implantaires, de la planification à la livraison.",
-      },
-      {
-        title: "Flux numérique",
-        description:
-          "Intégration CFAO pour une chaîne numérique fiable et traçable.",
-      },
-      {
-        title: "Délais maîtrisés",
-        description:
-          "Organisation interne structurée pour respecter vos plannings de soins.",
-      },
-      {
-        title: "Accompagnement praticien",
-        description:
-          "Un interlocuteur technique disponible à chaque étape du cas.",
-      },
-    ],
-  },
-
-  labIntro: {
-    eyebrow: "Le laboratoire",
-    title: "Chaîne de production interne, un réel 100 % Made in Blois",
-    body: "Chaque prothèse dentaire est fabriquée en interne, dans nos ateliers de Blois. Nous disposons de notre propre chaîne de production et d’un centre d’usinage dédié à nos clients — pas de sous-traitance : la totalité des étapes, de la conception CAO à la finition céramique, est réalisée par notre équipe de prothésistes.",
-    highlights: [
-      "Chaîne de production 100 % interne",
-      "Centre d’usinage dédié à nos clients",
-      "Locaux à Blois — Loir-et-Cher",
-    ],
-    // On retire le lien pour éviter la duplication avec le CTA du Hero
-    // qui pointe déjà vers /laboratoire (voir Chantier 2.4 du plan).
-    link: null as { label: string; href: string } | null,
-    photoCaption: "Équipe IMPLANTOLAB — atelier",
-    processEyebrow: "De la conception à la livraison",
-    processFootnote: "Fabrication 100 % interne — Blois",
-    processSteps: [
-      {
-        title: "Conception CAO",
-        description:
-          "Modélisation numérique du cas à partir de vos empreintes ou scans intra-oraux.",
-      },
-      {
-        title: "Sélection des matériaux",
-        description:
-          "Choix de la zircone, du disilicate ou du titane adaptés à chaque restauration.",
-      },
-      {
-        title: "Usinage & impression 3D",
-        description:
-          "Fabrication en CFAO 5 axes, pilotée depuis notre centre d’usinage intégré.",
-      },
-      {
-        title: "Finition céramique",
-        description:
-          "Stratification, polissage et ajustements réalisés à la main par nos prothésistes.",
-      },
-      {
-        title: "Contrôle qualité",
-        description:
-          "Vérification de la forme, de la teinte et de l’adaptation avant expédition.",
-      },
-    ],
-  },
-
   ctaTriptych: {
     eyebrow: "Aller plus loin",
     title: "Comment souhaitez-vous nous solliciter ?",
@@ -311,40 +235,6 @@ export const home = {
         tone: "deep" as const,
       },
     ],
-  },
-
-  news: {
-    eyebrow: "Actualités",
-    title: "Les dernières nouveautés du laboratoire",
-    description:
-      "Nouveaux matériaux, événements, ouvertures de postes : suivez la vie d’IMPLANTOLAB.",
-    link: { label: "Toutes les actualités", href: "/actualites" },
-  },
-
-  quality: {
-    eyebrow: "Laboratoire",
-    title: "Rigueur, traçabilité et qualité de fabrication",
-    description:
-      "Notre laboratoire s’appuie sur des processus documentés, un contrôle qualité systématique et une équipe spécialisée pour garantir des restaurations conformes à vos exigences cliniques.",
-    indicators: [
-      {
-        title: "Contrôle qualité",
-        description:
-          "Vérification systématique de chaque restauration avant expédition.",
-      },
-      {
-        title: "Traçabilité complète",
-        description:
-          "Suivi des matériaux et des étapes de fabrication, lot par lot.",
-      },
-      {
-        title: "Interlocuteur dédié",
-        description:
-          "Un référent technique pour le suivi de vos cas et de vos délais.",
-      },
-    ],
-    link: { label: "Découvrir le laboratoire", href: "/laboratoire" },
-    visualCaption: "Contrôle qualité — atelier",
   },
 
   contact: {

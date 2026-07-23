@@ -64,7 +64,7 @@ export function ParallaxImage({
     <motion.div
       ref={ref}
       style={enabled ? { y } : undefined}
-      className={cn("will-change-transform", className)}
+      className={cn(enabled && "will-change-transform", className)}
     >
       {children}
     </motion.div>

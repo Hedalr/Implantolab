@@ -9,6 +9,8 @@ import { PageCta } from "@/components/sections/PageCta";
 import { VisualPlaceholder } from "@/components/ui/VisualPlaceholder";
 import { site } from "@/content/fr/site";
 import { getAllSlugs, getArticleBySlug } from "@/lib/notion";
+import { formatArticleDate } from "@/lib/utils/date";
+import { actualitesCta } from "../cta";
 
 import "./prose.css";
 
@@ -19,24 +21,6 @@ type Params = { slug: string };
 type PageProps = {
   params: Promise<Params>;
 };
-
-const cta = {
-  title: "Un cas à adresser ?",
-  description:
-    "Vous avez un cas à adresser, une question technique ou un besoin de devis ? Notre équipe vous répond rapidement pour vous orienter vers la solution la plus adaptée.",
-  primary: { label: "Nous contacter", href: "/contact" },
-  secondary: { label: "Envoyer un cas", href: "/contact?sujet=cas" },
-};
-
-function formatDate(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
 
 export async function generateStaticParams(): Promise<Params[]> {
   try {
@@ -100,7 +84,7 @@ export default async function ArticlePage({ params }: PageProps) {
       <PageHero
         eyebrow={article.category ?? "Actualité"}
         title={article.title}
-        intro={article.excerpt || formatDate(article.date)}
+        intro={article.excerpt || formatArticleDate(article.date)}
       />
 
       <section className="bg-[var(--bg)] border-b border-[var(--line)]">
@@ -111,7 +95,7 @@ export default async function ArticlePage({ params }: PageProps) {
                 dateTime={article.date}
                 className="text-[var(--ink-discreet)]"
               >
-                {formatDate(article.date)}
+                {formatArticleDate(article.date)}
               </time>
               {article.category ? (
                 <>
@@ -177,7 +161,7 @@ export default async function ArticlePage({ params }: PageProps) {
         </Container>
       </section>
 
-      <PageCta cta={cta} />
+      <PageCta cta={actualitesCta} />
     </>
   );
 }

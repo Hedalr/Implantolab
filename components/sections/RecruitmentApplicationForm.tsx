@@ -2,6 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
+import {
+  authFieldClassName,
+  authLabelClassName,
+} from "@/components/auth/authFormStyles";
+import { UnderlineField } from "@/components/ui/UnderlineField";
 
 type RecruitmentApplicationFormProps = {
   openings: string[];
@@ -31,12 +36,7 @@ export function RecruitmentApplicationForm({
   const [selectedFileNames, setSelectedFileNames] = useState<string[]>([]);
 
   const posteOptions = [...openings, STAGE_OPTION, ALTERNANCE_OPTION];
-  const initialPoste =
-    defaultPoste && posteOptions.includes(defaultPoste)
-      ? defaultPoste
-      : defaultPoste
-        ? defaultPoste
-        : STAGE_OPTION;
+  const initialPoste = defaultPoste || STAGE_OPTION;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,45 +80,37 @@ export function RecruitmentApplicationForm({
     }
   }
 
-  const fieldBase = cn(
-    "w-full bg-transparent border-b py-3 text-base transition-colors",
-    "placeholder:text-[var(--ink-discreet)] focus:outline-none",
-    "text-[var(--ink)] border-[var(--line-strong)] focus:border-[var(--ink)]",
-  );
-
-  const labelBase = "text-eyebrow text-[var(--ink-discreet)]";
-
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-7">
       <div className="grid gap-7 sm:grid-cols-2">
-        <Field
+        <UnderlineField
           label="Nom et prénom"
           name="name"
           required
-          labelClass={labelBase}
-          fieldClass={fieldBase}
+          labelClass={authLabelClassName}
+          fieldClass={authFieldClassName}
         />
-        <Field
+        <UnderlineField
           label="Téléphone"
           name="phone"
           type="tel"
-          labelClass={labelBase}
-          fieldClass={fieldBase}
+          labelClass={authLabelClassName}
+          fieldClass={authFieldClassName}
         />
-        <Field
+        <UnderlineField
           label="Email"
           name="email"
           type="email"
           required
-          labelClass={labelBase}
-          fieldClass={fieldBase}
+          labelClass={authLabelClassName}
+          fieldClass={authFieldClassName}
         />
-        <Field
+        <UnderlineField
           label="Poste visé"
           name="poste"
           required
-          labelClass={labelBase}
-          fieldClass={fieldBase}
+          labelClass={authLabelClassName}
+          fieldClass={authFieldClassName}
           as="select"
           defaultValue={initialPoste}
         >
@@ -130,11 +122,11 @@ export function RecruitmentApplicationForm({
           {defaultPoste && !posteOptions.includes(defaultPoste) ? (
             <option value={defaultPoste}>{defaultPoste}</option>
           ) : null}
-        </Field>
+        </UnderlineField>
       </div>
 
       <label className="flex flex-col gap-3">
-        <span className={labelBase}>
+        <span className={authLabelClassName}>
           CV & pièces jointes <span aria-hidden="true">*</span>
         </span>
         <div className="flex flex-col gap-2">
@@ -145,7 +137,7 @@ export function RecruitmentApplicationForm({
             multiple
             accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             className={cn(
-              fieldBase,
+              authFieldClassName,
               "cursor-pointer file:mr-4 file:border-0 file:bg-transparent file:text-sm file:tracking-wide file:text-[var(--ink)]",
             )}
             onChange={(event) => {
@@ -180,7 +172,7 @@ export function RecruitmentApplicationForm({
       </label>
 
       <label className="flex flex-col gap-3">
-        <span className={labelBase}>
+        <span className={authLabelClassName}>
           Message <span aria-hidden="true">*</span>
         </span>
         <textarea
@@ -188,7 +180,7 @@ export function RecruitmentApplicationForm({
           required
           rows={6}
           placeholder="Présentez brièvement votre parcours, votre expérience et ce qui vous motive à rejoindre IMPLANTOLAB."
-          className={cn(fieldBase, "resize-none border rounded-none p-4 border-b")}
+          className={cn(authFieldClassName, "resize-none border rounded-none p-4 border-b")}
           style={{ borderBottomWidth: "1px" }}
         />
       </label>
@@ -245,62 +237,4 @@ export function RecruitmentApplicationForm({
       </div>
     </form>
   );
-}
-
-type FieldProps = {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  labelClass: string;
-  fieldClass: string;
-  as?: "input" | "select";
-  defaultValue?: string;
-  children?: React.ReactNode;
-};
-
-function Field({
-  label,
-  name,
-  type = "text",
-  required,
-  labelClass,
-  fieldClass,
-  as = "input",
-  defaultValue,
-  children,
-}: FieldProps) {
-  return (
-    <label className="flex flex-col gap-3">
-      <span className={labelClass}>
-        {label}
-        {required ? <span aria-hidden="true"> *</span> : null}
-      </span>
-      {as === "select" ? (
-        <select
-          name={name}
-          required={required}
-          defaultValue={defaultValue}
-          className={fieldClass}
-        >
-          {children}
-        </select>
-      ) : (
-        <input
-          type={type}
-          name={name}
-          required={required}
-          autoComplete={autoCompleteFor(name, type)}
-          className={fieldClass}
-        />
-      )}
-    </label>
-  );
-}
-
-function autoCompleteFor(name: string, type: string): string | undefined {
-  if (type === "email") return "email";
-  if (type === "tel") return "tel";
-  if (name === "name") return "name";
-  return undefined;
 }

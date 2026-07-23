@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/espace-praticien/FormField";
 import { cn } from "@/lib/cn";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import {
+  countInclusiveDays,
+  formatDateRange,
+  parseDateOnly,
+} from "@/lib/utils/date";
 import { addClosurePeriod, deleteClosurePeriod } from "./actions";
 
 export const metadata: Metadata = {
@@ -30,32 +36,6 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   "no-practice":
     "Votre cabinet n’est pas encore rattaché à votre compte.",
 };
-
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
-function parseDateOnly(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
-function formatDate(iso: string): string {
-  return dateFormatter.format(parseDateOnly(iso));
-}
-
-function formatRange(start: string, end: string): string {
-  if (start === end) return `Le ${formatDate(start)}`;
-  return `Du ${formatDate(start)} au ${formatDate(end)}`;
-}
-
-function countDays(start: string, end: string): number {
-  const s = parseDateOnly(start).getTime();
-  const e = parseDateOnly(end).getTime();
-  return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
-}
 
 export default async function FermeturesPage({
   searchParams,
@@ -200,11 +180,13 @@ export default async function FermeturesPage({
                   >
                     <div className="flex flex-col gap-1.5">
                       <p className="font-serif text-lg text-[var(--ink)]">
-                        {formatRange(row.start_date, row.end_date)}
+                        {formatDateRange(row.start_date, row.end_date)}
                       </p>
                       <p className="text-xs text-[var(--ink-discreet)] tracking-wide uppercase">
-                        {countDays(row.start_date, row.end_date)} jour
-                        {countDays(row.start_date, row.end_date) > 1 ? "s" : ""}
+                        {countInclusiveDays(row.start_date, row.end_date)} jour
+                        {countInclusiveDays(row.start_date, row.end_date) > 1
+                          ? "s"
+                          : ""}
                       </p>
                       {row.note ? (
                         <p className="mt-1 text-sm text-[var(--ink-muted)] leading-relaxed">
@@ -260,7 +242,7 @@ export default async function FermeturesPage({
                       className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
                     >
                       <span className="text-[var(--ink)]">
-                        {formatRange(row.start_date, row.end_date)}
+                        {formatDateRange(row.start_date, row.end_date)}
                       </span>
                       {row.note ? (
                         <span className="text-[var(--ink-discreet)] sm:text-right sm:max-w-[60%]">
@@ -329,33 +311,6 @@ function CardHeader({
         <p className="mt-1 text-sm text-[var(--ink-discreet)] leading-relaxed">
           {description}
         </p>
-      ) : null}
-    </div>
-  );
-}
-
-function FormField({
-  label,
-  htmlFor,
-  hint,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  hint?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-eyebrow">
-        {label}
-        {required ? <span aria-hidden="true"> *</span> : null}
-      </label>
-      {children}
-      {hint ? (
-        <span className="text-xs text-[var(--ink-discreet)]">{hint}</span>
       ) : null}
     </div>
   );

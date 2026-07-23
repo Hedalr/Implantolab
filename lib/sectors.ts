@@ -7,10 +7,6 @@ export const LAB_SECTOR_NAMES = ["Numérique", "Amovible", "Conjoint"] as const;
 
 export type LabSectorName = (typeof LAB_SECTOR_NAMES)[number];
 
-export function isLabSectorName(value: string): value is LabSectorName {
-  return (LAB_SECTOR_NAMES as readonly string[]).includes(value);
-}
-
 export type LabSector = {
   id: string;
   name: string;

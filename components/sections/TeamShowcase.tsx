@@ -1,5 +1,3 @@
-"use client";
-
 import { home } from "@/content/fr/home";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";

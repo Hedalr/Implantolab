@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { RequestMediaItem } from "@/components/requests/RequestMediaGallery";
+import { firstRelation } from "@/lib/supabase/relation";
 import {
   LAB_SECTOR_NAMES,
   sortLabSectors,
@@ -40,11 +41,6 @@ type RequestQueryRow = {
     | null;
 };
 
-function extractRelation<T>(value: T | T[] | null | undefined): T | null {
-  if (!value) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
 async function mapRequestRows(
   supabase: SupabaseClient,
   rows: RequestQueryRow[],
@@ -69,8 +65,8 @@ async function mapRequestRows(
   }
 
   return rows.map((row) => {
-    const practiceRow = extractRelation(row.practices);
-    const sectorRow = extractRelation(row.sectors);
+    const practiceRow = firstRelation(row.practices);
+    const sectorRow = firstRelation(row.sectors);
 
     return {
       id: row.id,

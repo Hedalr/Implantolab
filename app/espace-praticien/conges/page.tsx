@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/espace-praticien/FormField";
 import { cn } from "@/lib/cn";
 import { getServerSupabase, requireProsthetist } from "@/lib/supabase/server";
+import { formatDateRange, parseDateOnly } from "@/lib/utils/date";
 import { addLeaveRequest, deleteLeaveRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -42,31 +44,11 @@ const FEEDBACK: Record<string, string> = {
   profile: "Votre profil est incomplet. Contactez l’administrateur.",
 };
 
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
 const shortDateFormatter = new Intl.DateTimeFormat("fr-FR", {
   day: "2-digit",
   month: "2-digit",
   year: "numeric",
 });
-
-function parseDateOnly(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
-function formatDate(iso: string): string {
-  return dateFormatter.format(parseDateOnly(iso));
-}
-
-function formatRange(start: string, end: string): string {
-  if (start === end) return `Le ${formatDate(start)}`;
-  return `Du ${formatDate(start)} au ${formatDate(end)}`;
-}
 
 /**
  * Le trigger de conflit renvoie un message du type
@@ -237,7 +219,7 @@ export default async function CongesPage({
                     <div className="flex flex-col gap-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-serif text-lg text-[var(--ink)]">
-                          {formatRange(row.start_date, row.end_date)}
+                          {formatDateRange(row.start_date, row.end_date)}
                         </p>
                         <StatusBadge status={row.status} />
                       </div>
@@ -300,7 +282,7 @@ export default async function CongesPage({
                       className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
                     >
                       <span className="text-[var(--ink)]">
-                        {formatRange(row.start_date, row.end_date)}
+                        {formatDateRange(row.start_date, row.end_date)}
                       </span>
                       <span className="text-[var(--ink-discreet)] sm:text-right">
                         {STATUS_LABEL[row.status]} · {row.days_count} jour
@@ -456,33 +438,6 @@ function CardHeader({
         <p className="mt-1 text-sm text-[var(--ink-discreet)] leading-relaxed">
           {description}
         </p>
-      ) : null}
-    </div>
-  );
-}
-
-function FormField({
-  label,
-  htmlFor,
-  hint,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  hint?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-eyebrow">
-        {label}
-        {required ? <span aria-hidden="true"> *</span> : null}
-      </label>
-      {children}
-      {hint ? (
-        <span className="text-xs text-[var(--ink-discreet)]">{hint}</span>
       ) : null}
     </div>
   );
