@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 
-function labRedirect(params: Record<string, string>): never {
-  const query = new URLSearchParams(params).toString();
-  redirect(`/espace-praticien/laboratoire?${query}`);
-}
-
 async function updateRequestStatus(
   formData: FormData,
   status: "open" | "closed",
@@ -17,7 +12,7 @@ async function updateRequestStatus(
 
   const id = String(formData.get("id") ?? "").trim();
   if (!id) {
-    labRedirect({ error: "missing" });
+    redirect("/espace-praticien/laboratoire?error=missing");
   }
 
   const supabase = await getServerSupabase();

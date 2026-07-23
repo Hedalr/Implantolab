@@ -1,35 +1,28 @@
 import Link from "next/link";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
+  fetchRequestMediaItems,
   LAB_REQUESTS_PAGE_SIZE,
   listAdminRequests,
+  parseRequestStatusFilter,
   type AdminRequestRow,
+  type RequestStatusFilter,
 } from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
-import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
+import {
+  RequestMediaGallery,
+  type RequestMediaItem,
+} from "@/components/requests/RequestMediaGallery";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 type RequestRow = AdminRequestRow;
 
-type RequestMediaRow = {
-  id: string;
-  request_id: string;
-  original_filename: string | null;
-  mime_type: string | null;
-};
-
-type StatusFilter = "all" | "open" | "closed";
-
-function parseStatus(value: string | string[] | undefined): StatusFilter {
-  const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === "all" || raw === "open" || raw === "closed") return raw;
-  return "open";
-}
+type StatusFilter = RequestStatusFilter;
 
 function parsePage(value: string | string[] | undefined): number {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -75,7 +68,7 @@ export default async function AdminRequestsPage({
     patient: rawPatient,
     page: rawPage,
   } = await searchParams;
-  const status = parseStatus(rawStatus);
+  const status = parseRequestStatusFilter(rawStatus);
   const patientQuery =
     (Array.isArray(rawPatient) ? rawPatient[0] : rawPatient)?.trim() ?? "";
   const page = parsePage(rawPage);
@@ -94,21 +87,10 @@ export default async function AdminRequestsPage({
     pageSize: LAB_REQUESTS_PAGE_SIZE,
   });
 
-  const requestIds = requests.map((r) => r.id);
-  const { data: mediaData } =
-    requestIds.length > 0
-      ? await supabase
-          .from("request_media")
-          .select("id, request_id, original_filename, mime_type")
-          .in("request_id", requestIds)
-      : { data: [] as RequestMediaRow[] };
-  const mediaRows = (mediaData ?? []) as RequestMediaRow[];
-  const mediaByRequest = new Map<string, RequestMediaRow[]>();
-  for (const media of mediaRows) {
-    const list = mediaByRequest.get(media.request_id) ?? [];
-    list.push(media);
-    mediaByRequest.set(media.request_id, list);
-  }
+  const mediaByRequest = await fetchRequestMediaItems(
+    supabase,
+    requests.map((r) => r.id),
+  );
 
   return (
     <Container size="wide" className="py-10 md:py-14">
@@ -288,69 +270,61 @@ function RequestRowView({
   statusFilter,
 }: {
   row: RequestRow;
-  media: RequestMediaRow[];
+  media: RequestMediaItem[];
   statusFilter: StatusFilter;
 }) {
   const practiceLabel = row.practices?.name ?? "—";
   const practitionerLabel = row.creatorName ?? "—";
 
   return (
-    <>
-      <tr className="align-top">
-        <td className="px-4 py-3 border-b border-[var(--line)] text-numeral text-xs text-[var(--ink-muted)]">
-          {dateTimeFormatter.format(new Date(row.created_at))}
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
-          {practiceLabel}
-          {row.practices?.city ? (
-            <span className="block text-xs text-[var(--ink-discreet)]">
-              {row.practices.city}
+    <tr className="align-top">
+      <td className="px-4 py-3 border-b border-[var(--line)] text-numeral text-xs text-[var(--ink-muted)]">
+        {dateTimeFormatter.format(new Date(row.created_at))}
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
+        {practiceLabel}
+        {row.practices?.city ? (
+          <span className="block text-xs text-[var(--ink-discreet)]">
+            {row.practices.city}
+          </span>
+        ) : null}
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
+        {practitionerLabel}
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
+        {row.patientName ?? "—"}
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)]">
+        <CategoryBadge category={row.subject} />
+        <details className="group mt-2">
+          <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
+            <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
+              Voir le message
+              {media.length > 0
+                ? ` (${media.length} photo${media.length > 1 ? "s" : ""})`
+                : ""}
             </span>
-          ) : null}
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
-          {practitionerLabel}
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
-          {row.patientName ?? "—"}
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)]">
-          <CategoryBadge category={row.subject} />
-          <details className="group mt-2">
-            <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
-              <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
-                Voir le message
-                {media.length > 0
-                  ? ` (${media.length} photo${media.length > 1 ? "s" : ""})`
-                  : ""}
-              </span>
-              <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
-                Masquer
-              </span>
-            </summary>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--ink-muted)] max-w-2xl">
-              {row.message}
-            </p>
-            <RequestMediaGallery
-              media={media.map((m) => ({
-                id: m.id,
-                filename: m.original_filename,
-                mimeType: m.mime_type,
-              }))}
-            />
-          </details>
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
-          {row.sectorName ?? "—"}
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)]">
-          <StatusBadge status={row.status} />
-        </td>
-        <td className="px-4 py-3 border-b border-[var(--line)] text-right">
-          <RequestActionForm row={row} statusFilter={statusFilter} />
-        </td>
-      </tr>
-    </>
+            <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
+              Masquer
+            </span>
+          </summary>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--ink-muted)] max-w-2xl">
+            {row.message}
+          </p>
+          <RequestMediaGallery media={media} />
+        </details>
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
+        {row.sectorName ?? "—"}
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)]">
+        <StatusBadge status={row.status} />
+      </td>
+      <td className="px-4 py-3 border-b border-[var(--line)] text-right">
+        <RequestActionForm row={row} statusFilter={statusFilter} />
+      </td>
+    </tr>
   );
 }
 

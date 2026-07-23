@@ -7,8 +7,14 @@ import {
   REQUEST_CATEGORIES,
   formatRequestCategory,
 } from "@/lib/requests/types";
-import { listLabSectors } from "@/lib/requests/queries";
-import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
+import {
+  fetchRequestMediaItems,
+  listLabSectors,
+} from "@/lib/requests/queries";
+import {
+  RequestMediaGallery,
+  type RequestMediaItem,
+} from "@/components/requests/RequestMediaGallery";
 import { createRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -25,15 +31,7 @@ type RequestRow = {
   status: "open" | "closed";
   created_at: string;
   patient_name: string | null;
-  sector_id: string | null;
   sectors: { name: string | null; color: string | null } | null;
-};
-
-type RequestMediaRow = {
-  id: string;
-  request_id: string;
-  original_filename: string | null;
-  mime_type: string | null;
 };
 
 const FEEDBACK_MESSAGES: Record<string, string> = {
@@ -115,7 +113,7 @@ export default async function DemandesPage({
     supabase
       .from("requests")
       .select(
-        "id, subject, message, status, created_at, patient_name, sector_id, sectors ( name, color )",
+        "id, subject, message, status, created_at, patient_name, sectors ( name, color )",
       )
       .eq("practice_id", profile.practiceId)
       .order("created_at", { ascending: false }),
@@ -125,21 +123,10 @@ export default async function DemandesPage({
   const openRows = rows.filter((r) => r.status === "open");
   const closedRows = rows.filter((r) => r.status === "closed");
 
-  const requestIds = rows.map((r) => r.id);
-  const { data: mediaData } =
-    requestIds.length > 0
-      ? await supabase
-          .from("request_media")
-          .select("id, request_id, original_filename, mime_type")
-          .in("request_id", requestIds)
-      : { data: [] as RequestMediaRow[] };
-  const mediaRows = (mediaData ?? []) as RequestMediaRow[];
-  const mediaByRequest = new Map<string, RequestMediaRow[]>();
-  for (const media of mediaRows) {
-    const list = mediaByRequest.get(media.request_id) ?? [];
-    list.push(media);
-    mediaByRequest.set(media.request_id, list);
-  }
+  const mediaByRequest = await fetchRequestMediaItems(
+    supabase,
+    rows.map((r) => r.id),
+  );
 
   return (
     <Container size="wide" className="py-12 md:py-16">
@@ -427,7 +414,7 @@ function RequestCard({
   media,
 }: {
   row: RequestRow;
-  media: RequestMediaRow[];
+  media: RequestMediaItem[];
 }) {
   return (
     <article className="bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-7">
@@ -456,13 +443,7 @@ function RequestCard({
       <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed whitespace-pre-line">
         {row.message}
       </p>
-      <RequestMediaGallery
-        media={media.map((m) => ({
-          id: m.id,
-          filename: m.original_filename,
-          mimeType: m.mime_type,
-        }))}
-      />
+      <RequestMediaGallery media={media} />
     </article>
   );
 }

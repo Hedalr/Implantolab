@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RequestMediaItem } from "@/components/requests/RequestMediaGallery";
 import {
   LAB_SECTOR_NAMES,
   sortLabSectors,
@@ -116,7 +117,7 @@ export async function listLabSectors(
 export const LAB_REQUESTS_PAGE_SIZE = 30;
 
 export type LabRequestFilters = {
-  status?: "all" | "open" | "closed";
+  status?: RequestStatusFilter;
   sectorId?: string | "all";
   /** Préfixe du nom patient (insensible à la casse). */
   patientQuery?: string;
@@ -199,4 +200,54 @@ export async function getLabRequestById(
     data as unknown as RequestQueryRow,
   ]);
   return mapped ?? null;
+}
+
+export const REQUEST_STATUS_FILTERS = ["all", "open", "closed"] as const;
+export type RequestStatusFilter = (typeof REQUEST_STATUS_FILTERS)[number];
+
+/** Normalise une valeur de statut (query string ou form) vers un filtre connu. */
+export function parseRequestStatusFilter(
+  value: string | string[] | undefined,
+  fallback: RequestStatusFilter = "open",
+): RequestStatusFilter {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return REQUEST_STATUS_FILTERS.includes(raw as RequestStatusFilter)
+    ? (raw as RequestStatusFilter)
+    : fallback;
+}
+
+type RequestMediaDbRow = {
+  id: string;
+  request_id: string;
+  original_filename: string | null;
+  mime_type: string | null;
+};
+
+/**
+ * Charge les photos jointes pour un lot de demandes et les regroupe par
+ * `requestId`, prêtes à passer à `RequestMediaGallery`.
+ */
+export async function fetchRequestMediaItems(
+  supabase: SupabaseClient,
+  requestIds: string[],
+): Promise<Map<string, RequestMediaItem[]>> {
+  const grouped = new Map<string, RequestMediaItem[]>();
+  if (requestIds.length === 0) return grouped;
+
+  const { data } = await supabase
+    .from("request_media")
+    .select("id, request_id, original_filename, mime_type")
+    .in("request_id", requestIds)
+    .order("created_at", { ascending: true });
+
+  for (const row of (data ?? []) as RequestMediaDbRow[]) {
+    const list = grouped.get(row.request_id) ?? [];
+    list.push({
+      id: row.id,
+      filename: row.original_filename,
+      mimeType: row.mime_type,
+    });
+    grouped.set(row.request_id, list);
+  }
+  return grouped;
 }

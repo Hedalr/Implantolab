@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { parseRequestStatusFilter } from "@/lib/requests/queries";
 
 function pickStatusRedirect(status: FormDataEntryValue | null): string {
-  const value = typeof status === "string" ? status : "";
-  const allowed = ["all", "open", "closed"] as const;
-  const safe = (allowed as readonly string[]).includes(value) ? value : "open";
+  const safe = parseRequestStatusFilter(
+    typeof status === "string" ? status : undefined,
+  );
   return `/espace-praticien/admin/demandes?status=${safe}`;
 }
 

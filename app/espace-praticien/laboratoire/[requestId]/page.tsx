@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
-import { getLabRequestById } from "@/lib/requests/queries";
+import {
+  fetchRequestMediaItems,
+  getLabRequestById,
+} from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/cn";
+import { Badge } from "../Badge";
 import {
   markLabRequestClosed,
   markLabRequestOpen,
@@ -15,12 +18,6 @@ import {
 export const metadata: Metadata = {
   title: "Demande — Laboratoire",
   robots: { index: false, follow: false },
-};
-
-type RequestMediaRow = {
-  id: string;
-  original_filename: string | null;
-  mime_type: string | null;
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -46,13 +43,8 @@ export default async function LabRequestDetailPage({
   const request = await getLabRequestById(supabase, requestId);
   if (!request) notFound();
 
-  const { data: mediaData } = await supabase
-    .from("request_media")
-    .select("id, original_filename, mime_type")
-    .eq("request_id", requestId)
-    .order("created_at", { ascending: true });
-
-  const media = (mediaData ?? []) as RequestMediaRow[];
+  const mediaByRequest = await fetchRequestMediaItems(supabase, [requestId]);
+  const media = mediaByRequest.get(requestId) ?? [];
 
   return (
     <div className="flex flex-col gap-8 max-w-3xl">
@@ -128,13 +120,7 @@ export default async function LabRequestDetailPage({
         <p className="text-[var(--ink)] leading-relaxed whitespace-pre-line">
           {request.message}
         </p>
-        <RequestMediaGallery
-          media={media.map((m) => ({
-            id: m.id,
-            filename: m.original_filename,
-            mimeType: m.mime_type,
-          }))}
-        />
+        <RequestMediaGallery media={media} />
       </section>
 
       <form
@@ -151,35 +137,5 @@ export default async function LabRequestDetailPage({
         </Button>
       </form>
     </div>
-  );
-}
-
-function Badge({
-  label,
-  warm,
-  color,
-}: {
-  label: string;
-  warm?: boolean;
-  color?: string | null;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 border px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] shrink-0",
-        warm
-          ? "border-[var(--accent-warm)] text-[var(--accent-warm)]"
-          : "border-[var(--line-strong)] text-[var(--ink)]",
-      )}
-    >
-      {color ? (
-        <span
-          aria-hidden="true"
-          className="h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-      ) : null}
-      {label}
-    </span>
   );
 }
