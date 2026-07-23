@@ -7,8 +7,18 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { BackButton } from "@/components/ui/BackButton";
 import { MobileNav } from "@/components/layout/MobileNav";
-import { NavDropdown } from "@/components/layout/NavDropdown";
+import { MotionNavDropdownPanel } from "@/components/layout/MotionNavDropdownPanel";
+import { isNavActive, linkTone } from "@/components/layout/nav-utils";
 import { Container } from "@/components/ui/Container";
+import { cn } from "@/lib/cn";
+import {
+  MotionNavigationMenu,
+  MotionNavigationMenuContent,
+  MotionNavigationMenuItem,
+  MotionNavigationMenuLink,
+  MotionNavigationMenuList,
+  MotionNavigationMenuTrigger,
+} from "@/components/ui/motion-navigation-menu";
 
 type HeaderProps = {
   userDisplayName?: string | null;
@@ -27,19 +37,67 @@ export function Header({ userDisplayName = null }: HeaderProps) {
             <Logo showWordmark />
           </div>
 
-          <nav
+          <MotionNavigationMenu
             aria-label="Navigation principale"
-            className="hidden lg:flex items-center gap-7 xl:gap-9"
+            className="hidden lg:flex"
           >
-            {primaryNav.map((link) => {
-              const isActive =
-                pathname === link.href ||
-                (link.href !== "/" && pathname.startsWith(link.href));
-              return (
-                <NavDropdown key={link.href} link={link} isActive={isActive} />
-              );
-            })}
-          </nav>
+            <MotionNavigationMenuList className="gap-1 xl:gap-2">
+              {primaryNav.map((link) => {
+                const active = isNavActive(pathname, link);
+                const children = link.children;
+
+                if (!children?.length) {
+                  return (
+                    <MotionNavigationMenuItem key={link.href}>
+                      <MotionNavigationMenuLink
+                        href={link.href}
+                        className={cn(
+                          "relative h-9 justify-center px-3 py-2 text-sm tracking-wide",
+                          linkTone(active),
+                        )}
+                      >
+                        {link.label}
+                        {active ? (
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-x-3 -bottom-px h-px bg-[var(--accent)]"
+                          />
+                        ) : null}
+                      </MotionNavigationMenuLink>
+                    </MotionNavigationMenuItem>
+                  );
+                }
+
+                return (
+                  <MotionNavigationMenuItem key={link.href} value={link.href}>
+                    <MotionNavigationMenuTrigger
+                      className={cn(
+                        "relative text-sm tracking-wide",
+                        linkTone(active),
+                      )}
+                    >
+                      {link.label}
+                      {active ? (
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-x-3 -bottom-px h-px bg-[var(--accent)]"
+                        />
+                      ) : null}
+                    </MotionNavigationMenuTrigger>
+                    <MotionNavigationMenuContent>
+                      <MotionNavDropdownPanel
+                        link={link}
+                        items={children}
+                        pathname={pathname}
+                        overviewLabel="Voir la page"
+                        itemClassName="px-3 py-2.5"
+                      />
+                    </MotionNavigationMenuContent>
+                  </MotionNavigationMenuItem>
+                );
+              })}
+            </MotionNavigationMenuList>
+          </MotionNavigationMenu>
 
           <div className="hidden lg:flex items-center gap-3">
             <Link

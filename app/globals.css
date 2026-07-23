@@ -412,6 +412,36 @@ body {
 }
 
 /* =========================================================================
+   Liquid glass — panneaux flottants (nav dropdown) avec note rose.
+   ========================================================================= */
+
+.nav-liquid-glass {
+  border: 1px solid
+    color-mix(in oklab, var(--accent-warm-soft) 65%, white 35%);
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in oklab, white 78%, transparent) 0%,
+      color-mix(in oklab, var(--accent-warm-soft) 38%, transparent) 42%,
+      color-mix(in oklab, white 62%, transparent) 100%
+    ),
+    color-mix(in oklab, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 78%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--accent-warm) 14%, transparent),
+    0 18px 42px -22px color-mix(in oklab, var(--accent) 30%, transparent),
+    0 8px 22px -14px rgba(10, 10, 10, 0.14);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav-liquid-glass {
+    background: color-mix(in oklab, var(--bg-elevated) 92%, var(--accent-warm-soft));
+  }
+}
+
+/* =========================================================================
    Form base
    ========================================================================= */
 
