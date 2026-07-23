@@ -9,6 +9,7 @@ export const REQUEST_CATEGORIES = [
   "Infos complémentaires",
   "Urgence",
   "Question",
+  "Modifications prothèse",
 ] as const;
 
 export type RequestCategory = (typeof REQUEST_CATEGORIES)[number];
