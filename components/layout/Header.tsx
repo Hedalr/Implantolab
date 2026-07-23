@@ -34,7 +34,7 @@ export function Header({ userDisplayName = null }: HeaderProps) {
         <div className="flex h-16 md:h-20 items-center justify-between gap-8">
           <div className="flex items-center gap-3 md:gap-4">
             <BackButton />
-            <Logo showWordmark />
+            <Logo showWordmark priority />
           </div>
 
           <MotionNavigationMenu

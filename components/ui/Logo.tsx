@@ -4,15 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { site } from "@/content/fr/site";
 
 type LogoProps = {
   variant?: "default" | "invert";
   href?: string;
   className?: string;
-  /**
-   * Affiche le wordmark texte (IMPLANTOLAB + sous-titre) à côté du logo.
-   */
+  /** Wordmark texte à côté du picto (header / footer / mobile). */
   showWordmark?: boolean;
+  /** Précharge l’image (header above-the-fold uniquement). */
+  priority?: boolean;
 };
 
 export function Logo({
@@ -20,15 +21,11 @@ export function Logo({
   href = "/",
   className,
   showWordmark = false,
+  priority = false,
 }: LogoProps) {
   const pathname = usePathname();
 
-  /**
-   * Sur la page déjà ciblée par le lien (typiquement l'accueil), Next.js ne
-   * déclenche aucune navigation au clic — donc aucun scroll. On force un
-   * retour en haut de page dans ce cas précis pour que le logo reste utile
-   * même quand on a scrollé loin dans la page.
-   */
+  // Même route : Next ne navigue pas — on scroll en haut à la place.
   const handleClick = () => {
     if (pathname === href) {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -42,25 +39,32 @@ export function Logo({
       ? "text-[var(--ink-invert-muted)]"
       : "text-[var(--ink-discreet)]";
 
+  const markSrc =
+    variant === "invert"
+      ? "/brand/logo-mark-invert.png"
+      : "/brand/logo-mark.png";
+
   return (
     <Link
       href={href}
       onClick={handleClick}
-      aria-label="IMPLANTOLAB — Accueil"
-      className={cn("inline-flex items-center gap-3 group", color, className)}
+      aria-label={`${site.name} — Accueil`}
+      className={cn("inline-flex items-center gap-2.5 group", color, className)}
     >
       <Image
-        src="/brand/logo.png"
-        alt="IMPLANTOLAB"
-        width={200}
-        height={80}
+        src={markSrc}
+        alt=""
+        width={141}
+        height={240}
+        sizes="40px"
         className="h-9 w-auto md:h-10 shrink-0"
-        priority
+        priority={priority}
+        aria-hidden
       />
       {showWordmark ? (
         <span className="flex flex-col justify-center leading-none gap-1">
-          <span className="font-serif text-base sm:text-lg md:text-xl font-semibold tracking-tight uppercase">
-            Implantolab
+          <span className="font-serif text-lg sm:text-xl md:text-[1.35rem] font-semibold tracking-tight uppercase">
+            {site.name}
           </span>
           <span
             className={cn(
@@ -68,7 +72,7 @@ export function Logo({
               muted,
             )}
           >
-            Laboratoire de prothèses dentaires
+            {site.baseline}
           </span>
         </span>
       ) : null}

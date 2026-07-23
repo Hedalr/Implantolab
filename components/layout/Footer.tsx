@@ -12,7 +12,7 @@ export function Footer() {
       <Container size="wide" className="py-20">
         <div className="grid gap-14 lg:grid-cols-12">
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <Logo variant="invert" />
+            <Logo variant="invert" showWordmark />
             <p className="text-[var(--ink-invert-muted)] max-w-xs leading-relaxed">
               Laboratoire de prothèse dentaire spécialisé en implantologie,
               fabrication sur mesure et flux numérique.
