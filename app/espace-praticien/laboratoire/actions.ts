@@ -8,23 +8,29 @@ async function updateRequestStatus(
   formData: FormData,
   status: "open" | "closed",
 ): Promise<void> {
-  await requireLaboStaff();
+  const { profile } = await requireLaboStaff();
 
   const id = String(formData.get("id") ?? "").trim();
   if (!id) {
     redirect("/espace-praticien/laboratoire?error=missing");
   }
+  if (profile.role === "prosthetist" && !profile.sectorId) {
+    redirect("/espace-praticien/laboratoire?error=forbidden");
+  }
 
   const supabase = await getServerSupabase();
-  const { error } = await supabase
+  const update = supabase
     .from("requests")
     .update({ status })
     .eq("id", id);
+  const scopedUpdate =
+    profile.role === "prosthetist"
+      ? update.eq("sector_id", profile.sectorId)
+      : update;
+  const { data, error } = await scopedUpdate.select("id").maybeSingle();
 
-  if (error) {
-    redirect(
-      `/espace-praticien/laboratoire/${id}?error=${encodeURIComponent(error.message.slice(0, 60))}`,
-    );
+  if (error || !data) {
+    redirect("/espace-praticien/laboratoire?error=forbidden");
   }
 
   revalidatePath("/espace-praticien/laboratoire");

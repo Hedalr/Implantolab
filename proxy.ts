@@ -1,6 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+function isPublicAuthPath(pathname: string): boolean {
+  return [
+    "/espace-praticien/login",
+    "/espace-praticien/auth",
+    "/espace-praticien/logout",
+  ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+function redirectToLogin(request: NextRequest): NextResponse {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/espace-praticien/login";
+  redirectUrl.search = "";
+  return NextResponse.redirect(redirectUrl);
+}
+
 /**
  * Proxy Next.js 16 (ex-middleware).
  * Protège uniquement la section /espace-praticien.
@@ -14,25 +29,22 @@ import { updateSession } from "@/lib/supabase/middleware";
  * MIDDLEWARE_INVOCATION_FAILED sur Vercel.
  */
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isPublicPath = isPublicAuthPath(pathname);
+
   try {
     const { response, user } = await updateSession(request);
 
-    const pathname = request.nextUrl.pathname;
-    const isLoginRoute = pathname.startsWith("/espace-praticien/login");
-    const isAuthRoute = pathname.startsWith("/espace-praticien/auth");
-    const isLogoutRoute = pathname.startsWith("/espace-praticien/logout");
-
-    if (!user && !isLoginRoute && !isAuthRoute && !isLogoutRoute) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/espace-praticien/login";
-      redirectUrl.search = "";
-      return NextResponse.redirect(redirectUrl);
+    if (!user && !isPublicPath) {
+      return redirectToLogin(request);
     }
 
     return response;
   } catch (error) {
     console.error("[proxy] échec session:", error);
-    return NextResponse.next({ request });
+    return isPublicPath
+      ? NextResponse.next({ request })
+      : redirectToLogin(request);
   }
 }
 

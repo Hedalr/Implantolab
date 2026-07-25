@@ -7,7 +7,6 @@ import {
 } from "next/font/google";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Footer } from "@/components/layout/Footer";
-import { AuthHashRecovery } from "@/components/auth/AuthHashRecovery";
 import { site } from "@/content/fr/site";
 import "./globals.css";
 
@@ -131,7 +130,6 @@ export default function RootLayout({
         >
           Aller au contenu
         </a>
-        <AuthHashRecovery />
         <SiteHeader />
         <main id="contenu" className="flex-1">
           {children}

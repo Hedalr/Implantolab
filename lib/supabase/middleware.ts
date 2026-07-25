@@ -7,6 +7,12 @@ export type UpdateSessionResult = {
   user: User | null;
 };
 
+function preventSessionCaching(response: NextResponse): void {
+  response.headers.set("Cache-Control", "private, no-store");
+  response.headers.set("Expires", "0");
+  response.headers.set("Pragma", "no-cache");
+}
+
 function hasSupabaseAuthCookie(request: NextRequest): boolean {
   return request.cookies
     .getAll()
@@ -40,14 +46,20 @@ export async function updateSession(
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, responseHeaders?: Record<string, string>) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
           response = NextResponse.next({ request });
+          if (responseHeaders) {
+            for (const [name, value] of Object.entries(responseHeaders)) {
+              response.headers.set(name, value);
+            }
+          }
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
+          preventSessionCaching(response);
         },
       },
     });
@@ -56,9 +68,12 @@ export async function updateSession(
       data: { user },
     } = await supabase.auth.getUser();
 
+    preventSessionCaching(response);
     return { response, user };
   } catch (error) {
     console.error("[updateSession] échec:", error);
-    return { response: NextResponse.next({ request }), user: null };
+    const failedResponse = NextResponse.next({ request });
+    preventSessionCaching(failedResponse);
+    return { response: failedResponse, user: null };
   }
 }

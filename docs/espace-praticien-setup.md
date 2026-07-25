@@ -113,6 +113,21 @@ En production, renseignez aussi `NEXT_PUBLIC_SITE_URL` (ex.
 `https://www.implantolab.fr`) pour que les liens d’invitation pointent vers
 le bon domaine.
 
+### Template d’invitation sécurisé (obligatoire)
+
+Dans **Supabase → Authentication → Email Templates → Invite user**, remplacez
+le lien par un callback `token_hash` à usage unique :
+
+```html
+<a href="{{ .SiteURL }}/espace-praticien/auth/callback?token_hash={{ .TokenHash }}&type=invite&next=/espace-praticien/set-password">
+  Accepter l’invitation
+</a>
+```
+
+Vérifiez également que la **Site URL** Supabase correspond exactement au
+domaine de production. L’application refuse volontairement les anciens liens
+qui placent `access_token` et `refresh_token` dans le fragment URL.
+
 ### Depuis le dashboard Supabase (alternative)
 
 Dans **Table Editor → practices**, ajoutez une ligne par cabinet

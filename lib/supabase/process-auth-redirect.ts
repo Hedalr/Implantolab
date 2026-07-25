@@ -2,57 +2,60 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const DEFAULT_TARGET = "/espace-praticien/set-password";
+const AUTH_REDIRECT_ORIGIN = "https://auth.implantolab.invalid";
+
+function isSupportedOtpType(type: string | null): type is EmailOtpType {
+  return type === "invite" || type === "recovery";
+}
+
+export function getSafeAuthTarget(next: string | null): string {
+  if (!next || next.startsWith("//") || next.includes("\\")) {
+    return DEFAULT_TARGET;
+  }
+
+  try {
+    const target = new URL(next, AUTH_REDIRECT_ORIGIN);
+    const isInternalPath =
+      target.pathname === "/espace-praticien" ||
+      target.pathname.startsWith("/espace-praticien/");
+
+    if (target.origin !== AUTH_REDIRECT_ORIGIN || !isInternalPath) {
+      return DEFAULT_TARGET;
+    }
+
+    return `${target.pathname}${target.search}`;
+  } catch {
+    return DEFAULT_TARGET;
+  }
+}
 
 export type AuthRedirectResult =
   | { ok: true; target: string }
   | { ok: false; reason: "missing" | "error" };
 
 /**
- * Lit code, token_hash ou #access_token depuis l'URL courante et ouvre
- * une session Supabase. Utilisé par le callback dédié et le filet de
- * sécurité global (quand Supabase renvoie vers la Site URL /).
+ * Lit un code PKCE ou un token_hash à usage unique depuis le callback dédié,
+ * puis ouvre une session Supabase.
  */
 export async function processAuthRedirect(
   client: SupabaseClient,
   href: string,
 ): Promise<AuthRedirectResult> {
   const url = new URL(href);
-  const next =
-    url.searchParams.get("next") ?? DEFAULT_TARGET;
-  const target = next.startsWith("/") ? next : DEFAULT_TARGET;
+  const target = getSafeAuthTarget(url.searchParams.get("next"));
 
   const code = url.searchParams.get("code");
-  const token_hash = url.searchParams.get("token_hash");
+  const tokenHash = url.searchParams.get("token_hash");
   const type = url.searchParams.get("type");
 
-  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
-  const access_token = hash.get("access_token");
-  const refresh_token = hash.get("refresh_token");
-  const hashType = hash.get("type");
-
-  const isInvite =
-    type === "invite" ||
-    hashType === "invite" ||
-    target.includes("set-password");
-
   try {
-    if (isInvite) {
-      await client.auth.signOut();
-    }
-
     if (code) {
       const { error } = await client.auth.exchangeCodeForSession(code);
       if (error) throw error;
-    } else if (token_hash && type) {
+    } else if (tokenHash && isSupportedOtpType(type)) {
       const { error } = await client.auth.verifyOtp({
-        token_hash,
-        type: type as EmailOtpType,
-      });
-      if (error) throw error;
-    } else if (access_token && refresh_token) {
-      const { error } = await client.auth.setSession({
-        access_token,
-        refresh_token,
+        token_hash: tokenHash,
+        type,
       });
       if (error) throw error;
     } else {
@@ -64,13 +67,4 @@ export async function processAuthRedirect(
     console.error("[processAuthRedirect]", error);
     return { ok: false, reason: "error" };
   }
-}
-
-export function urlHasAuthTokens(href: string): boolean {
-  const url = new URL(href);
-  if (url.searchParams.has("code")) return true;
-  if (url.searchParams.has("token_hash")) return true;
-
-  const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
-  return hash.has("access_token") && hash.has("refresh_token");
 }

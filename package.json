@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:security": "node --test lib/supabase/process-auth-redirect.test.mjs"
   },
   "dependencies": {
     "@notionhq/client": "^5.22.0",
