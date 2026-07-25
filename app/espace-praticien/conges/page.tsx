@@ -44,27 +44,6 @@ const FEEDBACK: Record<string, string> = {
   profile: "Votre profil est incomplet. Contactez l’administrateur.",
 };
 
-const shortDateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-});
-
-/**
- * Le trigger de conflit renvoie un message du type
- *   "Camille Martin du 2026-07-01 au 2026-07-10"
- * On reformate les dates en français si le pattern est reconnu.
- */
-function formatConflictDetail(detail: string | undefined): string {
-  if (!detail) return "";
-  const match = detail.match(
-    /^(.+?)\s+du\s+(\d{4}-\d{2}-\d{2})\s+au\s+(\d{4}-\d{2}-\d{2})$/,
-  );
-  if (!match) return detail;
-  const [, name, start, end] = match;
-  return `${name} du ${shortDateFormatter.format(parseDateOnly(start))} au ${shortDateFormatter.format(parseDateOnly(end))}`;
-}
-
 export default async function CongesPage({
   searchParams,
 }: {
@@ -469,10 +448,7 @@ function FeedbackBanner({
       ? `Solde insuffisant : il vous reste ${detail}.`
       : "Solde de congés insuffisant pour cette période.";
   } else if (key === "conflict") {
-    const formatted = formatConflictDetail(detail);
-    message = formatted
-      ? `Ce créneau chevauche le congé de ${formatted}. Choisissez une autre période.`
-      : "Ce créneau chevauche déjà le congé d’un collègue de votre secteur.";
+    message = "Ce créneau chevauche déjà le congé d’un collègue de votre secteur.";
   } else {
     message =
       FEEDBACK[key] ?? (ok ? "Opération réussie." : "Une erreur est survenue.");

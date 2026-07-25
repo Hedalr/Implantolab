@@ -52,8 +52,7 @@ export async function addLeaveRequest(formData: FormData): Promise<void> {
       go({ error: "balance", detail });
     }
     if (message.startsWith("SECTOR_CONFLICT")) {
-      const detail = message.replace(/^SECTOR_CONFLICT:\s*/, "");
-      go({ error: "conflict", detail });
+      go({ error: "conflict" });
     }
     if (message.startsWith("PROFILE_NOT_FOUND")) {
       go({ error: "profile" });
