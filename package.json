@@ -5,6 +5,10 @@
   "engines": {
     "node": ">=22.12.0"
   },
+  "overrides": {
+    "postcss": "8.5.23",
+    "sharp": "0.35.3"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,7 +23,7 @@
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.23.0",
     "marked": "^18.0.5",
-    "next": "^16.2.9",
+    "next": "^16.2.11",
     "notion-to-md": "^3.1.9",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -31,7 +35,7 @@
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
     "@types/sanitize-html": "^2.16.1",
-    "postcss": "8.5.1",
+    "postcss": "8.5.23",
     "tailwindcss": "^4.3.2",
     "typescript": "5.7.3"
   }
