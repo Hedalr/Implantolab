@@ -3,6 +3,12 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import {
+  detectPhotoMimeType,
+  extensionForPhotoMimeType,
+  sanitizeDownloadFilename,
+} from "@/lib/requests/media-security";
+import { getServiceRoleSupabase } from "@/lib/supabase/admin";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 import { isRequestCategory } from "@/lib/requests/types";
 
@@ -11,21 +17,9 @@ const REQUEST_MEDIA_BUCKET = "request-media";
 
 const MAX_PHOTOS = 6;
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
-const ACCEPTED_PHOTO_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-];
 
 function fail(reason: string): never {
   redirect(`${DEMANDES_PATH}?error=${reason}`);
-}
-
-function extensionFromFilename(name: string): string {
-  const ext = name.split(".").pop();
-  return ext && ext.length > 0 && ext.length <= 5 ? ext.toLowerCase() : "jpg";
 }
 
 export async function createRequest(formData: FormData): Promise<void> {
@@ -64,16 +58,40 @@ export async function createRequest(formData: FormData): Promise<void> {
     fail("too-many-photos");
   }
 
+  const preparedPhotos = [];
   for (const photo of photos) {
     if (photo.size > MAX_PHOTO_SIZE_BYTES) {
       fail("photo-size");
     }
-    if (photo.type && !ACCEPTED_PHOTO_TYPES.includes(photo.type)) {
+
+    const buffer = Buffer.from(await photo.arrayBuffer());
+    const mimeType = detectPhotoMimeType(buffer);
+    if (!mimeType) {
       fail("photo-type");
     }
+
+    const extension = extensionForPhotoMimeType(mimeType);
+    preparedPhotos.push({
+      buffer,
+      extension,
+      mimeType,
+      originalFilename: sanitizeDownloadFilename(
+        photo.name,
+        `photo.${extension}`,
+      ),
+      size: photo.size,
+    });
   }
 
   const supabase = await getServerSupabase();
+  let storageAdmin: ReturnType<typeof getServiceRoleSupabase> | null = null;
+  if (preparedPhotos.length > 0) {
+    try {
+      storageAdmin = getServiceRoleSupabase();
+    } catch {
+      fail("media-config");
+    }
+  }
 
   const { data: sectorRow, error: sectorError } = await supabase
     .from("sectors")
@@ -100,6 +118,9 @@ export async function createRequest(formData: FormData): Promise<void> {
     .single();
 
   if (error || !inserted) {
+    if (error?.message.includes("REQUEST_RATE_LIMIT")) {
+      fail("rate-limit");
+    }
     fail("save");
   }
 
@@ -107,14 +128,14 @@ export async function createRequest(formData: FormData): Promise<void> {
 
   // Upload best-effort : une photo qui échoue ne doit pas faire échouer
   // l'envoi de la demande (le texte est déjà enregistré à ce stade).
-  for (const photo of photos) {
-    const path = `requests/${requestId}/${randomUUID()}.${extensionFromFilename(photo.name)}`;
-    const buffer = Buffer.from(await photo.arrayBuffer());
+  for (const photo of preparedPhotos) {
+    if (!storageAdmin) continue;
+    const path = `requests/${requestId}/${randomUUID()}.${photo.extension}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await storageAdmin.storage
       .from(REQUEST_MEDIA_BUCKET)
-      .upload(path, buffer, {
-        contentType: photo.type || "application/octet-stream",
+      .upload(path, photo.buffer, {
+        contentType: photo.mimeType,
         upsert: false,
       });
 
@@ -124,9 +145,9 @@ export async function createRequest(formData: FormData): Promise<void> {
       request_id: requestId,
       storage_bucket: REQUEST_MEDIA_BUCKET,
       storage_path: path,
-      mime_type: photo.type || null,
+      mime_type: photo.mimeType,
       size_bytes: photo.size,
-      original_filename: photo.name || null,
+      original_filename: photo.originalFilename,
     });
   }
 

@@ -114,5 +114,68 @@ comment on function public.check_leave_request() is
 -- case-media bucket is kept private pending an explicit retention decision.
 update storage.buckets
    set public = false
- where id in ('request-media', 'case-media')
-   and public is distinct from false;
+ where id in ('request-media', 'case-media');
+
+-- Enforce upload restrictions in Storage itself. Browser clients can no longer
+-- bypass the Server Action's MIME and size validation with a direct upload.
+update storage.buckets
+   set file_size_limit = 5242880,
+       allowed_mime_types = array[
+         'image/jpeg',
+         'image/png',
+         'image/webp',
+         'image/heic',
+         'image/heif'
+       ]::text[]
+ where id = 'request-media';
+
+drop policy if exists "request_media_storage_insert_own"
+  on storage.objects;
+
+-- Bound request and media creation by practice. The advisory lock makes the
+-- check atomic when several submissions arrive concurrently.
+create index if not exists requests_practice_created_at_idx
+  on public.requests (practice_id, created_at desc);
+
+create or replace function public.enforce_request_creation_rate_limit()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if current_user = 'authenticated' then
+    new.created_by := auth.uid();
+    new.created_at := pg_catalog.now();
+
+    perform pg_catalog.pg_advisory_xact_lock(
+      pg_catalog.hashtextextended(new.practice_id::text, 0)
+    );
+
+    if (
+      select pg_catalog.count(*) >= 5
+        from public.requests
+       where practice_id = new.practice_id
+         and created_at >= pg_catalog.now() - interval '15 minutes'
+    ) then
+      raise exception 'REQUEST_RATE_LIMIT' using errcode = 'P0001';
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all
+  on function public.enforce_request_creation_rate_limit()
+  from public, anon, authenticated;
+
+drop trigger if exists enforce_request_creation_rate_limit
+  on public.requests;
+
+create trigger enforce_request_creation_rate_limit
+before insert on public.requests
+for each row
+execute function public.enforce_request_creation_rate_limit();
+
+comment on function public.enforce_request_creation_rate_limit() is
+  'Limits each practice to five new requests per rolling 15-minute window.';

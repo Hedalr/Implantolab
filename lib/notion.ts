@@ -9,6 +9,7 @@ import {
   fallbackArticleDetails,
   fallbackArticles,
 } from "@/content/fr/actualites";
+import { sanitizeArticleHtml } from "@/lib/sanitize-article-html";
 
 /**
  * IMPLANTOLAB — Intégration Notion pour la publication des actualités.
@@ -23,10 +24,8 @@ import {
  * définies, les articles statiques de `content/fr/actualites.ts` sont
  * utilisés. Cela permet de faire tourner la vitrine sans setup Notion.
  *
- * Sécurité : le HTML rendu (via marked, mode `async: false`) provient de
- * contenu Notion authentifié ou de contenu statique interne. La surface
- * d'attaque XSS est donc considérée comme limitée. On garde toutefois
- * `mangle: false` et `headerIds: false` pour un rendu prévisible.
+ * Le HTML issu de Notion est sanitizé après conversion Markdown afin que les
+ * éditeurs du CMS ne puissent pas publier de scripts ou de liens dangereux.
  */
 
 export type Article = {
@@ -297,7 +296,8 @@ async function pageToHtml(pageId: string): Promise<string> {
     const rawMd = n2m.toMarkdownString(mdBlocks).parent ?? "";
     if (!rawMd) return "";
     const md = normalizeSiteImageUrlsInText(rawMd);
-    return marked.parse(md, { async: false }) as string;
+    const html = marked.parse(md, { async: false }) as string;
+    return sanitizeArticleHtml(html);
   } catch (error) {
     console.error("[notion] Échec du rendu markdown pour la page", pageId, error);
     return "";

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { sanitizeDownloadFilename } from "@/lib/requests/media-security";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 
 /**
@@ -55,7 +56,10 @@ export async function GET(
     .from(REQUEST_MEDIA_BUCKET)
     .createSignedUrl(storagePath, SIGNED_URL_TTL_SEC, {
       download: request.nextUrl.searchParams.get("download") === "1"
-        ? (media.original_filename as string | null) ?? undefined
+        ? sanitizeDownloadFilename(
+            media.original_filename as string | null,
+            "photo",
+          )
         : undefined,
     });
 

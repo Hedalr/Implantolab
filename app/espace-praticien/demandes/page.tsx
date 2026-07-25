@@ -46,6 +46,10 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   "too-many-photos": "Vous pouvez joindre jusqu’à 6 photos maximum.",
   "photo-size": "Chaque photo doit peser moins de 5 Mo.",
   "photo-type": "Formats acceptés pour les photos : JPG, PNG, WEBP, HEIC.",
+  "media-config":
+    "L’envoi de photos est temporairement indisponible. Contactez le laboratoire.",
+  "rate-limit":
+    "Trop de demandes ont été envoyées récemment par votre cabinet. Réessayez dans quelques minutes.",
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
