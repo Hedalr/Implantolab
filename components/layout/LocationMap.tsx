@@ -14,7 +14,7 @@ type LocationMapProps = {
 export function LocationMap({ compact = false, className }: LocationMapProps) {
   const address = formatAddress();
   const mapQuery = encodeURIComponent(address);
-  const embedSrc = `https://www.google.com/maps?q=${mapQuery}&hl=fr&z=16&output=embed`;
+  const embedSrc = `https://www.google.com/maps?q=${mapQuery}&hl=fr&z=13&output=embed`;
 
   return (
     <section
