@@ -456,3 +456,32 @@ input::placeholder,
 textarea::placeholder {
   color: var(--ink-discreet);
 }
+
+/* Autofill: Chrome paints a pale box that breaks dark forms. */
+:is(input, textarea):-webkit-autofill,
+:is(input, textarea):-webkit-autofill:hover,
+:is(input, textarea):-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  caret-color: inherit;
+  transition: background-color 99999s ease-in-out 0s;
+  box-shadow: inset 0 0 0 1000px transparent;
+}
+
+.form-on-deep :is(input, textarea):-webkit-autofill,
+.form-on-deep :is(input, textarea):-webkit-autofill:hover,
+.form-on-deep :is(input, textarea):-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink-invert);
+  caret-color: var(--ink-invert);
+  box-shadow: inset 0 0 0 1000px var(--bg-deep);
+}
+
+/* Closed select stays light-on-dark; open list stays dark-on-light. */
+.form-on-deep select {
+  color: var(--ink-invert);
+  color-scheme: light;
+}
+
+select option {
+  color: var(--ink);
+  background-color: var(--bg);
+}

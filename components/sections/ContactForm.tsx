@@ -9,7 +9,7 @@ type ContactFormProps = {
   compact?: boolean;
 };
 
-type Status = "idle" | "submitting" | "success" | "error";
+type Status = "idle" | "submitting" | "success";
 
 export function ContactForm({ theme = "light", compact = false }: ContactFormProps) {
   const [status, setStatus] = useState<Status>("idle");
@@ -18,20 +18,17 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setStatus("submitting");
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      const form = event.currentTarget;
-      form.reset();
-      setStatus("success");
-    } catch {
-      setStatus("error");
-    }
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    form.reset();
+    setStatus("success");
   }
 
   const fieldBase = cn(
-    "w-full bg-transparent border-b py-3 text-base transition-colors",
-    "placeholder:text-[var(--ink-discreet)] focus:outline-none",
+    "w-full border-0 border-b bg-transparent py-3 text-base transition-colors",
+    "rounded-none shadow-none outline-none focus:outline-none",
+    "placeholder:text-[var(--ink-discreet)]",
     dark
       ? "text-[var(--ink-invert)] border-[var(--line-invert)] focus:border-[var(--accent-warm-soft)]"
       : "text-[var(--ink)] border-[var(--line-strong)] focus:border-[var(--ink)]",
@@ -42,18 +39,42 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
     dark ? "text-[var(--ink-invert-muted)]" : "text-[var(--ink-discreet)]",
   );
 
+  const subjectField = (
+    <UnderlineField
+      label="Sujet"
+      name="subject"
+      labelClass={labelBase}
+      fieldClass={fieldBase}
+      as="select"
+      defaultValue="catalogue"
+    >
+      <option value="catalogue">Catalogue & tarifs</option>
+      <option value="rdv">Demande de rendez-vous</option>
+      <option value="devis">Demande de devis</option>
+      <option value="autre">Autre</option>
+    </UnderlineField>
+  );
+
   return (
     <form
       onSubmit={handleSubmit}
       noValidate
-      className={cn(
-        "flex flex-col gap-7",
-        dark ? "" : "",
-      )}
+      className={cn("flex flex-col gap-8", dark && "form-on-deep")}
     >
-      <div className="grid gap-7 sm:grid-cols-2">
-        <UnderlineField label="Nom du praticien" name="name" required labelClass={labelBase} fieldClass={fieldBase} />
-        <UnderlineField label="Cabinet" name="cabinet" labelClass={labelBase} fieldClass={fieldBase} />
+      <div className="grid gap-8 sm:grid-cols-2">
+        <UnderlineField
+          label="Nom du praticien"
+          name="name"
+          required
+          labelClass={labelBase}
+          fieldClass={fieldBase}
+        />
+        <UnderlineField
+          label="Cabinet"
+          name="cabinet"
+          labelClass={labelBase}
+          fieldClass={fieldBase}
+        />
         <UnderlineField
           label="Email"
           name="email"
@@ -62,7 +83,9 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
           labelClass={labelBase}
           fieldClass={fieldBase}
         />
-        {!compact ? (
+        {compact ? (
+          subjectField
+        ) : (
           <UnderlineField
             label="Téléphone"
             name="phone"
@@ -70,22 +93,10 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
             labelClass={labelBase}
             fieldClass={fieldBase}
           />
-        ) : null}
+        )}
       </div>
 
-      {!compact ? (
-        <UnderlineField
-          label="Sujet"
-          name="subject"
-          labelClass={labelBase}
-          fieldClass={fieldBase}
-          as="select"
-        >
-          <option value="devis">Demande de devis</option>
-          <option value="technique">Question technique</option>
-          <option value="autre">Autre</option>
-        </UnderlineField>
-      ) : null}
+      {!compact ? subjectField : null}
 
       <label className="flex flex-col gap-3">
         <span className={labelBase}>Message</span>
@@ -93,9 +104,8 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
           name="message"
           required
           rows={compact ? 4 : 6}
-          placeholder="Décrivez votre cas, votre besoin ou votre question."
-          className={cn(fieldBase, "resize-none border rounded-none p-4 border-b")}
-          style={{ borderBottomWidth: "1px" }}
+          placeholder="Précisez votre besoin : catalogue, tarifs, rendez-vous…"
+          className={cn(fieldBase, "resize-none min-h-[7rem]")}
         />
       </label>
 
@@ -126,7 +136,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
         </label>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-6 pt-2">
+      <div className="flex flex-wrap items-center gap-5 pt-1">
         <button
           type="submit"
           disabled={status === "submitting"}
@@ -138,7 +148,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
             status === "submitting" && "opacity-60 cursor-wait",
           )}
         >
-          {status === "submitting" ? "Envoi…" : "Envoyer la demande"}
+          {status === "submitting" ? "Envoi…" : "Prendre contact"}
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" />
           </svg>
@@ -154,9 +164,7 @@ export function ContactForm({ theme = "light", compact = false }: ContactFormPro
         >
           {status === "success"
             ? "Merci, votre message a bien été envoyé. Nous revenons vers vous rapidement."
-            : status === "error"
-              ? "Une erreur est survenue. Merci de réessayer ou de nous contacter par téléphone."
-              : "Réponse sous 1 jour ouvré."}
+            : "Réponse sous 1 jour ouvré."}
         </p>
       </div>
     </form>

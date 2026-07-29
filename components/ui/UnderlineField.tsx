@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/cn";
 
 type UnderlineFieldProps = {
   label: string;
@@ -31,14 +33,23 @@ export function UnderlineField({
         {required ? <span aria-hidden="true"> *</span> : null}
       </span>
       {as === "select" ? (
-        <select
-          name={name}
-          required={required}
-          defaultValue={defaultValue}
-          className={fieldClass}
-        >
-          {children}
-        </select>
+        <span className="relative block">
+          <select
+            name={name}
+            required={required}
+            defaultValue={defaultValue}
+            className={cn(
+              fieldClass,
+              "appearance-none cursor-pointer pr-8",
+            )}
+          >
+            {children}
+          </select>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--ink-discreet)]"
+          />
+        </span>
       ) : (
         <input
           type={type}

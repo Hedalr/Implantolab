@@ -2,13 +2,14 @@ import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { PageHero } from "@/components/sections/PageHero";
 import { ContactForm } from "@/components/sections/ContactForm";
+import { home } from "@/content/fr/home";
 import { site } from "@/content/fr/site";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata({
-  title: "Contactez IMPLANTOLAB",
+  title: "Prendre contact avec IMPLANTOLAB",
   description:
-    "Demande de devis, question technique : contactez le laboratoire IMPLANTOLAB. Notre équipe vous répond rapidement.",
+    "Demandez le catalogue de prothèses, nos tarifs ou un rendez-vous avec le laboratoire IMPLANTOLAB. Réponse sous 1 jour ouvré.",
   path: "/contact",
 });
 
@@ -39,6 +40,8 @@ const jsonLd = {
 };
 
 export default function ContactPage() {
+  const { eyebrow, title, description } = home.contact;
+
   return (
     <>
       <script
@@ -46,11 +49,7 @@ export default function ContactPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <PageHero
-        eyebrow="Contact"
-        title="Échangeons sur votre cas ou votre besoin"
-        intro="Que ce soit pour un devis ou une question technique, notre équipe est à votre écoute. Les praticiens partenaires peuvent adresser leurs cas via l’espace client. Nous revenons vers vous sous 1 jour ouvré."
-      />
+      <PageHero eyebrow={eyebrow} title={title} intro={description} />
 
       <section className="bg-[var(--bg-elevated)] border-b border-[var(--line)]">
         <Container size="wide" className="py-14 md:py-20 lg:py-28">

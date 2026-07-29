@@ -5,7 +5,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/sections/ContactForm";
 
 export function ContactCta() {
-  const { eyebrow, title, description, note } = home.contact;
+  const { eyebrow, title, description } = home.contact;
 
   return (
     <section className="bg-[var(--bg-deep)] text-[var(--ink-invert)]">
@@ -47,12 +47,6 @@ export function ContactCta() {
               >
                 {site.contact.email}
               </a>
-            </Reveal>
-
-            <Reveal delay={280}>
-              <p className="text-xs text-[var(--ink-invert-muted)] border-l border-[var(--line-invert)] pl-4 leading-relaxed mt-2 max-w-sm">
-                {note}
-              </p>
             </Reveal>
           </div>
 

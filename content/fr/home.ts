@@ -239,10 +239,9 @@ export const home = {
 
   contact: {
     eyebrow: "Contact",
-    title: "Un cas à adresser ?",
+    title: "Prendre contact avec le laboratoire",
     description:
-      "Vous avez un cas à adresser, une question technique ou un besoin de devis ? Notre équipe vous répond rapidement pour vous orienter vers la solution la plus adaptée.",
-    note: "Envoi de fichiers STL et espace praticien disponibles prochainement.",
+      "Nouveau praticien ou cabinet à équiper ? Demandez notre catalogue de prothèses et nos tarifs, ou planifiez un échange avec l’équipe pour découvrir comment collaborer avec IMPLANTOLAB.",
   },
 
   team: {
