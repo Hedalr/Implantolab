@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import type { LabSector } from "@/lib/sectors";
@@ -128,10 +129,17 @@ export function InviteUserForm({
         </Field>
       ) : null}
 
-      <Button type="submit" variant="primary" disabled={!canInvite}>
-        Envoyer l’invitation
-      </Button>
+      <InviteSubmitButton canInvite={canInvite} />
     </form>
+  );
+}
+
+function InviteSubmitButton({ canInvite }: { canInvite: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" variant="primary" disabled={!canInvite || pending}>
+      {pending ? "Envoi en cours…" : "Envoyer l’invitation"}
+    </Button>
   );
 }
 

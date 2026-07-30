@@ -36,16 +36,10 @@ function readText(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
 }
 
-/**
- * Un utilisateur invité une deuxième fois avec le même e-mail obtient une
- * erreur "already registered" de Supabase Auth. On distingue ce cas d'une
- * vraie collision (compte actif) pour orienter l'admin vers le bouton
- * « Réactiver » plutôt que de laisser penser que l'adresse est bloquée à vie.
- */
-async function isEmailDeactivated(
+async function findAuthUserByEmail(
   admin: SupabaseClient,
   email: string,
-): Promise<boolean> {
+): Promise<{ id: string; email?: string } | null> {
   try {
     const { data } = await withAdminTimeout(
       admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
@@ -53,6 +47,24 @@ async function isEmailDeactivated(
     const existing = data.users?.find(
       (u) => u.email?.toLowerCase() === email,
     );
+    return existing ? { id: existing.id, email: existing.email } : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Un utilisateur invité une deuxième fois avec le même e-mail obtient une
+ * erreur "already registered" de Supabase Auth — ou, sur certaines versions,
+ * un *renvoi* silencieux d'invitation. On pré-vérifie donc l'existence pour
+ * ne jamais appeler `inviteUserByEmail` deux fois sur la même adresse.
+ */
+async function isEmailDeactivated(
+  admin: SupabaseClient,
+  email: string,
+): Promise<boolean> {
+  try {
+    const existing = await findAuthUserByEmail(admin, email);
     if (!existing) return false;
 
     const { data: profile } = await admin
@@ -90,6 +102,20 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     go({ error: "service-role" });
   }
 
+  // Anti-doublon : si l'adresse existe déjà, on n'appelle PAS inviteUserByEmail
+  // (qui renverrait un second e-mail d'invitation au lieu d'échouer).
+  const already = await findAuthUserByEmail(admin, email);
+  if (already) {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("deleted_at")
+      .eq("id", already.id)
+      .maybeSingle();
+    go({
+      error: profile?.deleted_at ? "invite-exists-deleted" : "invite-exists",
+    });
+  }
+
   // Redirect vers /set-password après validation de l'invitation : le user
   // définit son mot de passe avant d'accéder à son espace. Sans cette étape,
   // il n'aurait aucun mot de passe et ne pourrait plus se reconnecter.
@@ -108,12 +134,33 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
         redirectTo,
         data: fullName.length > 0 ? { full_name: fullName } : undefined,
       }),
+      20_000,
     );
     data = res.data;
     error = res.error;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[invitePractitioner] timeout ou exception:", message);
+    // Si le SMTP a quand même créé l'utilisateur après le timeout client,
+    // on finalise le profil plutôt que d'inciter à un second envoi.
+    const createdAfterTimeout = await findAuthUserByEmail(admin, email);
+    if (createdAfterTimeout) {
+      const { error: profileError } = await admin
+        .from("profiles")
+        .update({
+          sector_id: isSectorLabRole(role) ? sectorId : null,
+          full_name: fullName.length > 0 ? fullName : null,
+          role,
+        })
+        .eq("id", createdAfterTimeout.id);
+      if (profileError) {
+        go({ error: "invite-profile" });
+      }
+      revalidatePath(PRATICIENS_PATH);
+      revalidatePath(EMPLOYES_PATH);
+      revalidatePath("/espace-praticien/admin");
+      go({ ok: inviteOkKey(role) });
+    }
     go({ error: "invite-smtp", detail: message.slice(0, 200) });
   }
 

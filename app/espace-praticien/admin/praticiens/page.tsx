@@ -60,7 +60,8 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   },
   "invite-exists": {
     title: "Compte existant",
-    message: "Cet e-mail est déjà enregistré.",
+    message:
+      "Cet e-mail est déjà enregistré. Aucun nouvel e-mail d’invitation n’a été renvoyé.",
   },
   "invite-failed": {
     title: "Erreur",
