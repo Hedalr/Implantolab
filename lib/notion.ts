@@ -9,6 +9,10 @@ import {
   fallbackArticleDetails,
   fallbackArticles,
 } from "@/content/fr/actualites";
+import {
+  persistNotionImage,
+  persistNotionImagesInHtml,
+} from "@/lib/notion-media";
 import { sanitizeArticleHtml } from "@/lib/sanitize-article-html";
 
 /**
@@ -23,6 +27,9 @@ import { sanitizeArticleHtml } from "@/lib/sanitize-article-html";
  * Si les variables `NOTION_TOKEN` et `NOTION_DATABASE_ID` ne sont pas
  * définies, les articles statiques de `content/fr/actualites.ts` sont
  * utilisés. Cela permet de faire tourner la vitrine sans setup Notion.
+ *
+ * Les images uploadées dans Notion (URL signées) sont copiées vers le
+ * bucket Supabase `actualites` lors du fetch, pour rester permanentes.
  *
  * Le HTML issu de Notion est sanitizé après conversion Markdown afin que les
  * éditeurs du CMS ne puissent pas publier de scripts ou de liens dangereux.
@@ -161,9 +168,9 @@ function normalizeSiteImageUrlsInText(text: string): string {
 
 /**
  * Extrait une URL d'image depuis une propriété "Files & media" ou "URL".
- * Les fichiers hébergés par Notion ont des URL signées qui expirent.
- * Comme les pages qui utilisent cette URL sont en ISR (revalidate=600),
- * la valeur est régénérée régulièrement.
+ * Les fichiers hébergés par Notion ont des URL signées (~1 h) : elles sont
+ * ensuite copiées vers Supabase Storage (`persistNotionImage`) pour rester
+ * permanentes sur le site.
  */
 function readImageUrl(prop: unknown, coverFromPage?: string | null): string | null {
   if (coverFromPage) return toLocalPathIfSiteAsset(coverFromPage);
@@ -223,6 +230,15 @@ function pageToArticle(page: PageLike): Article | null {
   };
 }
 
+/** Archive la couverture Notion vers Storage si besoin. */
+async function withPersistedCover(article: Article): Promise<Article> {
+  if (!article.coverUrl) return article;
+  const coverUrl = await persistNotionImage(article.coverUrl, {
+    articleSlug: article.slug,
+  });
+  return coverUrl === article.coverUrl ? article : { ...article, coverUrl };
+}
+
 const fetchPublishedPages = cache(async (): Promise<PageLike[]> => {
   if (!notion) return [];
   const dataSourceId = await getDataSourceId();
@@ -249,7 +265,11 @@ const fetchPublishedPages = cache(async (): Promise<PageLike[]> => {
 });
 
 export const getLatestArticles = cache(
-  async (limit?: number): Promise<Article[]> => {
+  async (
+    limit?: number,
+    /** false = métadonnées seules (ex. sitemap), sans I/O Storage. */
+    persistCovers = true,
+  ): Promise<Article[]> => {
     if (!hasNotionConfig) {
       warnFallbackOnce();
       const list = [...fallbackArticles];
@@ -269,7 +289,10 @@ export const getLatestArticles = cache(
       return typeof limit === "number" ? list.slice(0, limit) : list;
     }
 
-    return typeof limit === "number" ? articles.slice(0, limit) : articles;
+    const visible =
+      typeof limit === "number" ? articles.slice(0, limit) : articles;
+    if (!persistCovers) return visible;
+    return Promise.all(visible.map(withPersistedCover));
   },
 );
 
@@ -322,7 +345,14 @@ export const getArticleBySlug = cache(
     const base = pageToArticle(page);
     if (!base) return null;
 
-    const contentHtml = await pageToHtml(page.id);
-    return { ...base, contentHtml };
+    const [withCover, rawHtml] = await Promise.all([
+      withPersistedCover(base),
+      pageToHtml(page.id),
+    ]);
+    const contentHtml = await persistNotionImagesInHtml(
+      rawHtml,
+      withCover.slug,
+    );
+    return { ...withCover, contentHtml };
   },
 );

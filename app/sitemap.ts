@@ -14,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   try {
-    const articles = await getLatestArticles();
+    const articles = await getLatestArticles(undefined, false);
     for (const article of articles) {
       const lastModified = article.date ? new Date(article.date) : now;
       entries.push({

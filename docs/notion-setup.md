@@ -116,15 +116,29 @@ les paramètres du projet, pour les environnements **Preview** et
    - `Slug` : URL courte (minuscules, tirets — ex. `zircone-monolithique-rac-0`).
    - `Date` : date de publication.
    - `Résumé` : 1 à 3 phrases (utilisées en accroche et en meta description).
-   - `Image` : image de couverture (facultative mais recommandée).
+   - `Image` : image de couverture (facultative mais recommandée) —
+     uploadez le fichier directement dans Notion, le site l’archive
+     automatiquement.
    - `Catégorie` : facultatif.
    - `Publié` : cocher pour publier.
 4. Ouvrir la page (en cliquant sur le titre) et rédiger le corps de
    l’article avec les blocs Notion habituels (titres, paragraphes,
-   listes, images, citations, code…).
+   listes, images, citations, code…). Les images du corps sont aussi
+   archivées automatiquement.
 
 Le site se met à jour automatiquement sous **10 minutes** (durée du cache
 ISR). Pour forcer une régénération immédiate, redéployer le site.
+
+### Images — comportement automatique
+
+Les fichiers téléversés dans Notion ont des URL signées qui expirent
+(~1 heure). Au moment où le site lit Notion, il **copie** ces images vers
+un bucket Supabase Storage public (`actualites`) et sert ensuite l’URL
+permanente. Le labo n’a rien à faire de plus : créer l’actu dans Notion
+suffit.
+
+Prérequis : `SUPABASE_SERVICE_ROLE_KEY` et `NEXT_PUBLIC_SUPABASE_URL`
+doivent être configurés (déjà le cas pour l’espace praticien).
 
 ---
 
@@ -137,10 +151,11 @@ ISR). Pour forcer une régénération immédiate, redéployer le site.
   `NOTION_TOKEN` est invalide ou l’intégration n’a pas accès à la base.
 - **Erreur `object_not_found`** : le `NOTION_DATABASE_ID` ne correspond
   pas à une base partagée avec l’intégration.
-- **Une image ne s’affiche pas** : les URL des fichiers téléversés dans
-  Notion expirent après une heure. Le site les régénère lors du prochain
-  passage ISR (10 min). Pour une image toujours stable, préférer la
-  propriété `Image` au format **URL** avec un lien vers un CDN externe.
+- **Une image ne s’affiche pas** : vérifier les logs serveur
+  `[notion-media]`. Causes fréquentes : `SUPABASE_SERVICE_ROLE_KEY`
+  manquante, bucket `actualites` absent (migration non appliquée), ou
+  fichier trop lourd (> 10 Mo). Sans Storage, le site retombe sur l’URL
+  Notion temporaire (qui finira par expirer).
 - **Fallback statique actif** : si les variables `NOTION_TOKEN` ou
   `NOTION_DATABASE_ID` sont absentes ou vides, le site retombe
   silencieusement sur les articles de démonstration. Un avertissement
