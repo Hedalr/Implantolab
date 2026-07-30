@@ -18,7 +18,6 @@ const DEFAULT_FROM_EMAIL = "Implantolab <onboarding@resend.dev>";
 
 export type ProtheseModificationNotification = {
   requestId: string;
-  practiceName: string | null;
   patientName: string;
   practitionerName: string | null;
   practitionerEmail: string;

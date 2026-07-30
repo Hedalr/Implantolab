@@ -7,7 +7,7 @@ import { getServerSupabase, requireUser } from "@/lib/supabase/server";
  * ~5 minutes, pour afficher les photos jointes à une demande praticien.
  *
  * Les policies RLS sur `storage.objects` vérifient déjà que l'utilisateur
- * a le droit de voir ce fichier (son propre cabinet, un admin, ou un
+ * a le droit de voir ce fichier (sa propre demande, un admin, ou un
  * prothésiste du secteur concerné).
  */
 

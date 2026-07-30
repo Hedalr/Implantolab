@@ -100,7 +100,7 @@ export default async function AdminRequestsPage({
           Demandes praticiens
         </h1>
         <p className="mt-2 text-[var(--ink-muted)]">
-          Suivi et traitement des demandes envoyées par les cabinets partenaires.
+          Suivi et traitement des demandes envoyées par les dentistes partenaires.
         </p>
       </header>
 
@@ -180,7 +180,6 @@ export default async function AdminRequestsPage({
               <thead>
                 <tr>
                   <Th className="w-32">Date</Th>
-                  <Th>Cabinet</Th>
                   <Th>Praticien</Th>
                   <Th>Patient</Th>
                   <Th>Catégorie</Th>
@@ -273,7 +272,6 @@ function RequestRowView({
   media: RequestMediaItem[];
   statusFilter: StatusFilter;
 }) {
-  const practiceLabel = row.practices?.name ?? "—";
   const practitionerLabel = row.creatorName ?? "—";
 
   return (
@@ -282,14 +280,6 @@ function RequestRowView({
         {dateTimeFormatter.format(new Date(row.created_at))}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
-        {practiceLabel}
-        {row.practices?.city ? (
-          <span className="block text-xs text-[var(--ink-discreet)]">
-            {row.practices.city}
-          </span>
-        ) : null}
-      </td>
-      <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
         {practitionerLabel}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">

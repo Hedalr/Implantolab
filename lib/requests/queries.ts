@@ -18,7 +18,6 @@ export type AdminRequestRow = {
   sectorId: string | null;
   sectorName: string | null;
   sectorColor: string | null;
-  practices: { name: string | null; city: string | null } | null;
   creatorName: string | null;
 };
 
@@ -31,10 +30,6 @@ type RequestQueryRow = {
   created_by: string | null;
   patient_name: string | null;
   sector_id: string | null;
-  practices:
-    | { name: string | null; city: string | null }
-    | { name: string | null; city: string | null }[]
-    | null;
   sectors:
     | { name: string | null; color: string | null }
     | { name: string | null; color: string | null }[]
@@ -65,7 +60,6 @@ async function mapRequestRows(
   }
 
   return rows.map((row) => {
-    const practiceRow = firstRelation(row.practices);
     const sectorRow = firstRelation(row.sectors);
 
     return {
@@ -79,7 +73,6 @@ async function mapRequestRows(
       sectorId: row.sector_id,
       sectorName: sectorRow?.name ?? null,
       sectorColor: sectorRow?.color ?? null,
-      practices: practiceRow,
       creatorName: row.created_by
         ? (profileNames.get(row.created_by) ?? null)
         : null,
@@ -88,7 +81,7 @@ async function mapRequestRows(
 }
 
 const REQUEST_SELECT =
-  "id, subject, message, status, created_at, created_by, patient_name, sector_id, practices(name, city), sectors(name, color)";
+  "id, subject, message, status, created_at, created_by, patient_name, sector_id, sectors(name, color)";
 
 export async function listLabSectors(
   supabase: SupabaseClient,

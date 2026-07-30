@@ -16,8 +16,6 @@ export type Profile = {
   id: string;
   email: string;
   role: "practitioner" | "admin" | "prosthetist";
-  practiceId: string | null;
-  practiceName: string | null;
   fullName: string | null;
   sectorId: string | null;
   sectorName: string | null;
@@ -95,7 +93,7 @@ export const getSessionUser = cache(async (): Promise<{
 });
 
 /**
- * Profil applicatif + jointures practices/sectors.
+ * Profil applicatif + jointure sectors.
  * Mis en `cache()` pour éviter les doubles lectures dans layout + page.
  */
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
@@ -106,7 +104,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, role, practice_id, full_name, sector_id, leave_balance_days, practices ( name ), sectors ( name, color )",
+      "id, role, full_name, sector_id, leave_balance_days, sectors ( name, color )",
     )
     .eq("id", user.id)
     .maybeSingle();
@@ -117,25 +115,20 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const row = data as unknown as {
     id: string;
     role: Profile["role"] | null;
-    practice_id: string | null;
     full_name: string | null;
     sector_id: string | null;
     leave_balance_days: number | null;
-    practices: { name: string | null } | { name: string | null }[] | null;
     sectors:
       | { name: string | null; color: string | null }
       | { name: string | null; color: string | null }[]
       | null;
   };
-  const practiceRow = firstRelation(row.practices);
   const sectorRow = firstRelation(row.sectors);
 
   return {
     id: row.id,
     email: user.email,
     role: row.role ?? "practitioner",
-    practiceId: row.practice_id ?? null,
-    practiceName: practiceRow?.name ?? null,
     fullName: row.full_name ?? null,
     sectorId: row.sector_id ?? null,
     sectorName: sectorRow?.name ?? null,

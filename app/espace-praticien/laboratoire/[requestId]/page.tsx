@@ -80,7 +80,7 @@ export default async function LabRequestDetailPage({
           Laboratoire
         </span>
         <h1 className="font-serif text-2xl md:text-3xl text-[var(--ink)] leading-tight">
-          {request.creatorName ?? request.practices?.name ?? "Dentiste"}
+          {request.creatorName ?? "Dentiste"}
           {request.patientName ? (
             <span className="text-[var(--ink-muted)] font-sans text-xl md:text-2xl">
               {" "}
@@ -90,8 +90,6 @@ export default async function LabRequestDetailPage({
         </h1>
         <p className="text-sm text-[var(--ink-muted)]">
           {dateTimeFormatter.format(new Date(request.created_at))}
-          {request.practices?.name ? ` · ${request.practices.name}` : ""}
-          {request.practices?.city ? ` · ${request.practices.city}` : ""}
         </p>
         <div className="flex flex-wrap gap-2">
           <Badge

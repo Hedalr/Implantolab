@@ -41,15 +41,13 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   patient: "Merci d’indiquer le nom du patient (2 à 120 caractères).",
   message: "Le message doit contenir entre 10 et 2000 caractères.",
   save: "Une erreur est survenue lors de l’envoi. Merci de réessayer.",
-  "no-practice":
-    "Votre cabinet n’est pas encore rattaché à votre compte.",
   "too-many-photos": "Vous pouvez joindre jusqu’à 6 photos maximum.",
   "photo-size": "Chaque photo doit peser moins de 5 Mo.",
   "photo-type": "Formats acceptés pour les photos : JPG, PNG, WEBP, HEIC.",
   "media-config":
     "L’envoi de photos est temporairement indisponible. Contactez le laboratoire.",
   "rate-limit":
-    "Trop de demandes ont été envoyées récemment par votre cabinet. Réessayez dans quelques minutes.",
+    "Trop de demandes ont été envoyées récemment. Réessayez dans quelques minutes.",
 };
 
 const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -79,37 +77,8 @@ export default async function DemandesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { profile } = await requireUser();
+  const { userId } = await requireUser();
   const { ok, error } = await searchParams;
-
-  const practiceLabel = profile.practiceName ?? "votre cabinet";
-
-  if (!profile.practiceId) {
-    return (
-      <Container size="wide" className="py-12 md:py-16">
-        <PageHeader
-          title={`Mes demandes — ${practiceLabel}`}
-          intro="Adressez toute demande particulière au laboratoire : dates atypiques, urgences, questions techniques."
-        />
-        <div className="mt-10 bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-8 max-w-2xl">
-          <p className="text-eyebrow text-[var(--accent-warm)]">Accès partiel</p>
-          <p className="mt-3 text-[var(--ink)] leading-relaxed">
-            Votre cabinet n’a pas encore été rattaché à votre compte. Merci de
-            contacter le laboratoire pour finaliser votre accès à l’espace
-            praticien.
-          </p>
-          <p className="mt-5 text-sm">
-            <a
-              href="mailto:contact@implantolab.fr"
-              className="text-[var(--ink)] underline underline-offset-4 decoration-[var(--line-strong)] hover:decoration-[var(--ink)] hover:text-[var(--accent-warm)] transition-colors"
-            >
-              contact@implantolab.fr
-            </a>
-          </p>
-        </div>
-      </Container>
-    );
-  }
 
   const supabase = await getServerSupabase();
   const [sectors, requestsRes] = await Promise.all([
@@ -119,7 +88,7 @@ export default async function DemandesPage({
       .select(
         "id, subject, message, status, created_at, patient_name, sectors ( name, color )",
       )
-      .eq("practice_id", profile.practiceId)
+      .eq("profile_id", userId)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -135,7 +104,7 @@ export default async function DemandesPage({
   return (
     <Container size="wide" className="py-12 md:py-16">
       <PageHeader
-        title={`Mes demandes — ${practiceLabel}`}
+        title="Mes demandes"
         intro="Adressez toute demande particulière au laboratoire : dates atypiques, urgences, questions techniques."
       />
 

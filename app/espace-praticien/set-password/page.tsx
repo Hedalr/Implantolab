@@ -15,12 +15,18 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = Promise<{ error?: string }>;
+type SearchParams = Promise<{ error?: string; detail?: string }>;
 
 const ERROR_MESSAGES: Record<string, string> = {
   short: "Le mot de passe doit contenir au moins 8 caractères.",
   mismatch: "Les deux mots de passe ne correspondent pas.",
   weak: "Ce mot de passe est trop courant. Choisissez-en un plus complexe.",
+  "same-password":
+    "Ce mot de passe est identique à l’ancien. Choisissez-en un différent.",
+  "session-expired":
+    "Votre session a expiré. Redemandez un lien d’invitation au laboratoire.",
+  "rate-limit":
+    "Trop de tentatives récentes. Patientez une minute puis réessayez.",
   "update-failed":
     "Impossible d’enregistrer le mot de passe. Réessayez ou contactez le laboratoire.",
 };
@@ -39,7 +45,7 @@ export default async function SetPasswordPage({
     redirect("/espace-praticien/login?error=invite");
   }
 
-  const { error } = await searchParams;
+  const { error, detail } = await searchParams;
   const errorMessage = error ? ERROR_MESSAGES[error] ?? null : null;
 
   return (
@@ -80,9 +86,14 @@ export default async function SetPasswordPage({
         </label>
 
         {errorMessage ? (
-          <p role="alert" className="text-sm text-[var(--accent-warm)]">
-            {errorMessage}
-          </p>
+          <div role="alert">
+            <p className="text-sm text-[var(--accent-warm)]">{errorMessage}</p>
+            {error === "update-failed" && detail ? (
+              <p className="mt-2 text-xs font-mono text-[var(--ink-discreet)] break-all">
+                Détail technique : {detail}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         <div className="pt-2">

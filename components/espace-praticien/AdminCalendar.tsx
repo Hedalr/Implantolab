@@ -5,22 +5,21 @@ import { cn } from "@/lib/cn";
 
 type Closure = {
   id: string;
-  practiceId: string;
-  practiceName: string;
+  dentistId: string;
+  dentistName: string;
   startDate: string;
   endDate: string;
   note: string | null;
 };
 
-type Practice = {
+type Dentist = {
   id: string;
   name: string;
-  city: string | null;
 };
 
 type Props = {
   closures: Closure[];
-  practices: Practice[];
+  dentists: Dentist[];
 };
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -64,7 +63,7 @@ function hashHue(id: string): number {
   return h % 360;
 }
 
-function practiceColor(id: string): string {
+function dentistColor(id: string): string {
   return `hsl(${hashHue(id)}, 55%, 65%)`;
 }
 
@@ -131,12 +130,12 @@ function buildGrid(monthStart: Date): DayCell[] {
   return cells;
 }
 
-export function AdminCalendar({ closures, practices }: Props) {
+export function AdminCalendar({ closures, dentists }: Props) {
   const [monthStart, setMonthStart] = useState<Date>(() =>
     truncateToMonth(new Date()),
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPracticeId, setSelectedPracticeId] = useState<string | null>(
+  const [selectedDentistId, setSelectedDentistId] = useState<string | null>(
     null,
   );
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
@@ -150,24 +149,23 @@ export function AdminCalendar({ closures, practices }: Props) {
 
   const todayIso = isoDay(today);
 
-  const practiceDirectory = useMemo(() => {
-    const map = new Map<string, Practice>();
-    for (const p of practices) {
-      map.set(p.id, p);
+  const dentistDirectory = useMemo(() => {
+    const map = new Map<string, Dentist>();
+    for (const d of dentists) {
+      map.set(d.id, d);
     }
     for (const c of closures) {
-      if (!map.has(c.practiceId)) {
-        map.set(c.practiceId, {
-          id: c.practiceId,
-          name: c.practiceName,
-          city: null,
+      if (!map.has(c.dentistId)) {
+        map.set(c.dentistId, {
+          id: c.dentistId,
+          name: c.dentistName,
         });
       }
     }
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name, "fr"),
     );
-  }, [practices, closures]);
+  }, [dentists, closures]);
 
   const parsedClosures = useMemo(
     () =>
@@ -180,51 +178,43 @@ export function AdminCalendar({ closures, practices }: Props) {
   );
 
   const filteredClosures = useMemo(() => {
-    if (selectedPracticeId) {
-      return parsedClosures.filter((c) => c.practiceId === selectedPracticeId);
+    if (selectedDentistId) {
+      return parsedClosures.filter((c) => c.dentistId === selectedDentistId);
     }
 
     const q = normalizeSearch(searchQuery);
     if (!q) return parsedClosures;
 
     const matchingIds = new Set(
-      practiceDirectory
-        .filter((p) => {
-          const haystack = normalizeSearch(
-            `${p.name} ${p.city ?? ""}`,
-          );
-          return haystack.includes(q);
-        })
-        .map((p) => p.id),
+      dentistDirectory
+        .filter((d) => normalizeSearch(d.name).includes(q))
+        .map((d) => d.id),
     );
 
-    return parsedClosures.filter((c) => matchingIds.has(c.practiceId));
-  }, [parsedClosures, selectedPracticeId, searchQuery, practiceDirectory]);
+    return parsedClosures.filter((c) => matchingIds.has(c.dentistId));
+  }, [parsedClosures, selectedDentistId, searchQuery, dentistDirectory]);
 
   const suggestions = useMemo(() => {
     const q = normalizeSearch(searchQuery);
-    if (!q) return practiceDirectory.slice(0, 8);
+    if (!q) return dentistDirectory.slice(0, 8);
 
-    return practiceDirectory
-      .filter((p) => {
-        const haystack = normalizeSearch(`${p.name} ${p.city ?? ""}`);
-        return haystack.includes(q);
-      })
+    return dentistDirectory
+      .filter((d) => normalizeSearch(d.name).includes(q))
       .slice(0, 8);
-  }, [searchQuery, practiceDirectory]);
+  }, [searchQuery, dentistDirectory]);
 
-  const selectedPractice = selectedPracticeId
-    ? practiceDirectory.find((p) => p.id === selectedPracticeId) ?? null
+  const selectedDentist = selectedDentistId
+    ? dentistDirectory.find((d) => d.id === selectedDentistId) ?? null
     : null;
 
-  const isFiltered = Boolean(selectedPracticeId || normalizeSearch(searchQuery));
+  const isFiltered = Boolean(selectedDentistId || normalizeSearch(searchQuery));
 
-  const selectedPracticeClosures = useMemo(() => {
-    if (!selectedPracticeId) return [];
+  const selectedDentistClosures = useMemo(() => {
+    if (!selectedDentistId) return [];
     return parsedClosures
-      .filter((c) => c.practiceId === selectedPracticeId)
+      .filter((c) => c.dentistId === selectedDentistId)
       .sort((a, b) => a.startDate.localeCompare(b.startDate));
-  }, [parsedClosures, selectedPracticeId]);
+  }, [parsedClosures, selectedDentistId]);
 
   const hasClosureInMonth = useMemo(
     () =>
@@ -252,27 +242,27 @@ export function AdminCalendar({ closures, practices }: Props) {
     return map;
   }, [grid, filteredClosures]);
 
-  const practicesInMonth = useMemo(() => {
+  const dentistsInMonth = useMemo(() => {
     const seen = new Map<
       string,
-      { practiceId: string; practiceName: string; color: string }
+      { dentistId: string; dentistName: string; color: string }
     >();
     for (const cell of grid) {
       if (!cell.inMonth) continue;
       const list = closuresByDay.get(cell.key);
       if (!list) continue;
       for (const c of list) {
-        if (!seen.has(c.practiceId)) {
-          seen.set(c.practiceId, {
-            practiceId: c.practiceId,
-            practiceName: c.practiceName,
-            color: practiceColor(c.practiceId),
+        if (!seen.has(c.dentistId)) {
+          seen.set(c.dentistId, {
+            dentistId: c.dentistId,
+            dentistName: c.dentistName,
+            color: dentistColor(c.dentistId),
           });
         }
       }
     }
     return Array.from(seen.values()).sort((a, b) =>
-      a.practiceName.localeCompare(b.practiceName, "fr"),
+      a.dentistName.localeCompare(b.dentistName, "fr"),
     );
   }, [grid, closuresByDay]);
 
@@ -286,29 +276,29 @@ export function AdminCalendar({ closures, practices }: Props) {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, []);
 
-  function focusPractice(practiceId: string) {
-    const practice = practiceDirectory.find((p) => p.id === practiceId);
-    if (!practice) return;
+  function focusDentist(dentistId: string) {
+    const dentist = dentistDirectory.find((d) => d.id === dentistId);
+    if (!dentist) return;
 
-    setSelectedPracticeId(practiceId);
-    setSearchQuery(practice.name);
+    setSelectedDentistId(dentistId);
+    setSearchQuery(dentist.name);
     setSuggestionsOpen(false);
 
-    const practiceClosures = parsedClosures.filter(
-      (c) => c.practiceId === practiceId,
+    const dentistClosures = parsedClosures.filter(
+      (c) => c.dentistId === dentistId,
     );
-    if (practiceClosures.length === 0) return;
+    if (dentistClosures.length === 0) return;
 
     const upcoming =
-      practiceClosures.find((c) => c.endDate >= todayIso) ??
-      practiceClosures[practiceClosures.length - 1];
+      dentistClosures.find((c) => c.endDate >= todayIso) ??
+      dentistClosures[dentistClosures.length - 1];
 
     setMonthStart(truncateToMonth(upcoming.start));
   }
 
   function clearSearch() {
     setSearchQuery("");
-    setSelectedPracticeId(null);
+    setSelectedDentistId(null);
     setSuggestionsOpen(false);
   }
 
@@ -324,7 +314,7 @@ export function AdminCalendar({ closures, practices }: Props) {
       <div ref={searchRef} className="flex flex-col sm:flex-row sm:items-end gap-3">
         <div className="relative flex-1 max-w-lg">
           <label htmlFor="calendar-search" className="text-eyebrow">
-            Rechercher un cabinet
+            Rechercher un dentiste
           </label>
           <input
             id="calendar-search"
@@ -332,20 +322,20 @@ export function AdminCalendar({ closures, practices }: Props) {
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setSelectedPracticeId(null);
+              setSelectedDentistId(null);
               setSuggestionsOpen(true);
             }}
             onFocus={() => setSuggestionsOpen(true)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && suggestions.length === 1) {
                 e.preventDefault();
-                focusPractice(suggestions[0].id);
+                focusDentist(suggestions[0].id);
               }
               if (e.key === "Escape") {
                 setSuggestionsOpen(false);
               }
             }}
-            placeholder="Ex. Dr. Martin, Blois…"
+            placeholder="Ex. Dr. Martin…"
             autoComplete="off"
             className={cn(
               "mt-2 w-full bg-[var(--bg-elevated)] border border-[var(--line-strong)] px-4 py-3 text-base text-[var(--ink)]",
@@ -358,17 +348,14 @@ export function AdminCalendar({ closures, practices }: Props) {
               role="listbox"
               className="absolute z-20 left-0 right-0 mt-1 bg-[var(--bg-elevated)] border border-[var(--line-strong)] shadow-sm max-h-64 overflow-y-auto"
             >
-              {suggestions.map((p) => (
-                <li key={p.id} role="option">
+              {suggestions.map((d) => (
+                <li key={d.id} role="option">
                   <button
                     type="button"
-                    onClick={() => focusPractice(p.id)}
+                    onClick={() => focusDentist(d.id)}
                     className="w-full text-left px-4 py-3 text-sm text-[var(--ink)] hover:bg-[var(--bg)] transition-colors"
                   >
-                    <span className="font-medium">{p.name}</span>
-                    {p.city ? (
-                      <span className="text-[var(--ink-discreet)]"> · {p.city}</span>
-                    ) : null}
+                    <span className="font-medium">{d.name}</span>
                   </button>
                 </li>
               ))}
@@ -382,18 +369,18 @@ export function AdminCalendar({ closures, practices }: Props) {
             onClick={clearSearch}
             className="inline-flex items-center justify-center px-4 py-3 text-sm border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)] transition-colors whitespace-nowrap"
           >
-            Voir tous les cabinets
+            Voir tous les dentistes
           </button>
         ) : null}
       </div>
 
-      {selectedPractice ? (
-        <PracticeSummary
-          practice={selectedPractice}
-          closures={selectedPracticeClosures}
+      {selectedDentist ? (
+        <DentistSummary
+          dentist={selectedDentist}
+          closures={selectedDentistClosures}
           todayIso={todayIso}
           onJump={jumpToClosure}
-          color={practiceColor(selectedPractice.id)}
+          color={dentistColor(selectedDentist.id)}
         />
       ) : null}
 
@@ -403,9 +390,9 @@ export function AdminCalendar({ closures, practices }: Props) {
             <h2 className="text-lg font-serif text-[var(--ink)] text-numeral">
               {monthLabelCap}
             </h2>
-            {selectedPractice ? (
+            {selectedDentist ? (
               <p className="mt-0.5 text-xs text-[var(--ink-discreet)]">
-                Calendrier de {selectedPractice.name}
+                Calendrier de {selectedDentist.name}
               </p>
             ) : isFiltered ? (
               <p className="mt-0.5 text-xs text-[var(--ink-discreet)]">
@@ -443,9 +430,9 @@ export function AdminCalendar({ closures, practices }: Props) {
           <div className="px-5 py-4 border-b border-[var(--line)] bg-[var(--bg)]/50">
             <p className="text-sm text-[var(--ink-muted)]">
               Aucune fermeture sur ce mois pour la sélection en cours.
-              {selectedPracticeClosures.length > 0
+              {selectedDentistClosures.length > 0
                 ? " Consultez le récapitulatif ci-dessus ou changez de mois."
-                : " Ce cabinet n’a déclaré aucune fermeture pour l’instant."}
+                : " Ce dentiste n’a déclaré aucune fermeture pour l’instant."}
             </p>
           </div>
         ) : null}
@@ -497,8 +484,8 @@ export function AdminCalendar({ closures, practices }: Props) {
 
                 <div className="flex flex-col gap-0.5 min-h-0">
                   {visible.map((c) => {
-                    const bg = practiceColor(c.practiceId);
-                    const title = `${c.practiceName} • ${humanDate.format(c.start)} → ${humanDate.format(c.end)}${c.note ? ` • ${c.note}` : ""}`;
+                    const bg = dentistColor(c.dentistId);
+                    const title = `${c.dentistName} • ${humanDate.format(c.start)} → ${humanDate.format(c.end)}${c.note ? ` • ${c.note}` : ""}`;
                     return (
                       <span
                         key={`${cell.key}-${c.id}`}
@@ -506,7 +493,7 @@ export function AdminCalendar({ closures, practices }: Props) {
                         className="block truncate text-[10px] leading-4 px-1.5 py-0.5 text-black"
                         style={{ backgroundColor: bg }}
                       >
-                        {c.practiceName}
+                        {c.dentistName}
                       </span>
                     );
                   })}
@@ -516,7 +503,7 @@ export function AdminCalendar({ closures, practices }: Props) {
                         .slice(visible.length)
                         .map(
                           (c) =>
-                            `${c.practiceName} • ${humanDate.format(c.start)} → ${humanDate.format(c.end)}`,
+                            `${c.dentistName} • ${humanDate.format(c.start)} → ${humanDate.format(c.end)}`,
                         )
                         .join("\n")}
                       className="text-[10px] leading-4 px-1.5 py-0.5 text-[var(--ink-muted)] border border-[var(--line)]"
@@ -532,9 +519,9 @@ export function AdminCalendar({ closures, practices }: Props) {
 
         <div className="px-5 py-4 border-t border-[var(--line)]">
           <p className="text-eyebrow mb-3">
-            {isFiltered ? "Cabinets affichés" : "Cabinets présents ce mois"}
+            {isFiltered ? "Dentistes affichés" : "Dentistes présents ce mois"}
           </p>
-          {practicesInMonth.length === 0 ? (
+          {dentistsInMonth.length === 0 ? (
             <p className="text-sm text-[var(--ink-discreet)]">
               {isFiltered
                 ? "Aucune fermeture visible sur ce mois."
@@ -542,17 +529,17 @@ export function AdminCalendar({ closures, practices }: Props) {
             </p>
           ) : (
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
-              {practicesInMonth.map((p) => (
+              {dentistsInMonth.map((d) => (
                 <li
-                  key={p.practiceId}
+                  key={d.dentistId}
                   className="inline-flex items-center gap-2 text-sm text-[var(--ink)]"
                 >
                   <span
                     aria-hidden="true"
                     className="inline-block w-3 h-3"
-                    style={{ backgroundColor: p.color }}
+                    style={{ backgroundColor: d.color }}
                   />
-                  {p.practiceName}
+                  {d.dentistName}
                 </li>
               ))}
             </ul>
@@ -563,14 +550,14 @@ export function AdminCalendar({ closures, practices }: Props) {
   );
 }
 
-function PracticeSummary({
-  practice,
+function DentistSummary({
+  dentist,
   closures,
   todayIso,
   onJump,
   color,
 }: {
-  practice: Practice;
+  dentist: Dentist;
   closures: Array<
     Closure & { start: Date; end: Date }
   >;
@@ -585,17 +572,14 @@ function PracticeSummary({
     <section className="bg-[var(--bg-elevated)] border border-[var(--line)] p-5 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-eyebrow">Cabinet sélectionné</p>
+          <p className="text-eyebrow">Dentiste sélectionné</p>
           <div className="mt-2 flex items-center gap-3">
             <span
               aria-hidden="true"
               className="inline-block w-3 h-3 shrink-0"
               style={{ backgroundColor: color }}
             />
-            <h3 className="font-serif text-xl text-[var(--ink)]">{practice.name}</h3>
-            {practice.city ? (
-              <span className="text-sm text-[var(--ink-discreet)]">{practice.city}</span>
-            ) : null}
+            <h3 className="font-serif text-xl text-[var(--ink)]">{dentist.name}</h3>
           </div>
         </div>
         <p className="text-sm text-[var(--ink-muted)]">
@@ -609,7 +593,7 @@ function PracticeSummary({
 
       {closures.length === 0 ? (
         <p className="mt-4 text-sm text-[var(--ink-discreet)]">
-          Ce cabinet n’a pas encore déclaré de période de fermeture.
+          Ce dentiste n’a pas encore déclaré de période de fermeture.
         </p>
       ) : (
         <div className="mt-5 grid gap-6 md:grid-cols-2">

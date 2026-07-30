@@ -6,23 +6,15 @@ import { cn } from "@/lib/cn";
 import type { LabSector } from "@/lib/sectors";
 import { invitePractitioner } from "@/app/espace-praticien/admin/praticiens/actions";
 
-type PracticeOption = {
-  id: string;
-  name: string;
-  city: string | null;
-};
-
 const inputStyle = cn(
   "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
   "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
 );
 
 export function InviteUserForm({
-  practices,
   sectors,
   canInvite,
 }: {
-  practices: PracticeOption[];
   sectors: LabSector[];
   canInvite: boolean;
 }) {
@@ -49,7 +41,7 @@ export function InviteUserForm({
               Praticien (dentiste)
             </span>
             <span className="text-xs text-[var(--ink-discreet)]">
-              Accès à ses fermetures et demandes, rattaché à un cabinet.
+              Accès à ses fermetures et demandes.
             </span>
           </span>
         </label>
@@ -68,7 +60,7 @@ export function InviteUserForm({
               Prothésiste (collaborateur labo)
             </span>
             <span className="text-xs text-[var(--ink-discreet)]">
-              Accès aux demandes du secteur choisi. Aucun cabinet à sélectionner.
+              Accès aux demandes du secteur choisi.
             </span>
           </span>
         </label>
@@ -81,7 +73,7 @@ export function InviteUserForm({
           type="email"
           required
           disabled={!canInvite}
-          placeholder="dr.martin@cabinet.fr"
+          placeholder="dr.martin@exemple.fr"
           className={inputStyle}
         />
       </Field>
@@ -95,30 +87,7 @@ export function InviteUserForm({
         />
       </Field>
 
-      {role === "practitioner" ? (
-        <Field label="Cabinet" htmlFor="invite-practice" required>
-          <select
-            id="invite-practice"
-            name="practice_id"
-            required
-            disabled={!canInvite || practices.length === 0}
-            className={cn(inputStyle, "cursor-pointer")}
-            defaultValue=""
-          >
-            <option value="">
-              {practices.length === 0
-                ? "Créez d’abord un cabinet"
-                : "Sélectionner un cabinet"}
-            </option>
-            {practices.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-                {p.city ? ` — ${p.city}` : ""}
-              </option>
-            ))}
-          </select>
-        </Field>
-      ) : (
+      {role === "prosthetist" ? (
         <Field label="Secteur" htmlFor="invite-sector" required>
           <select
             id="invite-sector"
@@ -140,7 +109,7 @@ export function InviteUserForm({
             ))}
           </select>
         </Field>
-      )}
+      ) : null}
 
       <Button type="submit" variant="primary" disabled={!canInvite}>
         Envoyer l’invitation

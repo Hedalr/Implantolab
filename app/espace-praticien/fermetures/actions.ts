@@ -13,11 +13,7 @@ function fail(reason: string): never {
 }
 
 export async function addClosurePeriod(formData: FormData): Promise<void> {
-  const { userId, profile } = await requireUser();
-
-  if (!profile.practiceId) {
-    fail("no-practice");
-  }
+  const { userId } = await requireUser();
 
   const startDate = String(formData.get("start_date") ?? "").trim();
   const endDate = String(formData.get("end_date") ?? "").trim();
@@ -37,7 +33,7 @@ export async function addClosurePeriod(formData: FormData): Promise<void> {
 
   const supabase = await getServerSupabase();
   const { error } = await supabase.from("closure_periods").insert({
-    practice_id: profile.practiceId,
+    profile_id: userId,
     start_date: startDate,
     end_date: endDate,
     note: note.length > 0 ? note : null,
@@ -53,11 +49,7 @@ export async function addClosurePeriod(formData: FormData): Promise<void> {
 }
 
 export async function deleteClosurePeriod(formData: FormData): Promise<void> {
-  const { profile } = await requireUser();
-
-  if (!profile.practiceId) {
-    fail("no-practice");
-  }
+  const { userId } = await requireUser();
 
   const id = String(formData.get("id") ?? "").trim();
   if (!id) {
@@ -69,7 +61,7 @@ export async function deleteClosurePeriod(formData: FormData): Promise<void> {
     .from("closure_periods")
     .delete()
     .eq("id", id)
-    .eq("practice_id", profile.practiceId);
+    .eq("profile_id", userId);
 
   if (error) {
     fail("delete");

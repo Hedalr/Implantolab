@@ -6,50 +6,49 @@ export const dynamic = "force-dynamic";
 
 type ClosureRow = {
   id: string;
-  practice_id: string;
+  profile_id: string;
   start_date: string;
   end_date: string;
   note: string | null;
-  practices: { name: string | null } | null;
+  profiles: { full_name: string | null } | null;
 };
 
-type PracticeRow = {
+type DentistRow = {
   id: string;
-  name: string;
-  city: string | null;
+  full_name: string | null;
 };
 
 export default async function AdminCalendarPage() {
   await requireAdmin();
   const supabase = await getServerSupabase();
 
-  const [closuresRes, practicesRes] = await Promise.all([
+  const [closuresRes, dentistsRes] = await Promise.all([
     supabase
       .from("closure_periods")
-      .select("id, practice_id, start_date, end_date, note, practices(name)")
+      .select("id, profile_id, start_date, end_date, note, profiles(full_name)")
       .order("start_date", { ascending: true }),
     supabase
-      .from("practices")
-      .select("id, name, city")
-      .order("name", { ascending: true }),
+      .from("profiles")
+      .select("id, full_name")
+      .eq("role", "practitioner")
+      .order("full_name", { ascending: true }),
   ]);
 
   const rows = (closuresRes.data ?? []) as unknown as ClosureRow[];
-  const practiceRows = (practicesRes.data ?? []) as PracticeRow[];
+  const dentistRows = (dentistsRes.data ?? []) as DentistRow[];
 
   const closures = rows.map((r) => ({
     id: r.id,
-    practiceId: r.practice_id,
-    practiceName: r.practices?.name ?? "Cabinet",
+    dentistId: r.profile_id,
+    dentistName: r.profiles?.full_name ?? "Dentiste",
     startDate: r.start_date,
     endDate: r.end_date,
     note: r.note,
   }));
 
-  const practices = practiceRows.map((p) => ({
-    id: p.id,
-    name: p.name,
-    city: p.city,
+  const dentists = dentistRows.map((d) => ({
+    id: d.id,
+    name: d.full_name ?? "Dentiste",
   }));
 
   return (
@@ -60,13 +59,13 @@ export default async function AdminCalendarPage() {
           Calendrier des fermetures
         </h1>
         <p className="mt-2 text-[var(--ink-muted)]">
-          Vue centralisée des dates de fermeture déclarées par les cabinets
-          partenaires. Recherchez un cabinet pour afficher uniquement son
+          Vue centralisée des dates de fermeture déclarées par les dentistes
+          partenaires. Recherchez un dentiste pour afficher uniquement son
           calendrier.
         </p>
       </header>
 
-      <AdminCalendar closures={closures} practices={practices} />
+      <AdminCalendar closures={closures} dentists={dentists} />
     </Container>
   );
 }

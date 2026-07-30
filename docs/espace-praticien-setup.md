@@ -43,9 +43,12 @@ En production (Vercel), ces variables se déclarent dans
 
 ## 4. Appliquer la migration SQL
 
-La migration `supabase/migrations/001_init.sql` crée les 4 tables
-(`practices`, `profiles`, `closure_periods`, `requests`), active RLS et
-définit les policies.
+La migration `supabase/migrations/001_init.sql` crée les tables
+(`profiles`, `closure_periods`, `requests`), active RLS et définit les
+policies. Une migration ultérieure
+(`20260730180000_remove_practices.sql`) supprime l'ancienne table
+`practices` : chaque dentiste est directement rattaché à ses demandes et
+fermetures via `profile_id`, sans regroupement par cabinet.
 
 ### Option A — SQL Editor du dashboard (rapide)
 
@@ -87,20 +90,19 @@ par le code — pas besoin d’y toucher sauf pour personnaliser le style.
 locale même quand l’invitation est envoyée depuis Vercel. En production, mettez
 la **Site URL** sur `https://implantolab.vercel.app` (ou votre domaine final).
 
-## 5. Créer les cabinets et inviter les praticiens
+## 5. Inviter les praticiens
 
 ### Depuis le site (recommandé)
 
 1. Connectez-vous en **admin** sur `/espace-praticien/login`.
 2. Ouvrez **Praticiens** dans le menu admin (`/espace-praticien/admin/praticiens`).
-3. **Créez le cabinet** (nom + ville).
-4. **Invitez l’utilisateur** par e-mail. Deux types disponibles :
-   - **Praticien (dentiste)** : rattaché à un cabinet, accès à ses fermetures
-     et demandes.
+3. **Invitez l’utilisateur** par e-mail. Deux types disponibles :
+   - **Praticien (dentiste)** : opérationnel immédiatement, accès à ses
+     propres fermetures et demandes dès l’acceptation de l’invitation.
    - **Prothésiste (collaborateur labo)** : accès au module Laboratoire
      (demandes de son secteur : Numérique, Amovible ou Conjoint). Le secteur
-     est obligatoire à l’invitation. Aucun cabinet à sélectionner.
-5. L’utilisateur reçoit un lien « You've been invited ». En cliquant, il
+     est obligatoire à l’invitation.
+4. L’utilisateur reçoit un lien « You've been invited ». En cliquant, il
    arrive sur `/espace-praticien/set-password` où il choisit son mot de
    passe, puis est automatiquement redirigé vers son espace selon son
    rôle.
@@ -130,16 +132,6 @@ qui placent `access_token` et `refresh_token` dans le fragment URL.
 
 ### Depuis le dashboard Supabase (alternative)
 
-Dans **Table Editor → practices**, ajoutez une ligne par cabinet
-partenaire :
-
-- `name` : « Cabinet Dr. Dupont »
-- `city` : « Blois »
-
-Notez l’`id` (uuid) généré — il servira à rattacher les praticiens.
-
-## 6. Inviter les utilisateurs
-
 1. Allez dans **Authentication → Users → Invite user**.
 2. Saisissez l’email du praticien (ou d’un admin du laboratoire) et
    envoyez l’invitation.
@@ -148,25 +140,19 @@ Notez l’`id` (uuid) généré — il servira à rattacher les praticiens.
 Alternative : cliquez sur **Add user** et créez directement un compte
 avec un mot de passe (pratique pour un compte admin de test).
 
-## 7. Rattacher le profil au cabinet
-
 À la création d’un utilisateur, un trigger crée automatiquement une
-ligne `profiles` avec `role = 'practitioner'` et `practice_id = NULL`.
+ligne `profiles` avec `role = 'practitioner'`. Le praticien est
+opérationnel immédiatement : il n’a besoin d’aucun rattachement
+supplémentaire pour créer des demandes ou déclarer des fermetures.
+Si besoin, éditez la ligne dans **Table Editor → profiles** :
 
-Dans **Table Editor → profiles**, éditez cette ligne :
-
-- `practice_id` : coller l’`id` du cabinet créé à l’étape 5.
 - `full_name` : « Dr. Jean Dupont » (facultatif mais recommandé).
 - `role` :
-  - `practitioner` pour un compte cabinet (défaut).
+  - `practitioner` pour un compte dentiste (défaut).
   - `admin` pour un compte laboratoire (voit toutes les fermetures
     et toutes les demandes, peut gérer les praticiens).
 
-Un compte admin doit **quand même** avoir un `practice_id` s’il doit
-créer des fermetures pour son propre cabinet ; sinon on peut laisser
-`NULL` (il aura accès en lecture à tout via les policies RLS).
-
-## 8. Se connecter
+## 6. Se connecter
 
 Rendez-vous sur `/espace-praticien/login`, entrez l’email et le mot de
 passe.
@@ -200,5 +186,7 @@ passe.
   RLS mal appliquée). Vérifiez la présence de la ligne
   `profiles.id = <auth uid>`.
 - **« Row Level Security prevents this operation »** dans les logs → le
-  `practice_id` du profil n’est pas renseigné, ou l’utilisateur essaie
-  d’accéder à un cabinet qui n’est pas le sien. Vérifiez l’étape 7.
+  praticien essaie d’accéder à une demande ou une fermeture qui n’est
+  pas la sienne (`profile_id` différent de son `auth.uid()`). Vérifiez
+  la policy RLS concernée dans la migration
+  `20260730180000_remove_practices.sql`.

@@ -30,10 +30,6 @@ function fail(reason: string): never {
 export async function createRequest(formData: FormData): Promise<void> {
   const { userId, profile } = await requireUser();
 
-  if (!profile.practiceId) {
-    fail("no-practice");
-  }
-
   const subject = String(formData.get("subject") ?? "").trim();
   const patientName = String(formData.get("patient_name") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
@@ -111,7 +107,7 @@ export async function createRequest(formData: FormData): Promise<void> {
   const { data: inserted, error } = await supabase
     .from("requests")
     .insert({
-      practice_id: profile.practiceId,
+      profile_id: userId,
       subject,
       patient_name: patientName,
       message,
@@ -139,7 +135,6 @@ export async function createRequest(formData: FormData): Promise<void> {
     after(() =>
       sendProtheseModificationNotification({
         requestId,
-        practiceName: profile.practiceName,
         patientName,
         practitionerName: profile.fullName,
         practitionerEmail: profile.email,

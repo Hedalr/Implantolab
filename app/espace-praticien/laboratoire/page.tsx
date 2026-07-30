@@ -210,8 +210,7 @@ export default async function LaboratoireIndex({
         <>
           <ul className="flex flex-col gap-3">
             {requests.map((r) => {
-              const dentistLabel =
-                r.creatorName ?? r.practices?.name ?? "Dentiste inconnu";
+              const dentistLabel = r.creatorName ?? "Dentiste inconnu";
               return (
                 <li key={r.id}>
                   <Link
@@ -232,12 +231,6 @@ export default async function LaboratoireIndex({
                             </span>
                           ) : null}
                         </p>
-                        {r.practices?.name && r.creatorName ? (
-                          <p className="text-xs text-[var(--ink-discreet)] truncate">
-                            {r.practices.name}
-                            {r.practices.city ? ` · ${r.practices.city}` : ""}
-                          </p>
-                        ) : null}
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge
                             label={formatRequestCategory(r.subject)}

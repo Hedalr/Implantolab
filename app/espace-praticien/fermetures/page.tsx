@@ -33,8 +33,6 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   note: "La note doit contenir au plus 500 caractères.",
   save: "Une erreur est survenue lors de l’enregistrement. Merci de réessayer.",
   delete: "Impossible de supprimer cette fermeture. Merci de réessayer.",
-  "no-practice":
-    "Votre cabinet n’est pas encore rattaché à votre compte.",
 };
 
 export default async function FermeturesPage({
@@ -42,43 +40,14 @@ export default async function FermeturesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { profile } = await requireUser();
+  const { userId } = await requireUser();
   const { ok, error } = await searchParams;
-
-  const practiceLabel = profile.practiceName ?? "votre cabinet";
-
-  if (!profile.practiceId) {
-    return (
-      <Container size="wide" className="py-12 md:py-16">
-        <PageHeader
-          title={`Mes fermetures — ${practiceLabel}`}
-          intro="Déclarez vos dates de fermeture pour que le laboratoire puisse ajuster le planning de production."
-        />
-        <div className="mt-10 bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-8 max-w-2xl">
-          <p className="text-eyebrow text-[var(--accent-warm)]">Accès partiel</p>
-          <p className="mt-3 text-[var(--ink)] leading-relaxed">
-            Votre cabinet n’a pas encore été rattaché à votre compte. Merci de
-            contacter le laboratoire pour finaliser votre accès à l’espace
-            praticien.
-          </p>
-          <p className="mt-5 text-sm">
-            <a
-              href="mailto:contact@implantolab.fr"
-              className="text-[var(--ink)] underline underline-offset-4 decoration-[var(--line-strong)] hover:decoration-[var(--ink)] hover:text-[var(--accent-warm)] transition-colors"
-            >
-              contact@implantolab.fr
-            </a>
-          </p>
-        </div>
-      </Container>
-    );
-  }
 
   const supabase = await getServerSupabase();
   const { data } = await supabase
     .from("closure_periods")
     .select("id, start_date, end_date, note")
-    .eq("practice_id", profile.practiceId)
+    .eq("profile_id", userId)
     .order("start_date", { ascending: true });
 
   const rows = (data ?? []) as ClosurePeriodRow[];
@@ -97,7 +66,7 @@ export default async function FermeturesPage({
   return (
     <Container size="wide" className="py-12 md:py-16">
       <PageHeader
-        title={`Mes fermetures — ${practiceLabel}`}
+        title="Mes fermetures"
         intro="Déclarez vos dates de fermeture pour que le laboratoire puisse ajuster le planning de production."
       />
 

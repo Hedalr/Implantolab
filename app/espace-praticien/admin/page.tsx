@@ -17,7 +17,7 @@ type ClosureRow = {
   start_date: string;
   end_date: string;
   note: string | null;
-  practices: { name: string | null; city: string | null } | null;
+  profiles: { full_name: string | null } | null;
 };
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
@@ -55,7 +55,6 @@ export default async function AdminDashboardPage() {
   const [
     closuresThisWeekRes,
     openRequestsRes,
-    practicesRes,
     practitionersRes,
     recentRequestsRes,
     upcomingClosuresRes,
@@ -69,7 +68,6 @@ export default async function AdminDashboardPage() {
       .from("requests")
       .select("id", { count: "exact", head: true })
       .eq("status", "open"),
-    supabase.from("practices").select("id", { count: "exact", head: true }),
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
@@ -77,7 +75,7 @@ export default async function AdminDashboardPage() {
     listAdminRequests(supabase, { status: "all", page: 1, pageSize: 5 }),
     supabase
       .from("closure_periods")
-      .select("id, start_date, end_date, note, practices(name, city)")
+      .select("id, start_date, end_date, note, profiles(full_name)")
       .gte("start_date", todayIso)
       .order("start_date", { ascending: true })
       .limit(5),
@@ -85,7 +83,6 @@ export default async function AdminDashboardPage() {
 
   const closuresThisWeek = closuresThisWeekRes.count ?? 0;
   const openRequests = openRequestsRes.count ?? 0;
-  const practicesCount = practicesRes.count ?? 0;
   const practitionersCount = practitionersRes.count ?? 0;
   const recentRequests = recentRequestsRes.rows;
   const upcomingClosures = (upcomingClosuresRes.data ?? []) as unknown as ClosureRow[];
@@ -106,22 +103,17 @@ export default async function AdminDashboardPage() {
 
       <section
         aria-label="Indicateurs clés"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
       >
         <Kpi
           label="Fermetures cette semaine"
           value={closuresThisWeek}
-          hint="Cabinets fermés dans les 7 jours"
+          hint="Dentistes fermés dans les 7 jours"
         />
         <Kpi
           label="Demandes ouvertes"
           value={openRequests}
           hint="À traiter par l'équipe"
-        />
-        <Kpi
-          label="Cabinets actifs"
-          value={practicesCount}
-          hint="Praticiens partenaires"
         />
         <Kpi
           label="Praticiens"
@@ -144,7 +136,7 @@ export default async function AdminDashboardPage() {
         />
         <ShortcutLink
           href="/espace-praticien/admin/praticiens"
-          label="Praticiens & cabinets"
+          label="Praticiens"
         />
       </section>
 
@@ -163,12 +155,9 @@ export default async function AdminDashboardPage() {
                     <StatusBadge status={r.status} />
                   </div>
                   <p className="mt-1 text-xs text-[var(--ink-discreet)]">
-                    {r.creatorName ?? r.practices?.name ?? "Cabinet inconnu"}
-                    {r.patientName ? ` • ${r.patientName}` : ""}
-                    {r.practices?.name && r.creatorName
-                      ? ` • ${r.practices.name}`
-                      : ""}{" "}
-                    • {dateTimeFormatter.format(new Date(r.created_at))}
+                    {r.creatorName ?? "Dentiste inconnu"}
+                    {r.patientName ? ` • ${r.patientName}` : ""} •{" "}
+                    {dateTimeFormatter.format(new Date(r.created_at))}
                   </p>
                 </li>
               ))}
@@ -187,7 +176,7 @@ export default async function AdminDashboardPage() {
               {upcomingClosures.map((c) => (
                 <li key={c.id} className="py-3">
                   <p className="text-sm font-medium text-[var(--ink)]">
-                    {c.practices?.name ?? "Cabinet inconnu"}
+                    {c.profiles?.full_name ?? "Dentiste inconnu"}
                   </p>
                   <p className="mt-1 text-xs text-[var(--ink-discreet)] text-numeral">
                     {dateFormatter.format(new Date(c.start_date))} →{" "}

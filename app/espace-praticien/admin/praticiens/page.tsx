@@ -1,5 +1,4 @@
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import {
   getServiceRoleSupabase,
@@ -9,32 +8,19 @@ import {
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
 import { listLabSectors } from "@/lib/requests/queries";
-import { createPractice, linkPractitioner } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ ok?: string; error?: string; detail?: string }>;
 
-type PracticeRow = {
-  id: string;
-  name: string;
-  city: string | null;
-  created_at: string;
-};
-
 type ProfileRow = {
   id: string;
   full_name: string | null;
-  practice_id: string | null;
+  role: "practitioner" | "prosthetist" | "admin";
   created_at: string;
-  practices: { name: string | null; city: string | null } | null;
 };
 
 const FEEDBACK: Record<string, { title: string; message: string }> = {
-  "practice-created": {
-    title: "Cabinet créé",
-    message: "Le cabinet a été ajouté. Vous pouvez maintenant inviter un praticien.",
-  },
   invited: {
     title: "Invitation envoyée",
     message:
@@ -45,22 +31,9 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     message:
       "Le prothésiste recevra un e-mail pour définir son mot de passe et accéder au module laboratoire.",
   },
-  linked: {
-    title: "Cabinet rattaché",
-    message: "Le compte praticien est maintenant lié à son cabinet.",
-  },
-  "practice-name": {
-    title: "Erreur",
-    message: "Le nom du cabinet doit contenir au moins 2 caractères.",
-  },
-  "practice-save": {
-    title: "Erreur",
-    message: "Impossible d’enregistrer le cabinet. Merci de réessayer.",
-  },
   "invite-validation": {
     title: "Erreur",
-    message:
-      "E-mail et cabinet sont obligatoires pour inviter un praticien.",
+    message: "L’e-mail est obligatoire pour inviter un utilisateur.",
   },
   "invite-sector": {
     title: "Erreur",
@@ -74,8 +47,7 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   },
   "invite-exists": {
     title: "Compte existant",
-    message:
-      "Cet e-mail est déjà enregistré. Utilisez le formulaire « Rattacher un compte » ci-dessous.",
+    message: "Cet e-mail est déjà enregistré.",
   },
   "invite-failed": {
     title: "Erreur",
@@ -94,22 +66,9 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   "invite-profile": {
     title: "Erreur partielle",
     message:
-      "L’invitation a été envoyée mais le rattachement au cabinet a échoué. Contactez le support technique.",
-  },
-  "link-validation": {
-    title: "Erreur",
-    message: "Sélectionnez un compte et un cabinet à rattacher.",
-  },
-  "link-failed": {
-    title: "Erreur",
-    message: "Impossible de rattacher le compte au cabinet.",
+      "L’invitation a été envoyée mais la mise à jour du profil a échoué. Contactez le support technique.",
   },
 };
-
-const inputStyle = cn(
-  "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
-  "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
-);
 
 export default async function AdminPraticiensPage({
   searchParams,
@@ -123,22 +82,16 @@ export default async function AdminPraticiensPage({
   const canInvite = isServiceRoleConfigured();
 
   const supabase = await getServerSupabase();
-  const [{ data: practicesData }, { data: profilesData }, sectors] =
-    await Promise.all([
-      supabase
-        .from("practices")
-        .select("id, name, city, created_at")
-        .order("name", { ascending: true }),
-      supabase
-        .from("profiles")
-        .select("id, full_name, practice_id, created_at, practices ( name, city )")
-        .eq("role", "practitioner")
-        .order("created_at", { ascending: false }),
-      listLabSectors(supabase),
-    ]);
+  const [{ data: profilesData }, sectors] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, role, created_at")
+      .in("role", ["practitioner", "prosthetist"])
+      .order("created_at", { ascending: false }),
+    listLabSectors(supabase),
+  ]);
 
-  const practices = (practicesData ?? []) as PracticeRow[];
-  const profiles = (profilesData ?? []) as unknown as ProfileRow[];
+  const profiles = (profilesData ?? []) as ProfileRow[];
 
   const emailById = new Map<string, string>();
   if (canInvite) {
@@ -163,17 +116,15 @@ export default async function AdminPraticiensPage({
     }
   }
 
-  const unlinkedProfiles = profiles.filter((p) => !p.practice_id);
-
   return (
     <Container size="wide" className="py-10 md:py-14">
       <header className="mb-8 max-w-3xl">
         <p className="text-eyebrow">Administration</p>
         <h1 className="mt-3 text-3xl md:text-4xl font-serif text-[var(--ink)]">
-          Praticiens &amp; cabinets
+          Praticiens
         </h1>
         <p className="mt-2 text-[var(--ink-muted)] leading-relaxed">
-          Créez les cabinets partenaires et invitez les praticiens par e-mail.
+          Invitez les praticiens et prothésistes par e-mail.
         </p>
       </header>
 
@@ -209,143 +160,21 @@ export default async function AdminPraticiensPage({
       ) : null}
 
       <div className="grid gap-8 lg:grid-cols-12">
-        <div className="lg:col-span-5 flex flex-col gap-8">
-          <Panel title="Nouveau cabinet" eyebrow="Étape 1">
-            <form action={createPractice} className="mt-5 flex flex-col gap-5">
-              <Field label="Nom du cabinet" htmlFor="practice-name" required>
-                <input
-                  id="practice-name"
-                  name="name"
-                  required
-                  placeholder="Cabinet Dr. Martin"
-                  className={inputStyle}
-                />
-              </Field>
-              <Field label="Ville" htmlFor="practice-city">
-                <input
-                  id="practice-city"
-                  name="city"
-                  placeholder="Blois"
-                  className={inputStyle}
-                />
-              </Field>
-              <Button type="submit" variant="primary">
-                Créer le cabinet
-              </Button>
-            </form>
-          </Panel>
-
-          <Panel title="Inviter un utilisateur" eyebrow="Étape 2">
+        <div className="lg:col-span-5">
+          <Panel title="Inviter un utilisateur" eyebrow="Invitation">
             <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
               L’utilisateur reçoit un e-mail pour choisir son mot de passe.
-              Choisissez le type de compte : praticien (dentiste, rattaché à
-              un cabinet) ou prothésiste du laboratoire (avec secteur).
+              Choisissez le type de compte : praticien (dentiste) ou
+              prothésiste du laboratoire (avec secteur).
             </p>
-            <InviteUserForm
-              practices={practices}
-              sectors={sectors}
-              canInvite={canInvite}
-            />
+            <InviteUserForm sectors={sectors} canInvite={canInvite} />
           </Panel>
-
-          {unlinkedProfiles.length > 0 ? (
-            <Panel title="Rattacher un compte existant" eyebrow="Comptes en attente">
-              <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
-                Pour les comptes déjà créés sans cabinet (accès partiel).
-              </p>
-              <form action={linkPractitioner} className="mt-5 flex flex-col gap-5">
-                <Field label="Compte" htmlFor="link-profile" required>
-                  <select
-                    id="link-profile"
-                    name="profile_id"
-                    required
-                    className={cn(inputStyle, "cursor-pointer")}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Sélectionner un compte
-                    </option>
-                    {unlinkedProfiles.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.full_name ?? emailById.get(p.id) ?? p.id.slice(0, 8)}
-                        {emailById.get(p.id) && p.full_name
-                          ? ` (${emailById.get(p.id)})`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Cabinet" htmlFor="link-practice" required>
-                  <select
-                    id="link-practice"
-                    name="practice_id"
-                    required
-                    className={cn(inputStyle, "cursor-pointer")}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Sélectionner un cabinet
-                    </option>
-                    {practices.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.city ? ` — ${p.city}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Nom complet (facultatif)" htmlFor="link-name">
-                  <input
-                    id="link-name"
-                    name="full_name"
-                    placeholder="Dr. Jean Martin"
-                    className={inputStyle}
-                  />
-                </Field>
-                <Button type="submit" variant="secondary">
-                  Rattacher au cabinet
-                </Button>
-              </form>
-            </Panel>
-          ) : null}
         </div>
 
-        <div className="lg:col-span-7 flex flex-col gap-8">
-          <Panel title={`Cabinets (${practices.length})`} eyebrow="Répertoire">
-            {practices.length === 0 ? (
-              <Empty label="Aucun cabinet enregistré." />
-            ) : (
-              <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
-                {practices.map((p) => {
-                  const linkedCount = profiles.filter(
-                    (pr) => pr.practice_id === p.id,
-                  ).length;
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-baseline justify-between gap-4 py-4"
-                    >
-                      <div>
-                        <p className="text-[var(--ink)] font-medium">{p.name}</p>
-                        {p.city ? (
-                          <p className="text-xs text-[var(--ink-discreet)] mt-0.5">
-                            {p.city}
-                          </p>
-                        ) : null}
-                      </div>
-                      <span className="text-xs text-[var(--ink-discreet)] whitespace-nowrap">
-                        {linkedCount} praticien{linkedCount !== 1 ? "s" : ""}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Panel>
-
-          <Panel title={`Praticiens (${profiles.length})`} eyebrow="Comptes">
+        <div className="lg:col-span-7">
+          <Panel title={`Praticiens & prothésistes (${profiles.length})`} eyebrow="Comptes">
             {profiles.length === 0 ? (
-              <Empty label="Aucun praticien invité pour le moment." />
+              <Empty label="Aucun compte invité pour le moment." />
             ) : (
               <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
                 {profiles.map((p) => (
@@ -358,18 +187,9 @@ export default async function AdminPraticiensPage({
                         {emailById.get(p.id) ?? "E-mail non disponible"}
                       </p>
                     </div>
-                    <div className="flex flex-col items-start sm:items-end gap-1">
-                      {p.practices?.name ? (
-                        <span className="text-sm text-[var(--ink-muted)]">
-                          {p.practices.name}
-                          {p.practices.city ? ` · ${p.practices.city}` : ""}
-                        </span>
-                      ) : (
-                        <span className="text-xs tracking-wide uppercase text-[var(--accent-warm)]">
-                          Accès partiel
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
+                      {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -396,28 +216,6 @@ function Panel({
       <h2 className="mt-1 font-serif text-xl text-[var(--ink)]">{title}</h2>
       {children}
     </section>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={htmlFor} className="text-eyebrow">
-        {label}
-        {required ? <span aria-hidden="true"> *</span> : null}
-      </label>
-      {children}
-    </div>
   );
 }
 

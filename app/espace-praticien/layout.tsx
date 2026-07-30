@@ -85,9 +85,9 @@ export default async function EspacePraticienLayout({
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex flex-col items-end leading-tight">
                   <span className="text-xs text-[var(--ink)]">{profile.email}</span>
-                  {profile.practiceName ? (
+                  {profile.fullName ? (
                     <span className="text-[11px] text-[var(--ink-discreet)]">
-                      {profile.practiceName}
+                      {profile.fullName}
                     </span>
                   ) : null}
                 </div>
