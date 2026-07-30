@@ -25,7 +25,16 @@ export function useAuthRedirect() {
 
     void processAuthRedirect(supabase, window.location.href).then((result) => {
       if (result.ok) {
-        router.replace(result.target);
+        // Navigation "dure" (et non `router.replace`) : le layout
+        // `/espace-praticien` est mis en cache côté client par le Router
+        // Cache de Next.js. Un remplacement "soft" réutiliserait le rendu du
+        // layout déjà affiché sur cette page de callback — rendu avec la
+        // session encore active AVANT l'échange du token d'invitation (ex.
+        // celle d'un admin déjà connecté dans ce navigateur). Un rechargement
+        // complet force le serveur (proxy + layout) à relire les cookies
+        // fraîchement posés par `processAuthRedirect` et à afficher le bon
+        // utilisateur dans l'en-tête.
+        window.location.replace(result.target);
         return;
       }
       router.replace("/espace-praticien/login?error=invite");
