@@ -39,7 +39,7 @@ update public.requests
 update public.closure_periods cp
    set profile_id = sub.profile_id
   from (
-    select practice_id, min(id) as profile_id
+    select practice_id, min(id::text)::uuid as profile_id
       from public.profiles
      where role = 'practitioner'
        and practice_id is not null
@@ -52,7 +52,7 @@ update public.closure_periods cp
 update public.requests r
    set profile_id = sub.profile_id
   from (
-    select practice_id, min(id) as profile_id
+    select practice_id, min(id::text)::uuid as profile_id
       from public.profiles
      where role = 'practitioner'
        and practice_id is not null
@@ -282,11 +282,14 @@ create policy "request_media_storage_read_own_or_admin"
 alter table public.closure_periods drop column if exists practice_id;
 alter table public.requests drop column if exists practice_id;
 
-drop function if exists public.user_practice_id();
-
 alter table public.profiles drop column if exists practice_id;
 
+-- La table practices a ses propres policies RLS (ex. practices_select_own_or_admin)
+-- qui dépendent de user_practice_id() : on doit la supprimer (cascade) avant
+-- de pouvoir supprimer la fonction.
 drop table if exists public.practices cascade;
+
+drop function if exists public.user_practice_id();
 
 -- =============================================================================
 -- Fin de la migration 20260730180000_remove_practices
