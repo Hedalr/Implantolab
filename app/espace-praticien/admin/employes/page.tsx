@@ -120,6 +120,7 @@ export default async function AdminEmployesPage({
     .from("profiles")
     .select("id, full_name, sector_id, leave_balance_days, created_at")
     .eq("role", "prosthetist")
+    .is("deleted_at", null)
     .order("full_name", { ascending: true });
 
   const sectors = (sectorsData ?? []) as SectorRow[];
@@ -314,7 +315,8 @@ export default async function AdminEmployesPage({
               >
                 Praticiens
               </a>
-              .
+              . Pour retirer l’accès d’un employé (ou réactiver un compte
+              désactivé), rendez-vous également sur cette page.
             </p>
 
             {employees.length === 0 ? (

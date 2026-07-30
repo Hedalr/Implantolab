@@ -8,6 +8,7 @@ import {
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
 import { listLabSectors } from "@/lib/requests/queries";
+import { deletePractitioner, reactivatePractitioner } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ type ProfileRow = {
   full_name: string | null;
   role: "practitioner" | "prosthetist" | "admin";
   created_at: string;
+  deleted_at: string | null;
 };
 
 const FEEDBACK: Record<string, { title: string; message: string }> = {
@@ -68,6 +70,44 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     message:
       "L’invitation a été envoyée mais la mise à jour du profil a échoué. Contactez le support technique.",
   },
+  "invite-exists-deleted": {
+    title: "Compte désactivé",
+    message:
+      "Cette adresse appartient à un compte désactivé. Utilisez le bouton « Réactiver » dans la liste des comptes désactivés ci-dessous plutôt que d’inviter à nouveau.",
+  },
+  deleted: {
+    title: "Accès révoqué",
+    message:
+      "Le praticien n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
+  },
+  "deleted-prosthetist": {
+    title: "Accès révoqué",
+    message:
+      "Le prothésiste n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
+  },
+  reactivated: {
+    title: "Compte réactivé",
+    message:
+      "L’accès a été rétabli. Un e-mail lui a été envoyé pour définir un nouveau mot de passe.",
+  },
+  "reactivate-partial": {
+    title: "Compte réactivé",
+    message:
+      "L’accès a été rétabli mais l’e-mail de reconnexion n’a pas pu être envoyé. Réessayez la réactivation ou contactez la personne directement.",
+  },
+  "reactivate-failed": {
+    title: "Erreur",
+    message: "Impossible de réactiver ce compte. Réessayez ou contactez le support technique.",
+  },
+  "delete-validation": {
+    title: "Erreur",
+    message: "Impossible d’identifier ce compte.",
+  },
+  "delete-failed": {
+    title: "Erreur",
+    message:
+      "La révocation de l’accès a échoué. Réessayez ou contactez le support technique.",
+  },
 };
 
 export default async function AdminPraticiensPage({
@@ -85,13 +125,15 @@ export default async function AdminPraticiensPage({
   const [{ data: profilesData }, sectors] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, role, created_at")
+      .select("id, full_name, role, created_at, deleted_at")
       .in("role", ["practitioner", "prosthetist"])
       .order("created_at", { ascending: false }),
     listLabSectors(supabase),
   ]);
 
   const profiles = (profilesData ?? []) as ProfileRow[];
+  const activeProfiles = profiles.filter((p) => !p.deleted_at);
+  const deactivatedProfiles = profiles.filter((p) => p.deleted_at);
 
   const emailById = new Map<string, string>();
   if (canInvite) {
@@ -171,14 +213,20 @@ export default async function AdminPraticiensPage({
           </Panel>
         </div>
 
-        <div className="lg:col-span-7">
-          <Panel title={`Praticiens & prothésistes (${profiles.length})`} eyebrow="Comptes">
-            {profiles.length === 0 ? (
-              <Empty label="Aucun compte invité pour le moment." />
+        <div className="lg:col-span-7 flex flex-col gap-8">
+          <Panel
+            title={`Praticiens & prothésistes (${activeProfiles.length})`}
+            eyebrow="Comptes"
+          >
+            {activeProfiles.length === 0 ? (
+              <Empty label="Aucun compte actif pour le moment." />
             ) : (
               <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
-                {profiles.map((p) => (
-                  <li key={p.id} className="py-4 flex flex-col gap-1.5 sm:flex-row sm:justify-between sm:gap-6">
+                {activeProfiles.map((p) => (
+                  <li
+                    key={p.id}
+                    className="py-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                  >
                     <div>
                       <p className="text-[var(--ink)]">
                         {p.full_name ?? "Sans nom"}
@@ -187,14 +235,70 @@ export default async function AdminPraticiensPage({
                         {emailById.get(p.id) ?? "E-mail non disponible"}
                       </p>
                     </div>
-                    <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
-                      {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
-                    </span>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
+                        {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
+                      </span>
+                      <form action={deletePractitioner}>
+                        <input type="hidden" name="profile_id" value={p.id} />
+                        <button
+                          type="submit"
+                          className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
+                        >
+                          Supprimer l’accès
+                        </button>
+                      </form>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
           </Panel>
+
+          {deactivatedProfiles.length > 0 ? (
+            <Panel
+              title={`Comptes désactivés (${deactivatedProfiles.length})`}
+              eyebrow="Historique"
+            >
+              <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
+                Ces comptes n’ont plus accès à l’espace praticien. Leur
+                historique (demandes, congés, fermetures) est conservé.
+                Réactivez un compte pour lui redonner accès et lui envoyer un
+                nouveau mot de passe.
+              </p>
+              <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
+                {deactivatedProfiles.map((p) => (
+                  <li
+                    key={p.id}
+                    className="py-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                  >
+                    <div>
+                      <p className="text-[var(--ink-muted)]">
+                        {p.full_name ?? "Sans nom"}
+                      </p>
+                      <p className="text-xs text-[var(--ink-discreet)]">
+                        {emailById.get(p.id) ?? "E-mail non disponible"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
+                        {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
+                      </span>
+                      <form action={reactivatePractitioner}>
+                        <input type="hidden" name="profile_id" value={p.id} />
+                        <button
+                          type="submit"
+                          className="text-xs tracking-wide uppercase text-[var(--ink)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
+                        >
+                          Réactiver
+                        </button>
+                      </form>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          ) : null}
         </div>
       </div>
     </Container>
