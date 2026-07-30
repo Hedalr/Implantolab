@@ -42,14 +42,12 @@ export function buildProtheseModificationEmailText(
   const lines = [
     "MODIFICATION PROTHESE",
     "",
-    `Cabinet : ${notification.practiceName ?? "—"}`,
     `Patient : ${notification.patientName}`,
     `Praticien : ${notification.practitionerName ?? notification.practitionerEmail}`,
     "",
     notification.message,
     "",
     `Reçu le ${formatDateTime(notification.createdAt)}`,
-    `Dossier #${notification.requestId.slice(0, 8)}`,
   ];
   return lines.join("\n");
 }
