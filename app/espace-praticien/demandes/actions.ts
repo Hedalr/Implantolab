@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import {
   detectPhotoMimeType,
   extensionForPhotoMimeType,
@@ -10,7 +11,11 @@ import {
 } from "@/lib/requests/media-security";
 import { getServiceRoleSupabase } from "@/lib/supabase/admin";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
-import { isRequestCategory } from "@/lib/requests/types";
+import {
+  isRequestCategory,
+  MODIFICATION_PROTHESE_CATEGORY,
+} from "@/lib/requests/types";
+import { sendProtheseModificationNotification } from "@/lib/email/prothese-notification";
 
 const DEMANDES_PATH = "/espace-praticien/demandes";
 const REQUEST_MEDIA_BUCKET = "request-media";
@@ -126,8 +131,24 @@ export async function createRequest(formData: FormData): Promise<void> {
 
   const requestId = inserted.id as string;
 
-  // Upload best-effort : une photo qui échoue ne doit pas faire échouer
-  // l'envoi de la demande (le texte est déjà enregistré à ce stade).
+  // Effets de bord best-effort (notification email, upload photos) : la
+  // demande est déjà enregistrée à ce stade, ils ne doivent jamais la faire
+  // échouer. La notification est différée via `after()` pour ne pas
+  // ralentir la redirection avec l'appel réseau vers Resend.
+  if (subject === MODIFICATION_PROTHESE_CATEGORY) {
+    after(() =>
+      sendProtheseModificationNotification({
+        requestId,
+        practiceName: profile.practiceName,
+        patientName,
+        practitionerName: profile.fullName,
+        practitionerEmail: profile.email,
+        message,
+        createdAt: new Date(),
+      }),
+    );
+  }
+
   for (const photo of preparedPhotos) {
     if (!storageAdmin) continue;
     const path = `requests/${requestId}/${randomUUID()}.${photo.extension}`;

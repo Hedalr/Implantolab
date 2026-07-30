@@ -18,6 +18,15 @@ export function isRequestCategory(value: string): value is RequestCategory {
   return (REQUEST_CATEGORIES as readonly string[]).includes(value);
 }
 
+/**
+ * Catégorie déclenchant l'envoi automatique d'un email à la boîte dédiée
+ * "Modifications prothèse" (qui déclenche à son tour l'impression d'une
+ * étiquette côté laboratoire via une règle Outlook).
+ * Voir `lib/email/prothese-notification.ts`.
+ */
+export const MODIFICATION_PROTHESE_CATEGORY: RequestCategory =
+  "Modifications prothèse";
+
 /** Affiche les catégories, y compris l'ancienne valeur "Demande". */
 export function formatRequestCategory(subject: string): string {
   if (subject === "Demande") return "Infos complémentaires";

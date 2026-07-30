@@ -40,3 +40,16 @@ export function countInclusiveDays(start: string, end: string): number {
   const e = parseDateOnly(end).getTime();
   return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
 }
+
+const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** Ex. "30/07/2026 16:29". */
+export function formatDateTime(date: Date): string {
+  return dateTimeFormatter.format(date);
+}
