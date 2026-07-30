@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { homePathForRole } from "@/lib/roles";
 import {
   getCurrentProfile,
   getSessionUser,
@@ -18,12 +19,5 @@ export default async function EspacePraticienIndex() {
   }
 
   const profile = await getCurrentProfile();
-  if (profile?.role === "admin") {
-    redirect("/espace-praticien/admin");
-  }
-  if (profile?.role === "prosthetist") {
-    redirect("/espace-praticien/laboratoire");
-  }
-
-  redirect("/espace-praticien/demandes");
+  redirect(homePathForRole(profile?.role));
 }

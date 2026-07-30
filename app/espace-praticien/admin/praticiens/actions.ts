@@ -9,6 +9,12 @@ import {
   withAdminTimeout,
 } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import {
+  deleteOkKey,
+  inviteOkKey,
+  isSectorLabRole,
+  parseInviteRole,
+} from "@/lib/roles";
 
 const PRATICIENS_PATH = "/espace-praticien/admin/praticiens";
 const EMPLOYES_PATH = "/espace-praticien/admin/employes";
@@ -68,15 +74,12 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const fullName = readText(formData, "full_name");
   const sectorId = readText(formData, "sector_id");
   const rawRole = readText(formData, "role") || "practitioner";
-  const role: "practitioner" | "prosthetist" =
-    rawRole === "prosthetist" ? "prosthetist" : "practitioner";
+  const role = parseInviteRole(rawRole);
 
   if (!email.includes("@")) {
     go({ error: "invite-validation" });
   }
-  // Un prothésiste doit avoir un secteur ; un praticien n'a besoin d'aucun
-  // rattachement supplémentaire pour être opérationnel.
-  if (role === "prosthetist" && !sectorId) {
+  if (isSectorLabRole(role) && !sectorId) {
     go({ error: "invite-sector" });
   }
 
@@ -147,7 +150,7 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const { error: profileError } = await admin
     .from("profiles")
     .update({
-      sector_id: role === "prosthetist" ? sectorId : null,
+      sector_id: isSectorLabRole(role) ? sectorId : null,
       full_name: fullName.length > 0 ? fullName : null,
       role,
     })
@@ -158,8 +161,9 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   }
 
   revalidatePath(PRATICIENS_PATH);
+  revalidatePath(EMPLOYES_PATH);
   revalidatePath("/espace-praticien/admin");
-  go({ ok: role === "prosthetist" ? "invited-prosthetist" : "invited" });
+  go({ ok: inviteOkKey(role) });
 }
 
 /**
@@ -225,7 +229,7 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
   revalidatePath(PRATICIENS_PATH);
   revalidatePath(EMPLOYES_PATH);
   revalidatePath(ADMIN_HOME_PATH);
-  go({ ok: target.role === "prosthetist" ? "deleted-prosthetist" : "deleted" });
+  go({ ok: deleteOkKey(target.role) });
 }
 
 /**

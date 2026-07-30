@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
+import { getServerSupabase, isSectorLabRole, requireLaboStaff } from "@/lib/supabase/server";
 
 async function updateRequestStatus(
   formData: FormData,
@@ -14,7 +14,7 @@ async function updateRequestStatus(
   if (!id) {
     redirect("/espace-praticien/laboratoire?error=missing");
   }
-  if (profile.role === "prosthetist" && !profile.sectorId) {
+  if (isSectorLabRole(profile.role) && !profile.sectorId) {
     redirect("/espace-praticien/laboratoire?error=forbidden");
   }
 
@@ -23,8 +23,7 @@ async function updateRequestStatus(
     .from("requests")
     .update({ status })
     .eq("id", id);
-  const scopedUpdate =
-    profile.role === "prosthetist"
+  const scopedUpdate = isSectorLabRole(profile.role)
       ? update.eq("sector_id", profile.sectorId)
       : update;
   const { data, error } = await scopedUpdate.select("id").maybeSingle();

@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import {
+  getServerSupabase,
+  requireAdminOrChef,
+} from "@/lib/supabase/server";
+import { CHEF_INBOX_SUBJECTS } from "@/lib/roles";
 import { parseRequestStatusFilter } from "@/lib/requests/queries";
 
 function pickStatusRedirect(status: FormDataEntryValue | null): string {
@@ -16,24 +20,37 @@ async function updateRequestStatus(
   formData: FormData,
   status: "open" | "closed",
 ): Promise<void> {
-  await requireAdmin();
+  const { profile } = await requireAdminOrChef();
   const id = formData.get("id");
   if (typeof id !== "string" || id.length === 0) {
     throw new Error("Identifiant de demande manquant.");
   }
 
   const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("requests")
-    .update({ status })
-    .eq("id", id);
+  let update = supabase.from("requests").update({ status }).eq("id", id);
 
-  if (error) {
-    throw new Error(`Impossible de mettre à jour la demande : ${error.message}`);
+  if (profile.role === "chef_de_secteur") {
+    if (!profile.sectorId) {
+      throw new Error("Secteur manquant pour ce chef de secteur.");
+    }
+    update = update
+      .eq("sector_id", profile.sectorId)
+      .in("subject", [...CHEF_INBOX_SUBJECTS]);
+  }
+
+  const { data, error } = await update.select("id").maybeSingle();
+
+  if (error || !data) {
+    throw new Error(
+      error
+        ? `Impossible de mettre à jour la demande : ${error.message}`
+        : "Demande introuvable ou hors périmètre.",
+    );
   }
 
   revalidatePath("/espace-praticien/admin/demandes");
   revalidatePath("/espace-praticien/admin");
+  revalidatePath("/espace-praticien/laboratoire");
   redirect(pickStatusRedirect(formData.get("status")));
 }
 

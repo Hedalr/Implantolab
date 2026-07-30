@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getServerSupabase, requireProsthetist } from "@/lib/supabase/server";
+import { getServerSupabase, requireLabCollaborator } from "@/lib/supabase/server";
 
 const CONGES_PATH = "/espace-praticien/conges";
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -13,7 +13,7 @@ function go(params: Record<string, string>): never {
 }
 
 export async function addLeaveRequest(formData: FormData): Promise<void> {
-  const { userId } = await requireProsthetist();
+  const { userId } = await requireLabCollaborator();
 
   const startDate = String(formData.get("start_date") ?? "").trim();
   const endDate = String(formData.get("end_date") ?? "").trim();
@@ -67,7 +67,7 @@ export async function addLeaveRequest(formData: FormData): Promise<void> {
 }
 
 export async function deleteLeaveRequest(formData: FormData): Promise<void> {
-  const { userId } = await requireProsthetist();
+  const { userId } = await requireLabCollaborator();
 
   const id = String(formData.get("id") ?? "").trim();
   if (!id) {

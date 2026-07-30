@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { SECTOR_LAB_ROLES } from "@/lib/roles";
 
 const EMPLOYES_PATH = "/espace-praticien/admin/employes";
 const CONGES_PATH = "/espace-praticien/admin/conges";
@@ -117,7 +118,7 @@ export async function updateEmployeeSector(formData: FormData): Promise<void> {
     .from("profiles")
     .update({ sector_id: sectorId })
     .eq("id", profileId)
-    .eq("role", "prosthetist");
+    .in("role", [...SECTOR_LAB_ROLES]);
 
   if (error) {
     go({ error: "employee-save" });
@@ -149,7 +150,7 @@ export async function updateEmployeeLeaveBalance(
     .from("profiles")
     .update({ leave_balance_days: balance })
     .eq("id", profileId)
-    .eq("role", "prosthetist");
+    .in("role", [...SECTOR_LAB_ROLES]);
 
   if (error) {
     go({ error: "employee-save" });

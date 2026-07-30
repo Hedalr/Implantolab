@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import type { LabSector } from "@/lib/sectors";
+import { isSectorLabRole, type InviteRole } from "@/lib/roles";
 import { invitePractitioner } from "@/app/espace-praticien/admin/praticiens/actions";
 
 const inputStyle = cn(
@@ -18,9 +19,8 @@ export function InviteUserForm({
   sectors: LabSector[];
   canInvite: boolean;
 }) {
-  const [role, setRole] = useState<"practitioner" | "prosthetist">(
-    "practitioner",
-  );
+  const [role, setRole] = useState<InviteRole>("practitioner");
+  const needsSector = isSectorLabRole(role);
 
   return (
     <form action={invitePractitioner} className="mt-5 flex flex-col gap-5">
@@ -64,6 +64,23 @@ export function InviteUserForm({
             </span>
           </span>
         </label>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="radio"
+            name="role"
+            value="chef_de_secteur"
+            checked={role === "chef_de_secteur"}
+            onChange={() => setRole("chef_de_secteur")}
+            disabled={!canInvite}
+            className="mt-1 accent-[var(--accent-warm)]"
+          />
+          <span className="flex flex-col">
+            <span className="text-sm text-[var(--ink)]">Chef de secteur</span>
+            <span className="text-xs text-[var(--ink-discreet)]">
+              Questions/urgences et file labo du secteur choisi.
+            </span>
+          </span>
+        </label>
       </fieldset>
 
       <Field label="E-mail" htmlFor="invite-email" required>
@@ -87,7 +104,7 @@ export function InviteUserForm({
         />
       </Field>
 
-      {role === "prosthetist" ? (
+      {needsSector ? (
         <Field label="Secteur" htmlFor="invite-sector" required>
           <select
             id="invite-sector"

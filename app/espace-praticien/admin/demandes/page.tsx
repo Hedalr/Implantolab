@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import {
+  getServerSupabase,
+  requireAdminOrChef,
+} from "@/lib/supabase/server";
 import {
   fetchRequestMediaItems,
   LAB_REQUESTS_PAGE_SIZE,
@@ -9,6 +12,7 @@ import {
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
 import { formatRequestCategory } from "@/lib/requests/types";
+import { CHEF_INBOX_SUBJECTS } from "@/lib/roles";
 import { Container } from "@/components/ui/Container";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
@@ -62,7 +66,8 @@ export default async function AdminRequestsPage({
     page?: string | string[];
   }>;
 }) {
-  await requireAdmin();
+  const { profile } = await requireAdminOrChef();
+  const isChef = profile.role === "chef_de_secteur";
   const {
     status: rawStatus,
     patient: rawPatient,
@@ -85,6 +90,12 @@ export default async function AdminRequestsPage({
     patientQuery: patientQuery || undefined,
     page,
     pageSize: LAB_REQUESTS_PAGE_SIZE,
+    ...(isChef
+      ? {
+          subjects: [...CHEF_INBOX_SUBJECTS],
+          sectorId: profile.sectorId ?? undefined,
+        }
+      : {}),
   });
 
   const mediaByRequest = await fetchRequestMediaItems(
@@ -95,12 +106,16 @@ export default async function AdminRequestsPage({
   return (
     <Container size="wide" className="py-10 md:py-14">
       <header className="mb-8 max-w-2xl">
-        <p className="text-eyebrow">Administration</p>
+        <p className="text-eyebrow">
+          {isChef ? "Chef de secteur" : "Administration"}
+        </p>
         <h1 className="mt-3 text-3xl md:text-4xl font-serif text-[var(--ink)]">
-          Demandes praticiens
+          {isChef ? "Questions & urgences" : "Demandes praticiens"}
         </h1>
         <p className="mt-2 text-[var(--ink-muted)]">
-          Suivi et traitement des demandes envoyées par les dentistes partenaires.
+          {isChef
+            ? `Questions et urgences du secteur ${profile.sectorName ?? "assigné"}.`
+            : "Suivi et traitement des demandes envoyées par les dentistes partenaires."}
         </p>
       </header>
 

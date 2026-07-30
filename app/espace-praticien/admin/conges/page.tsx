@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { AdminLeaveCalendar } from "@/components/espace-praticien/AdminLeaveCalendar";
 import { LeaveRangePreview } from "@/components/espace-praticien/LeaveRangePreview";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { SECTOR_LAB_ROLES } from "@/lib/roles";
 import { firstRelation } from "@/lib/supabase/relation";
 import { formatDateRange, parseDateOnly } from "@/lib/utils/date";
 import {
@@ -78,7 +79,7 @@ export default async function AdminCongesPage({
       .select(
         "id, full_name, sector_id, leave_balance_days, sectors ( name, color )",
       )
-      .eq("role", "prosthetist")
+      .in("role", [...SECTOR_LAB_ROLES])
       .order("full_name", { ascending: true }),
     supabase
       .from("leave_requests")

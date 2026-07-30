@@ -7,6 +7,7 @@ import {
   withAdminTimeout,
 } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { SECTOR_LAB_ROLES } from "@/lib/roles";
 import {
   createSector,
   deleteSector,
@@ -119,7 +120,7 @@ export default async function AdminEmployesPage({
   const { data: employeesData } = await supabase
     .from("profiles")
     .select("id, full_name, sector_id, leave_balance_days, created_at")
-    .eq("role", "prosthetist")
+    .in("role", [...SECTOR_LAB_ROLES])
     .is("deleted_at", null)
     .order("full_name", { ascending: true });
 

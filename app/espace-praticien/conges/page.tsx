@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/espace-praticien/FormField";
 import { cn } from "@/lib/cn";
-import { getServerSupabase, requireProsthetist } from "@/lib/supabase/server";
+import { getServerSupabase, requireLabCollaborator } from "@/lib/supabase/server";
 import { formatDateRange, parseDateOnly } from "@/lib/utils/date";
 import { addLeaveRequest, deleteLeaveRequest } from "./actions";
 
@@ -49,7 +49,7 @@ export default async function CongesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { userId, profile } = await requireProsthetist();
+  const { userId, profile } = await requireLabCollaborator();
   const { ok, error, detail } = await searchParams;
 
   const supabase = await getServerSupabase();

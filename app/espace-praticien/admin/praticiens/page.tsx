@@ -9,6 +9,7 @@ import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
 import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
 import { listLabSectors } from "@/lib/requests/queries";
+import { roleLabel, type ProfileRole } from "@/lib/roles";
 import {
   deletePractitioner,
   permanentlyDeletePractitioner,
@@ -22,7 +23,7 @@ type SearchParams = Promise<{ ok?: string; error?: string; detail?: string }>;
 type ProfileRow = {
   id: string;
   full_name: string | null;
-  role: "practitioner" | "prosthetist" | "admin";
+  role: ProfileRole;
   created_at: string;
   deleted_at: string | null;
 };
@@ -38,6 +39,11 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     message:
       "Le prothésiste recevra un e-mail pour définir son mot de passe et accéder au module laboratoire.",
   },
+  "invited-chef": {
+    title: "Invitation envoyée",
+    message:
+      "Le chef de secteur recevra un e-mail pour définir son mot de passe et accéder aux questions/urgences et au laboratoire.",
+  },
   "invite-validation": {
     title: "Erreur",
     message: "L’e-mail est obligatoire pour inviter un utilisateur.",
@@ -45,7 +51,7 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   "invite-sector": {
     title: "Erreur",
     message:
-      "Le secteur (Numérique, Amovible ou Conjoint) est obligatoire pour inviter un prothésiste.",
+      "Le secteur (Numérique, Amovible ou Conjoint) est obligatoire pour inviter un prothésiste ou un chef de secteur.",
   },
   "service-role": {
     title: "Configuration requise",
@@ -89,6 +95,11 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Accès révoqué",
     message:
       "Le prothésiste n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
+  },
+  "deleted-chef": {
+    title: "Accès révoqué",
+    message:
+      "Le chef de secteur n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
   },
   reactivated: {
     title: "Compte réactivé",
@@ -136,7 +147,7 @@ export default async function AdminPraticiensPage({
     supabase
       .from("profiles")
       .select("id, full_name, role, created_at, deleted_at")
-      .in("role", ["practitioner", "prosthetist"])
+      .in("role", ["practitioner", "prosthetist", "chef_de_secteur"])
       .order("created_at", { ascending: false }),
     listLabSectors(supabase),
   ]);
@@ -247,7 +258,7 @@ export default async function AdminPraticiensPage({
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
-                        {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
+                        {roleLabel(p.role)}
                       </span>
                       <form action={deletePractitioner}>
                         <input type="hidden" name="profile_id" value={p.id} />
@@ -293,7 +304,7 @@ export default async function AdminPraticiensPage({
                     </div>
                     <div className="flex items-center gap-4 shrink-0">
                       <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
-                        {p.role === "prosthetist" ? "Prothésiste" : "Praticien"}
+                        {roleLabel(p.role)}
                       </span>
                       <form action={reactivatePractitioner}>
                         <input type="hidden" name="profile_id" value={p.id} />

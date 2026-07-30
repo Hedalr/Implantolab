@@ -4,6 +4,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { firstRelation } from "@/lib/supabase/relation";
+import {
+  isSectorLabRole,
+  type ProfileRole,
+} from "@/lib/roles";
+
+export type { ProfileRole };
+export { isSectorLabRole };
 
 /**
  * Profil applicatif exposé aux composants server et aux routes.
@@ -15,7 +22,7 @@ import { firstRelation } from "@/lib/supabase/relation";
 export type Profile = {
   id: string;
   email: string;
-  role: "practitioner" | "admin" | "prosthetist";
+  role: ProfileRole;
   fullName: string | null;
   sectorId: string | null;
   sectorName: string | null;
@@ -26,6 +33,7 @@ export type Profile = {
 const LOGIN_PATH = "/espace-praticien/login";
 const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/demandes";
 const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
+const DEFAULT_CHEF_HOME = "/espace-praticien/admin/demandes";
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(
@@ -163,34 +171,62 @@ export async function requireAdmin(): Promise<{
 }> {
   const session = await requireUser();
   if (session.profile.role !== "admin") {
-    redirect(DEFAULT_PRACTITIONER_HOME);
+    redirect(
+      session.profile.role === "chef_de_secteur"
+        ? DEFAULT_CHEF_HOME
+        : DEFAULT_PRACTITIONER_HOME,
+    );
   }
   return session;
 }
 
-/** Comme `requireUser`, admin ou prothésiste (labo). */
+/** Comme `requireUser`, admin, prothésiste ou chef de secteur (labo). */
 export async function requireLaboStaff(): Promise<{
   userId: string;
   email: string;
   profile: Profile;
 }> {
   const session = await requireUser();
-  if (session.profile.role !== "admin" && session.profile.role !== "prosthetist") {
+  if (
+    session.profile.role !== "admin" &&
+    !isSectorLabRole(session.profile.role)
+  ) {
     redirect(DEFAULT_PRACTITIONER_HOME);
   }
   return session;
 }
 
-/**
- * Prothésiste uniquement — les admins passent par /espace-praticien/admin/conges.
- */
-export async function requireProsthetist(): Promise<{
+/** Admin ou chef de secteur (inbox Questions/Urgences). */
+export async function requireAdminOrChef(): Promise<{
   userId: string;
   email: string;
   profile: Profile;
 }> {
   const session = await requireUser();
-  if (session.profile.role !== "prosthetist") {
+  if (
+    session.profile.role !== "admin" &&
+    session.profile.role !== "chef_de_secteur"
+  ) {
+    redirect(
+      isSectorLabRole(session.profile.role)
+        ? DEFAULT_LABO_HOME
+        : DEFAULT_PRACTITIONER_HOME,
+    );
+  }
+  return session;
+}
+
+/**
+ * Collaborateur labo (prothésiste ou chef) — les admins passent par
+ * /espace-praticien/admin/conges.
+ */
+export async function requireLabCollaborator(): Promise<{
+  userId: string;
+  email: string;
+  profile: Profile;
+}> {
+  const session = await requireUser();
+  if (!isSectorLabRole(session.profile.role)) {
     redirect(
       session.profile.role === "admin" ? DEFAULT_LABO_HOME : DEFAULT_PRACTITIONER_HOME,
     );

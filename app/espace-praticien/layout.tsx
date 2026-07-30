@@ -1,45 +1,12 @@
 import type { ReactNode } from "react";
-import type { NavLink } from "@/content/fr/site";
 import { Container } from "@/components/ui/Container";
 import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
+import { navForRole, spaceLabelForRole } from "@/lib/roles";
 import {
   getCurrentProfile,
   isSupabaseConfigured,
   type Profile,
 } from "@/lib/supabase/server";
-
-const practitionerNav: NavLink[] = [
-  { href: "/espace-praticien/fermetures", label: "Mes fermetures" },
-  { href: "/espace-praticien/demandes", label: "Demandes" },
-];
-
-const adminNav: NavLink[] = [
-  { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
-  {
-    href: "/espace-praticien/admin/praticiens",
-    label: "Praticiens",
-    children: [
-      {
-        href: "/espace-praticien/admin/calendrier",
-        label: "Fermetures dentistes",
-      },
-    ],
-  },
-  {
-    href: "/espace-praticien/admin/employes",
-    label: "Employés",
-    children: [
-      { href: "/espace-praticien/admin/conges", label: "Congés employés" },
-    ],
-  },
-  { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
-  { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
-];
-
-const prosthetistNav: NavLink[] = [
-  { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
-  { href: "/espace-praticien/conges", label: "Mes congés" },
-];
 
 export default async function EspacePraticienLayout({
   children,
@@ -51,20 +18,9 @@ export default async function EspacePraticienLayout({
     ? await getCurrentProfile()
     : null;
 
-  const nav =
-    profile?.role === "admin"
-      ? adminNav
-      : profile?.role === "prosthetist"
-        ? prosthetistNav
-        : practitionerNav;
+  const nav = navForRole(profile?.role);
   const showNav = Boolean(profile);
-
-  const spaceLabel =
-    profile?.role === "admin"
-      ? "Espace admin"
-      : profile?.role === "prosthetist"
-        ? "Espace collaborateur"
-        : "Espace praticien";
+  const spaceLabel = spaceLabelForRole(profile?.role);
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-[var(--bg)]">
