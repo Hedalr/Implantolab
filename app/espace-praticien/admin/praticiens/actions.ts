@@ -304,3 +304,56 @@ export async function reactivatePractitioner(
 
   go({ ok: "reactivated" });
 }
+
+/**
+ * Supprime définitivement un compte désactivé : le compte Supabase Auth est
+ * effacé (`deleteUser`), ce qui supprime en cascade la ligne `profiles` et
+ * tout son historique (demandes, congés, fermetures — `on delete cascade`).
+ * Contrairement à `deletePractitioner`, cette action est irréversible et
+ * libère immédiatement l'adresse e-mail pour une invitation classique.
+ * Réservée aux comptes déjà désactivés, pour éviter un clic accidentel sur
+ * un compte encore actif.
+ */
+export async function permanentlyDeletePractitioner(
+  formData: FormData,
+): Promise<void> {
+  await requireAdmin();
+
+  const profileId = readText(formData, "profile_id");
+  if (!profileId) {
+    go({ error: "delete-validation" });
+  }
+
+  let admin;
+  try {
+    admin = getServiceRoleSupabase();
+  } catch {
+    go({ error: "service-role" });
+  }
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, role, deleted_at")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (!target || target.role === "admin" || !target.deleted_at) {
+    go({ error: "delete-validation" });
+  }
+
+  try {
+    await withAdminTimeout(admin.auth.admin.deleteUser(profileId));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      "[permanentlyDeletePractitioner] échec de la suppression:",
+      message,
+    );
+    go({ error: "delete-failed", detail: message.slice(0, 200) });
+  }
+
+  revalidatePath(PRATICIENS_PATH);
+  revalidatePath(EMPLOYES_PATH);
+  revalidatePath(ADMIN_HOME_PATH);
+  go({ ok: "deleted-permanently" });
+}

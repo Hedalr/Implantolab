@@ -7,8 +7,13 @@ import {
 } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
+import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
 import { listLabSectors } from "@/lib/requests/queries";
-import { deletePractitioner, reactivatePractitioner } from "./actions";
+import {
+  deletePractitioner,
+  permanentlyDeletePractitioner,
+  reactivatePractitioner,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +112,11 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Erreur",
     message:
       "La révocation de l’accès a échoué. Réessayez ou contactez le support technique.",
+  },
+  "deleted-permanently": {
+    title: "Compte supprimé",
+    message:
+      "Le compte et son historique (demandes, congés, fermetures) ont été supprimés définitivement. L’adresse e-mail est immédiatement réutilisable pour une nouvelle invitation.",
   },
 };
 
@@ -263,8 +273,9 @@ export default async function AdminPraticiensPage({
               <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
                 Ces comptes n’ont plus accès à l’espace praticien. Leur
                 historique (demandes, congés, fermetures) est conservé.
-                Réactivez un compte pour lui redonner accès et lui envoyer un
-                nouveau mot de passe.
+                Réactivez un compte pour lui redonner accès, ou supprimez-le
+                définitivement (compte + historique effacés, action
+                irréversible) si vous n’en avez plus besoin.
               </p>
               <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
                 {deactivatedProfiles.map((p) => (
@@ -293,6 +304,14 @@ export default async function AdminPraticiensPage({
                           Réactiver
                         </button>
                       </form>
+                      <ConfirmFormButton
+                        action={permanentlyDeletePractitioner}
+                        hiddenFields={{ profile_id: p.id }}
+                        confirmMessage={`Supprimer définitivement ${p.full_name ?? "ce compte"} ? Son historique (demandes, congés, fermetures) sera effacé. Cette action est irréversible.`}
+                        className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
+                      >
+                        Supprimer définitivement
+                      </ConfirmFormButton>
                     </div>
                   </li>
                 ))}
