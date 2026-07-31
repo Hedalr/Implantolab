@@ -3,12 +3,13 @@
 import type { NavLink } from "@/content/fr/site";
 import { cn } from "@/lib/cn";
 import { MotionNavigationMenuLink } from "@/components/ui/motion-navigation-menu";
-import { pathWithoutHash } from "@/components/layout/nav-utils";
+import { isHrefActive } from "@/components/layout/nav-utils";
 
 type MotionNavDropdownPanelProps = {
   link: NavLink;
   items: NavLink[];
   pathname: string;
+  searchParams?: URLSearchParams;
   overviewLabel: string;
   itemClassName?: string;
 };
@@ -17,16 +18,19 @@ export function MotionNavDropdownPanel({
   link,
   items,
   pathname,
+  searchParams,
   overviewLabel,
   itemClassName,
 }: MotionNavDropdownPanelProps) {
+  const params = searchParams ?? new URLSearchParams();
+
   return (
     <div className="flex w-max min-w-0 flex-col gap-0.5">
       <MotionNavigationMenuLink
         href={link.href}
         className={cn(
           itemClassName,
-          pathname === link.href
+          isHrefActive(pathname, params, link.href)
             ? "text-[var(--ink)]"
             : "text-[var(--ink-muted)]",
         )}
@@ -37,7 +41,7 @@ export function MotionNavDropdownPanel({
         </span>
       </MotionNavigationMenuLink>
       {items.map((child) => {
-        const childActive = pathname === pathWithoutHash(child.href);
+        const childActive = isHrefActive(pathname, params, child.href);
         return (
           <MotionNavigationMenuLink
             key={child.href}

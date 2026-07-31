@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
+import { listLabSectors } from "@/lib/requests/queries";
 import { navForRole, spaceLabelForRole } from "@/lib/roles";
 import {
   getCurrentProfile,
+  getServerSupabase,
   isSupabaseConfigured,
   type Profile,
 } from "@/lib/supabase/server";
@@ -18,7 +21,12 @@ export default async function EspacePraticienLayout({
     ? await getCurrentProfile()
     : null;
 
-  const nav = navForRole(profile?.role);
+  const sectors =
+    configured && profile?.role === "admin"
+      ? await listLabSectors(await getServerSupabase())
+      : [];
+
+  const nav = navForRole(profile?.role, { sectors });
   const showNav = Boolean(profile);
   const spaceLabel = spaceLabelForRole(profile?.role);
 
@@ -33,7 +41,9 @@ export default async function EspacePraticienLayout({
               </span>
 
               {showNav ? (
-                <EspacePraticienNav items={nav} variant="desktop" />
+                <Suspense fallback={null}>
+                  <EspacePraticienNav items={nav} variant="desktop" />
+                </Suspense>
               ) : null}
             </div>
 
@@ -60,7 +70,9 @@ export default async function EspacePraticienLayout({
           </div>
 
           {showNav ? (
-            <EspacePraticienNav items={nav} variant="mobile" />
+            <Suspense fallback={null}>
+              <EspacePraticienNav items={nav} variant="mobile" />
+            </Suspense>
           ) : null}
         </Container>
       </div>

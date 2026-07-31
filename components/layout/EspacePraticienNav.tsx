@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { NavLink } from "@/content/fr/site";
 import { cn } from "@/lib/cn";
 import { MotionNavDropdownPanel } from "@/components/layout/MotionNavDropdownPanel";
 import {
   flattenNav,
+  isHrefActive,
   isNavActive,
   linkTone,
 } from "@/components/layout/nav-utils";
@@ -26,6 +27,7 @@ type EspacePraticienNavProps = {
 
 export function EspacePraticienNav({ items, variant }: EspacePraticienNavProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   if (variant === "desktop") {
     return (
@@ -66,7 +68,8 @@ export function EspacePraticienNav({ items, variant }: EspacePraticienNavProps) 
                     link={item}
                     items={children}
                     pathname={pathname}
-                    overviewLabel="Vue d'ensemble"
+                    searchParams={searchParams}
+                    overviewLabel={item.overviewLabel ?? "Vue d'ensemble"}
                     itemClassName="px-3 py-2"
                   />
                 </MotionNavigationMenuContent>
@@ -89,7 +92,7 @@ export function EspacePraticienNav({ items, variant }: EspacePraticienNavProps) 
           href={item.href}
           className={cn(
             "text-xs transition-colors whitespace-nowrap",
-            pathname === item.href
+            isHrefActive(pathname, searchParams, item.href)
               ? "text-[var(--ink)]"
               : "text-[var(--ink-muted)] hover:text-[var(--ink)]",
           )}

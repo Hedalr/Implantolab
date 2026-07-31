@@ -1,5 +1,6 @@
 import type { NavLink } from "@/content/fr/site";
 import { REQUEST_INBOX_LABEL } from "@/lib/requests/types";
+import type { LabSector } from "@/lib/sectors";
 
 export type ProfileRole =
   | "practitioner"
@@ -53,28 +54,42 @@ const practitionerNav: NavLink[] = [
   { href: "/espace-praticien/demandes", label: "Demandes" },
 ];
 
-const adminNav: NavLink[] = [
-  { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
-  {
-    href: "/espace-praticien/admin/praticiens",
-    label: "Praticiens",
-    children: [
-      {
-        href: "/espace-praticien/admin/calendrier",
-        label: "Fermetures dentistes",
-      },
-    ],
-  },
-  {
-    href: "/espace-praticien/admin/employes",
-    label: "Employés",
-    children: [
-      { href: "/espace-praticien/admin/conges", label: "Congés employés" },
-    ],
-  },
-  { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
-  { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
-];
+function buildAdminNav(sectors: LabSector[] = []): NavLink[] {
+  const laboratoireChildren: NavLink[] = sectors.map((sector) => ({
+    href: `/espace-praticien/laboratoire?sector=${sector.id}`,
+    label: sector.name,
+  }));
+
+  return [
+    { href: "/espace-praticien/admin", label: "Vue d'ensemble" },
+    {
+      href: "/espace-praticien/admin/praticiens",
+      label: "Praticiens",
+      children: [
+        {
+          href: "/espace-praticien/admin/calendrier",
+          label: "Fermetures dentistes",
+        },
+      ],
+    },
+    {
+      href: "/espace-praticien/admin/employes",
+      label: "Employés",
+      children: [
+        { href: "/espace-praticien/admin/conges", label: "Congés employés" },
+      ],
+    },
+    { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
+    {
+      href: "/espace-praticien/laboratoire",
+      label: "Laboratoire",
+      overviewLabel: "Tous les secteurs",
+      ...(laboratoireChildren.length
+        ? { children: laboratoireChildren }
+        : {}),
+    },
+  ];
+}
 
 const prosthetistNav: NavLink[] = [
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
@@ -87,8 +102,7 @@ const chefNav: NavLink[] = [
   { href: "/espace-praticien/conges", label: "Mes congés" },
 ];
 
-const NAV_BY_ROLE: Record<ProfileRole, NavLink[]> = {
-  admin: adminNav,
+const NAV_BY_ROLE: Record<Exclude<ProfileRole, "admin">, NavLink[]> = {
   chef_de_secteur: chefNav,
   prosthetist: prosthetistNav,
   practitioner: practitionerNav,
@@ -101,8 +115,12 @@ const SPACE_LABEL_BY_ROLE: Record<ProfileRole, string> = {
   practitioner: "Espace praticien",
 };
 
-export function navForRole(role: ProfileRole | undefined | null): NavLink[] {
+export function navForRole(
+  role: ProfileRole | undefined | null,
+  options?: { sectors?: LabSector[] },
+): NavLink[] {
   if (!role) return practitionerNav;
+  if (role === "admin") return buildAdminNav(options?.sectors);
   return NAV_BY_ROLE[role];
 }
 

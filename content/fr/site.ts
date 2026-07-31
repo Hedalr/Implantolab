@@ -2,6 +2,8 @@ export type NavLink = {
   label: string;
   href: string;
   children?: NavLink[];
+  /** Sous-titre du lien parent dans le panneau déroulant (ex. « Tous les secteurs »). */
+  overviewLabel?: string;
 };
 
 export const site = {
