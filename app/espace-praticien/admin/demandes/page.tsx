@@ -17,6 +17,8 @@ import {
   REQUEST_INBOX_LABEL,
   REQUEST_INBOX_SUBJECTS,
 } from "@/lib/requests/types";
+import { getPatientFilter } from "@/lib/requests/patient-filter";
+import { PatientSearchForm } from "@/components/requests/PatientSearchForm";
 import { Container } from "@/components/ui/Container";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
@@ -37,14 +39,9 @@ function parsePage(value: string | string[] | undefined): number {
   return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
-function buildAdminDemandesHref(
-  status: StatusFilter,
-  patient: string,
-  page = 1,
-): string {
+function buildAdminDemandesHref(status: StatusFilter, page = 1): string {
   const params = new URLSearchParams();
   if (status !== "open") params.set("status", status);
-  if (patient.trim()) params.set("patient", patient.trim());
   if (page > 1) params.set("page", String(page));
   const q = params.toString();
   return q
@@ -65,20 +62,14 @@ export default async function AdminRequestsPage({
 }: {
   searchParams: Promise<{
     status?: string | string[];
-    patient?: string | string[];
     page?: string | string[];
   }>;
 }) {
   const { profile } = await requireAdminOrChef();
   const isChef = profile.role === "chef_de_secteur";
-  const {
-    status: rawStatus,
-    patient: rawPatient,
-    page: rawPage,
-  } = await searchParams;
+  const { status: rawStatus, page: rawPage } = await searchParams;
   const status = parseRequestStatusFilter(rawStatus);
-  const patientQuery =
-    (Array.isArray(rawPatient) ? rawPatient[0] : rawPatient)?.trim() ?? "";
+  const patientQuery = await getPatientFilter("adminDemandes");
   const page = parsePage(rawPage);
 
   const supabase = await getServerSupabase();
@@ -123,65 +114,20 @@ export default async function AdminRequestsPage({
         </p>
       </header>
 
-      <form
-        method="get"
-        className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3"
-      >
-        {status !== "open" ? (
-          <input type="hidden" name="status" value={status} />
-        ) : null}
-        <label className="flex flex-col gap-1.5 flex-1 max-w-md">
-          <span className="text-eyebrow">Patient</span>
-          <input
-            type="search"
-            name="patient"
-            defaultValue={patientQuery}
-            placeholder="Début du nom du patient…"
-            autoComplete="off"
-            className={cn(
-              "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
-              "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
-            )}
-          />
-        </label>
-        <button
-          type="submit"
-          className="self-start sm:self-auto px-4 py-2.5 text-xs uppercase tracking-[0.16em] border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)] transition-colors"
-        >
-          Rechercher
-        </button>
-        {patientQuery ? (
-          <Link
-            href={buildAdminDemandesHref(status, "")}
-            className="self-start sm:self-auto px-3 py-2.5 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors"
-          >
-            Effacer
-          </Link>
-        ) : null}
-      </form>
+      <PatientSearchForm
+        scope="adminDemandes"
+        redirectTo={buildAdminDemandesHref(status)}
+        defaultValue={patientQuery}
+        className="mb-6"
+      />
 
       <nav
         aria-label="Filtrer par statut"
         className="mb-6 flex flex-wrap gap-2 border-b border-[var(--line)] pb-3"
       >
-        <TabLink
-          current={status}
-          target="open"
-          label="Ouvertes"
-          patient={patientQuery}
-        />
-        <TabLink
-          current={status}
-          target="closed"
-          label="Traitées"
-          patient={patientQuery}
-        />
-        <TabLink
-          current={status}
-          target="all"
-          label="Toutes"
-          patient={patientQuery}
-        />
+        <TabLink current={status} target="open" label="Ouvertes" />
+        <TabLink current={status} target="closed" label="Traitées" />
+        <TabLink current={status} target="all" label="Toutes" />
       </nav>
 
       {requests.length === 0 ? (
@@ -227,9 +173,7 @@ export default async function AdminRequestsPage({
             totalPages={totalPages}
             total={total}
             pageSize={pageSize}
-            hrefForPage={(p) =>
-              buildAdminDemandesHref(status, patientQuery, p)
-            }
+            hrefForPage={(p) => buildAdminDemandesHref(status, p)}
           />
         </div>
       )}
@@ -241,17 +185,15 @@ function TabLink({
   current,
   target,
   label,
-  patient,
 }: {
   current: StatusFilter;
   target: StatusFilter;
   label: string;
-  patient?: string;
 }) {
   const active = current === target;
   return (
     <Link
-      href={buildAdminDemandesHref(target, patient ?? "")}
+      href={buildAdminDemandesHref(target)}
       className={cn(
         "px-3 py-1.5 text-sm border transition-colors",
         active

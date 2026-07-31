@@ -12,6 +12,8 @@ import {
   formatRequestCategory,
   LAB_EXCLUDED_SUBJECTS,
 } from "@/lib/requests/types";
+import { getPatientFilter } from "@/lib/requests/patient-filter";
+import { PatientSearchForm } from "@/components/requests/PatientSearchForm";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
 import { Badge } from "./Badge";
@@ -24,7 +26,6 @@ export const metadata: Metadata = {
 type SearchParams = Promise<{
   sector?: string;
   status?: string;
-  patient?: string;
   page?: string;
 }>;
 
@@ -51,11 +52,10 @@ export default async function LaboratoireIndex({
   const {
     sector: rawSector,
     status: rawStatus,
-    patient: rawPatient,
     page: rawPage,
   } = await searchParams;
   const status = parseRequestStatusFilter(rawStatus);
-  const patientQuery = (rawPatient ?? "").trim();
+  const patientQuery = await getPatientFilter("laboratoire");
   const page = parsePage(rawPage);
 
   const supabase = await getServerSupabase();
@@ -128,14 +128,14 @@ export default async function LaboratoireIndex({
           className="flex flex-wrap gap-2 border-b border-[var(--line)] pb-3"
         >
           <SectorTab
-            href={buildHref("all", status, patientQuery)}
+            href={buildHref("all", status)}
             label="Tous"
             active={sectorFilter === "all"}
           />
           {sectors.map((s) => (
             <SectorTab
               key={s.id}
-              href={buildHref(s.id, status, patientQuery)}
+              href={buildHref(s.id, status)}
               label={s.name}
               color={s.color}
               active={sectorFilter === s.id}
@@ -144,62 +144,28 @@ export default async function LaboratoireIndex({
         </nav>
       ) : null}
 
-      <form
-        method="get"
-        className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3"
-      >
-        {sectorFilter !== "all" ? (
-          <input type="hidden" name="sector" value={sectorFilter} />
-        ) : null}
-        {status !== "open" ? (
-          <input type="hidden" name="status" value={status} />
-        ) : null}
-        <label className="flex flex-col gap-1.5 flex-1 max-w-md">
-          <span className="text-eyebrow">Patient</span>
-          <input
-            type="search"
-            name="patient"
-            defaultValue={patientQuery}
-            placeholder="Début du nom du patient…"
-            autoComplete="off"
-            className={cn(
-              "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
-              "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
-            )}
-          />
-        </label>
-        <button
-          type="submit"
-          className="self-start sm:self-auto px-4 py-2.5 text-xs uppercase tracking-[0.16em] border border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)] transition-colors"
-        >
-          Rechercher
-        </button>
-        {patientQuery ? (
-          <Link
-            href={buildHref(sectorFilter, status, "")}
-            className="self-start sm:self-auto px-3 py-2.5 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors"
-          >
-            Effacer
-          </Link>
-        ) : null}
-      </form>
+      <PatientSearchForm
+        scope="laboratoire"
+        redirectTo={buildHref(sectorFilter, status)}
+        defaultValue={patientQuery}
+      />
 
       <nav
         aria-label="Filtrer par statut"
         className="flex flex-wrap gap-2"
       >
         <StatusTab
-          href={buildHref(sectorFilter, "open", patientQuery)}
+          href={buildHref(sectorFilter, "open")}
           label="Ouvertes"
           active={status === "open"}
         />
         <StatusTab
-          href={buildHref(sectorFilter, "closed", patientQuery)}
+          href={buildHref(sectorFilter, "closed")}
           label="Traitées"
           active={status === "closed"}
         />
         <StatusTab
-          href={buildHref(sectorFilter, "all", patientQuery)}
+          href={buildHref(sectorFilter, "all")}
           label="Toutes"
           active={status === "all"}
         />
@@ -268,9 +234,7 @@ export default async function LaboratoireIndex({
             totalPages={totalPages}
             total={total}
             pageSize={pageSize}
-            hrefForPage={(p) =>
-              buildHref(sectorFilter, status, patientQuery, p)
-            }
+            hrefForPage={(p) => buildHref(sectorFilter, status, p)}
           />
         </>
       )}
@@ -278,16 +242,10 @@ export default async function LaboratoireIndex({
   );
 }
 
-function buildHref(
-  sector: string,
-  status: StatusFilter,
-  patient: string,
-  page = 1,
-): string {
+function buildHref(sector: string, status: StatusFilter, page = 1): string {
   const params = new URLSearchParams();
   if (sector !== "all") params.set("sector", sector);
   if (status !== "open") params.set("status", status);
-  if (patient.trim()) params.set("patient", patient.trim());
   if (page > 1) params.set("page", String(page));
   const q = params.toString();
   return q
