@@ -5,6 +5,7 @@ import { PageHero } from "@/components/sections/PageHero";
 import { RecruitmentApplicationForm } from "@/components/sections/RecruitmentApplicationForm";
 import { site } from "@/content/fr/site";
 import { getJobOpenings } from "@/lib/notion-jobs";
+import { buildMailtoHref } from "@/lib/mailto";
 import { pageMetadata } from "@/lib/metadata";
 
 export const revalidate = 600;
@@ -55,7 +56,10 @@ export default async function CandidaturePage({
                 <li className="flex flex-col gap-1">
                   <span className="text-eyebrow">Email recrutement</span>
                   <a
-                    href={`mailto:${site.contact.email}?subject=Candidature IMPLANTOLAB`}
+                    href={buildMailtoHref({
+                      to: site.contact.email,
+                      subject: "Candidature IMPLANTOLAB",
+                    })}
                     className="font-serif text-lg sm:text-xl text-[var(--ink)] hover:text-[var(--accent)] transition-colors break-all"
                   >
                     {site.contact.email}

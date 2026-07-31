@@ -3,8 +3,8 @@ import { sanitizeDownloadFilename } from "@/lib/requests/media-security";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 
 /**
- * Redirige vers une signed URL du bucket privé `request-media` valable
- * ~5 minutes, pour afficher les photos jointes à une demande praticien.
+ * Redirige vers une signed URL du bucket privé `request-media`, pour
+ * afficher les photos jointes à une demande praticien.
  *
  * Les policies RLS sur `storage.objects` vérifient déjà que l'utilisateur
  * a le droit de voir ce fichier (sa propre demande, un admin, ou un
@@ -14,7 +14,9 @@ import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SIGNED_URL_TTL_SEC = 300;
+// L'URL signée n'a besoin de vivre que le temps de la redirection : passé ce
+// délai, une URL qui aurait fuité ne donne plus accès à la photo patient.
+const SIGNED_URL_TTL_SEC = 60;
 const REQUEST_MEDIA_BUCKET = "request-media";
 
 function isExpectedStoragePath(requestId: string, storagePath: string): boolean {

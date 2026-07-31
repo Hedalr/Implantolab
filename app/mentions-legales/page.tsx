@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Container } from "@/components/ui/Container";
 
 import { PageHero } from "@/components/sections/PageHero";
@@ -155,6 +157,80 @@ export default function MentionsLegalesPage() {
                   {legal.hosting.url.replace(/^https?:\/\//, "")}
 
                 </a>
+
+              </p>
+
+            </Block>
+
+            <Block title="Hébergement des données">
+
+              <p>
+
+                Les données de l’espace praticien (comptes, demandes, fichiers
+
+                joints) sont hébergées par {legal.dataHosting.name} —{" "}
+
+                {legal.dataHosting.region}.
+
+              </p>
+
+              <p>
+
+                <a
+
+                  href={legal.dataHosting.url}
+
+                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4 break-all"
+
+                  target="_blank"
+
+                  rel="noopener noreferrer"
+
+                >
+
+                  {legal.dataHosting.url.replace(/^https?:\/\//, "")}
+
+                </a>
+
+              </p>
+
+            </Block>
+
+            <Block title="Données personnelles">
+
+              <p>
+
+                Pour toute question relative au traitement de vos données
+
+                personnelles ou pour exercer vos droits, écrivez à{" "}
+
+                <a
+
+                  href={`mailto:${contact.email}`}
+
+                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4 break-all"
+
+                >
+
+                  {contact.email}
+
+                </a>
+
+                . Le détail des traitements figure dans notre{" "}
+
+                <Link
+
+                  href="/confidentialite"
+
+                  className="text-[var(--ink)] hover:text-[var(--accent)] underline underline-offset-4"
+
+                >
+
+                  politique de confidentialité
+
+                </Link>
+
+                .
 
               </p>
 

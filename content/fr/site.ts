@@ -48,6 +48,16 @@ export const site = {
       address: "340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis",
       url: "https://vercel.com",
     },
+    /**
+     * Hébergeur de la base de données et des fichiers de l'espace praticien,
+     * distinct de l'hébergeur du site vitrine. À mentionner séparément :
+     * c'est lui qui héberge les données personnelles.
+     */
+    dataHosting: {
+      name: "Supabase Inc.",
+      region: "Union européenne — Francfort (AWS eu-central-1)",
+      url: "https://supabase.com",
+    },
   },
 };
 

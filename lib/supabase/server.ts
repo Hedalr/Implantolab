@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { firstRelation } from "@/lib/supabase/relation";
+import { SUPABASE_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import {
   isSectorLabRole,
   type ProfileRole,
@@ -60,6 +61,7 @@ export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
   const cookieStore = await cookies();
 
   return createServerClient(url, anonKey, {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return cookieStore.getAll();
