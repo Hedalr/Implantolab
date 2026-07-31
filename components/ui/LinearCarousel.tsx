@@ -204,7 +204,7 @@ export function Card({
       <div className="absolute inset-x-0 bottom-0 z-30 w-full p-5 md:p-7">
         {card.category ? (
           <motion.p
-            className="text-left text-[0.65rem] uppercase tracking-[0.16em] text-white/85 md:text-xs"
+            className="text-left text-xs uppercase tracking-[0.16em] text-white/90"
           >
             {card.category}
           </motion.p>

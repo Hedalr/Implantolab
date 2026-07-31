@@ -39,7 +39,15 @@ export function Button(props: ButtonProps) {
   const classes = cn(baseStyles, variants[variant], className);
 
   if ("href" in props && props.href) {
-    const { href, ...rest } = props as ButtonAsLink;
+    // `variant`/`className`/`children` doivent sortir de `rest` : sinon le spread
+    // réapplique le className brut par-dessus les styles calculés.
+    const {
+      href,
+      variant: _variant,
+      className: _className,
+      children: _children,
+      ...rest
+    } = props as ButtonAsLink;
     return (
       <Link href={href} className={classes} {...rest}>
         {children}

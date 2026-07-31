@@ -23,7 +23,7 @@ export function Hero() {
     <section className="grain atmosphere-rose relative overflow-hidden">
       <Container
         size="wide"
-        className="relative pt-8 md:pt-10 lg:pt-12 pb-20 md:pb-28 lg:pb-36"
+        className="relative pt-8 md:pt-10 lg:pt-12 pb-14 md:pb-28 lg:pb-36"
       >
         <HeroScroll
           copy={
@@ -39,13 +39,13 @@ export function Hero() {
               </Reveal>
 
               <Reveal delay={80}>
-                <h1 className="text-display text-4xl md:text-5xl lg:text-[3.75rem] text-balance">
+                <h1 className="text-display text-display-hero text-balance">
                   {title}
                 </h1>
               </Reveal>
 
               <Reveal delay={160}>
-                <p className="text-lg md:text-xl text-[var(--ink-muted)] leading-relaxed max-w-xl text-pretty">
+                <p className="text-base sm:text-lg md:text-xl text-[var(--ink-muted)] leading-relaxed max-w-xl text-pretty">
                   <strong className="font-semibold text-[var(--ink)]">
                     IMPLANTOLAB
                   </strong>
@@ -53,11 +53,22 @@ export function Hero() {
                 </p>
               </Reveal>
 
-              <Reveal delay={240} className="flex flex-wrap gap-3 pt-2">
-                <Button href={primaryCta.href} variant="primary">
+              <Reveal
+                delay={240}
+                className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap"
+              >
+                <Button
+                  href={primaryCta.href}
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                >
                   {primaryCta.label}
                 </Button>
-                <Button href={secondaryCta.href} variant="secondary">
+                <Button
+                  href={secondaryCta.href}
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                >
                   {secondaryCta.label}
                 </Button>
               </Reveal>
@@ -73,7 +84,7 @@ export function Hero() {
                         src="/videos/hero-implanto.mp4"
                         className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
                       />
-                      <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                      <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-xs sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
                         {visualCaption}
                       </figcaption>
                     </figure>
@@ -86,7 +97,7 @@ export function Hero() {
                         src="/videos/hero-implanto-2.mp4"
                         className="relative w-full aspect-[3/4] max-h-[560px] overflow-hidden rounded-sm border border-[var(--line)] bg-[var(--bg-elevated)] shadow-[0_20px_40px_rgba(0,0,0,0.06)]"
                       />
-                      <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-discreet)]">
+                      <figcaption className="pointer-events-none absolute bottom-2 left-2 rounded-sm bg-white/85 backdrop-blur-sm px-2 py-1 text-xs sm:text-[0.65rem] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
                         {visualCaptionSecondary}
                       </figcaption>
                     </figure>

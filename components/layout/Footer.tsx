@@ -9,9 +9,12 @@ export function Footer() {
 
   return (
     <footer className="bg-[var(--bg-deep)] text-[var(--ink-invert)]">
-      <Container size="wide" className="py-20">
-        <div className="grid gap-14 lg:grid-cols-12">
-          <div className="lg:col-span-4 flex flex-col gap-6">
+      <Container
+        size="wide"
+        className="pt-14 pb-[max(3.5rem,env(safe-area-inset-bottom))] sm:pt-20 sm:pb-20"
+      >
+        <div className="grid gap-12 sm:gap-14 lg:grid-cols-12">
+          <div className="lg:col-span-4 flex flex-col gap-5 sm:gap-6">
             <Logo variant="invert" showWordmark />
             <p className="text-[var(--ink-invert-muted)] max-w-xs leading-relaxed">
               Laboratoire de prothèse dentaire spécialisé en implantologie,
@@ -23,16 +26,16 @@ export function Footer() {
               {site.contact.address.postalCode} {site.contact.address.city},{" "}
               {site.contact.address.country}
             </address>
-            <div className="flex flex-col gap-1 text-sm">
+            <div className="flex flex-col text-sm">
               <a
                 href={`tel:${site.contact.phone}`}
-                className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                className="tap-row text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
               >
                 {site.contact.phoneDisplay}
               </a>
               <a
                 href={`mailto:${site.contact.email}`}
-                className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                className="tap-row break-all text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
               >
                 {site.contact.email}
               </a>
@@ -40,18 +43,18 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-8 flex flex-col gap-10">
-            <div className="grid gap-10 sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 sm:gap-10">
               {footerColumns.map((column) => (
-                <div key={column.title} className="flex flex-col gap-4">
+                <div key={column.title} className="flex flex-col gap-1.5 sm:gap-2">
                   <h3 className="text-eyebrow text-[var(--ink-invert-muted)]">
                     {column.title}
                   </h3>
-                  <ul className="flex flex-col gap-2.5 text-sm">
+                  <ul className="flex flex-col text-sm">
                     {column.links.map((link) => (
                       <li key={link.href}>
                         <Link
                           href={link.href}
-                          className="text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
+                          className="tap-row text-[var(--ink-invert)] hover:text-[var(--accent-warm-soft)] transition-colors"
                         >
                           {link.label}
                         </Link>
@@ -65,17 +68,17 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t border-[var(--line-invert)] flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-[var(--ink-invert-muted)]">
-          <p>
+        <div className="mt-12 pt-6 sm:mt-16 sm:pt-8 border-t border-[var(--line-invert)] flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs text-[var(--ink-invert-muted)]">
+          <p className="text-[0.8125rem] leading-relaxed sm:text-xs">
             © {year} {site.name} — Laboratoire de prothèse dentaire. Tous droits
             réservés.
           </p>
-          <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <ul className="flex flex-wrap items-center gap-x-6 text-[0.8125rem] sm:text-xs">
             {legalLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="hover:text-[var(--ink-invert)] transition-colors"
+                  className="tap-row hover:text-[var(--ink-invert)] transition-colors"
                 >
                   {link.label}
                 </Link>

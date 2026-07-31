@@ -227,7 +227,7 @@ export function MobileNav({ userDisplayName = null }: MobileNavProps) {
                 </ul>
               </nav>
 
-              <div className="shrink-0 border-t border-[var(--line)] bg-[var(--bg-elevated)] px-5 py-5">
+              <div className="shrink-0 border-t border-[var(--line)] bg-[var(--bg-elevated)] px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
                 <div className="flex flex-col gap-3">
                   <Button href={practitionerLink.href} variant="secondary" className="w-full">
                     {isLoggedIn ? userDisplayName : practitionerLink.label}

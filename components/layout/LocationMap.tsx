@@ -32,7 +32,7 @@ export function LocationMap({ compact = false, className }: LocationMapProps) {
       <div
         className={cn(
           "relative w-full",
-          compact ? "h-[160px] sm:h-[180px]" : "h-[280px] sm:h-[320px] md:h-[400px]",
+          compact ? "h-[230px] sm:h-[200px]" : "h-[280px] sm:h-[320px] md:h-[400px]",
         )}
       >
         {loaded ? (
@@ -47,7 +47,7 @@ export function LocationMap({ compact = false, className }: LocationMapProps) {
         ) : (
           <div
             className={cn(
-              "absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center",
+              "absolute inset-0 flex flex-col items-center justify-center gap-2 px-5 text-center",
               compact
                 ? "bg-[var(--bg-deep-soft)] text-[var(--ink-invert)]"
                 : "bg-[var(--bg-elevated)] text-[var(--ink)]",
@@ -67,7 +67,7 @@ export function LocationMap({ compact = false, className }: LocationMapProps) {
               type="button"
               onClick={() => setLoaded(true)}
               className={cn(
-                "px-4 py-2 text-xs uppercase tracking-[0.16em] border transition-colors",
+                "inline-flex min-h-11 items-center justify-center px-5 py-2.5 text-xs uppercase tracking-[0.16em] border transition-colors",
                 compact
                   ? "border-[var(--line-invert)] text-[var(--ink-invert)] hover:border-[var(--accent-warm-soft)] hover:text-[var(--accent-warm-soft)]"
                   : "border-[var(--line-strong)] text-[var(--ink)] hover:border-[var(--ink)]",
@@ -75,29 +75,31 @@ export function LocationMap({ compact = false, className }: LocationMapProps) {
             >
               Afficher la carte
             </button>
-            <p
-              className={cn(
-                "text-[11px] leading-relaxed max-w-xs",
-                compact
-                  ? "text-[var(--ink-invert-muted)]"
-                  : "text-[var(--ink-discreet)]",
-              )}
-            >
-              Charge Google Maps (cookies tiers possibles).{" "}
+            <div className="flex flex-col items-center">
+              <p
+                className={cn(
+                  "text-xs leading-relaxed max-w-xs",
+                  compact
+                    ? "text-[var(--ink-invert-muted)]"
+                    : "text-[var(--ink-discreet)]",
+                )}
+              >
+                Charge Google Maps (cookies tiers possibles).
+              </p>
               <a
                 href={externalHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
-                  "underline underline-offset-2 transition-colors",
+                  "tap-link text-xs underline underline-offset-2 transition-colors",
                   compact
-                    ? "hover:text-[var(--accent-warm-soft)]"
-                    : "hover:text-[var(--ink)]",
+                    ? "text-[var(--ink-invert-muted)] hover:text-[var(--accent-warm-soft)]"
+                    : "text-[var(--ink-discreet)] hover:text-[var(--ink)]",
                 )}
               >
                 Ouvrir dans Google Maps
               </a>
-            </p>
+            </div>
           </div>
         )}
       </div>

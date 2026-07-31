@@ -176,7 +176,7 @@ export function SwipeGallery({
         </AnimatePresence>
 
         {label ? (
-          <span className="pointer-events-none absolute left-3 top-3 z-10 bg-black/45 px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
+          <span className="pointer-events-none absolute left-3 top-3 z-10 bg-black/45 px-2.5 py-1 text-xs sm:text-[0.65rem] uppercase tracking-[0.14em] text-white/90 backdrop-blur-sm">
             {label}
           </span>
         ) : null}

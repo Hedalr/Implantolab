@@ -19,7 +19,7 @@ export function SectionHeading({
   return (
     <header
       className={cn(
-        "flex flex-col gap-5 max-w-2xl",
+        "flex flex-col gap-4 sm:gap-5 max-w-2xl",
         align === "center" && "mx-auto text-center items-center",
         className,
       )}
@@ -33,7 +33,7 @@ export function SectionHeading({
           {eyebrow}
         </span>
       ) : null}
-      <h2 className="text-display text-2xl sm:text-3xl md:text-4xl lg:text-[2.75rem] text-balance">
+      <h2 className="text-display text-display-section text-balance">
         {title}
       </h2>
       {description ? (

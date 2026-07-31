@@ -73,6 +73,15 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Le header collant mesure 4rem (mobile) / 5rem (>=md) : les ancres de section
+     doivent s'arrêter en dessous plutôt que sous la barre. */
+  scroll-padding-top: 5rem;
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 6rem;
+  }
 }
 
 body {
@@ -81,6 +90,9 @@ body {
   font-family: var(--font-sans);
   font-feature-settings: "ss01", "cv11";
   line-height: 1.55;
+  /* Le flash gris de Chrome Android double le feedback tactile déjà géré
+     par `active:` et les états `:hover` restreints à `fine-hover`. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
@@ -161,6 +173,46 @@ body {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
+
+  /* Variante bloc pour les listes de liens (footer, nav) : la zone tactile
+     couvre toute la largeur de la colonne, pas seulement le texte. */
+  .tap-row {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+
+  /* Échelles fluides : suppriment les sauts de taille entre 320px et 1280px
+     là où les paliers md/lg laissaient le texte figé sur toute la plage mobile. */
+  .text-display-hero {
+    font-size: clamp(2rem, 1.28rem + 3.6vw, 3.75rem);
+  }
+
+  .text-display-page {
+    font-size: clamp(1.875rem, 1.32rem + 2.75vw, 3.25rem);
+  }
+
+  .text-display-section {
+    font-size: clamp(1.625rem, 1.27rem + 1.78vw, 2.75rem);
+  }
+}
+
+/* Bandeaux défilables horizontalement (nav praticien, carrousels tactiles) :
+   ancrage par élément et masquage de la barre native sur mobile. */
+.scroll-rail {
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.scroll-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-rail > * {
+  scroll-snap-align: start;
 }
 
 /* =========================================================================

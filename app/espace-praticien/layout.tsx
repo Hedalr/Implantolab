@@ -34,7 +34,7 @@ export default async function EspacePraticienLayout({
     <div className="min-h-[calc(100vh-5rem)] bg-[var(--bg)]">
       <div className="sticky top-16 md:top-20 z-30 border-b border-[var(--line)] bg-[var(--bg-elevated)]">
         <Container size="wide">
-          <div className="flex h-14 items-center justify-between gap-6">
+          <div className="flex h-14 items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-8">
               <span className="text-eyebrow text-[var(--ink-discreet)] hidden sm:inline">
                 {spaceLabel}
@@ -78,7 +78,10 @@ export default async function EspacePraticienLayout({
       </div>
 
       <main>
-        <Container size="wide" className="py-10">
+        <Container
+          size="wide"
+          className="py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-10"
+        >
           {children}
         </Container>
       </main>

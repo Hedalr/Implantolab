@@ -118,7 +118,7 @@ export default function ExpertisesPage() {
                     <Reveal delay={220}>
                       <Link
                         href={`/${item.slug}`}
-                        className="inline-flex items-center gap-3 text-[var(--ink)] border-b border-[var(--ink)] pb-1 text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start"
+                        className="tap-link gap-3 text-[var(--ink)] border-b border-[var(--ink)] text-sm tracking-wide hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors self-start"
                       >
                         Découvrir l’expertise
                         <svg

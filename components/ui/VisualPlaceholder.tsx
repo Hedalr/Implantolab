@@ -90,7 +90,7 @@ export function VisualPlaceholder({
       )}
 
       {caption ? (
-        <figcaption className="absolute bottom-3 left-3 z-10 text-[0.7rem] sm:text-[0.65rem] uppercase tracking-widest sm:tracking-[0.18em] text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+        <figcaption className="absolute bottom-3 left-3 right-3 z-10 text-xs sm:text-[0.65rem] uppercase tracking-wider sm:tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.75)]">
           {caption}
         </figcaption>
       ) : null}

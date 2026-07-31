@@ -84,16 +84,24 @@ export function EspacePraticienNav({ items, variant }: EspacePraticienNavProps) 
   return (
     <nav
       aria-label="Navigation praticien (mobile)"
-      className="flex md:hidden items-center gap-5 overflow-x-auto pb-3 pt-1 -mx-6 px-6"
+      className={cn(
+        "scroll-rail flex md:hidden items-stretch gap-1 overflow-x-auto pb-2",
+        // Le rail saigne jusqu'aux bords de l'écran mais réaligne son premier
+        // et son dernier élément sur la gouttière du Container.
+        "-mx-4 px-4 sm:-mx-6 sm:px-6",
+      )}
     >
       {flattenNav(items).map((item) => (
         <Link
           key={item.href}
           href={item.href}
+          aria-current={
+            isHrefActive(pathname, searchParams, item.href) ? "page" : undefined
+          }
           className={cn(
-            "text-xs transition-colors whitespace-nowrap",
+            "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-3 text-sm transition-colors",
             isHrefActive(pathname, searchParams, item.href)
-              ? "text-[var(--ink)]"
+              ? "text-[var(--ink)] shadow-[inset_0_-2px_0_var(--accent)]"
               : "text-[var(--ink-muted)] hover:text-[var(--ink)]",
           )}
         >

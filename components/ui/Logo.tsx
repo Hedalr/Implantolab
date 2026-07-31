@@ -49,7 +49,11 @@ export function Logo({
       href={href}
       onClick={handleClick}
       aria-label={`${site.name} — Accueil`}
-      className={cn("inline-flex items-center gap-2.5 group", color, className)}
+      className={cn(
+        "inline-flex min-h-11 items-center gap-2.5 group",
+        color,
+        className,
+      )}
     >
       <Image
         src={markSrc}
