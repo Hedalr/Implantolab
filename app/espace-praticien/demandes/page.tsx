@@ -477,8 +477,8 @@ function CategoryBadge({ category }: { category: string }) {
       className={cn(
         "inline-flex items-center gap-2 border px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] shrink-0 self-start",
         isUrgent
-          ? "border-[var(--accent-warm)] text-[var(--accent-warm)]"
-          : "border-[var(--line-strong)] text-[var(--ink)]",
+          ? "border-red-500 bg-red-500/10 text-red-700"
+          : "border-amber-500 bg-amber-500/10 text-amber-700",
       )}
     >
       {label}

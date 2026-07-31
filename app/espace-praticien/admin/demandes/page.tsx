@@ -344,10 +344,10 @@ function CategoryBadge({ category }: { category: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 text-[10px] tracking-widest uppercase",
+        "inline-flex items-center px-2 py-0.5 text-[10px] tracking-widest uppercase border",
         isUrgent
-          ? "bg-[var(--accent-warm)]/10 text-[var(--accent-warm)]"
-          : "bg-[var(--ink-discreet)]/10 text-[var(--ink-discreet)]",
+          ? "border-red-500 bg-red-500/10 text-red-700"
+          : "border-amber-500 bg-amber-500/10 text-amber-700",
       )}
     >
       {formatRequestCategory(category)}
