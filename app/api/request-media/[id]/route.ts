@@ -1,76 +1,67 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sanitizeDownloadFilename } from "@/lib/requests/media-security";
-import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import {
+  isMediaId,
+  loadAccessibleMedia,
+  signMediaUrl,
+} from "@/lib/requests/request-media-access";
+import { getServerSupabase, getSessionUser } from "@/lib/supabase/server";
 
 /**
  * Redirige vers une signed URL du bucket privé `request-media`, pour
- * afficher les photos jointes à une demande praticien.
+ * afficher ou télécharger les photos jointes à une demande praticien.
  *
- * Les policies RLS sur `storage.objects` vérifient déjà que l'utilisateur
- * a le droit de voir ce fichier (sa propre demande, un admin, ou un
- * prothésiste du secteur concerné).
+ * Les policies RLS sur `request_media` / `storage.objects` vérifient déjà
+ * que l'utilisateur a le droit de voir ce fichier.
  */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-// L'URL signée n'a besoin de vivre que le temps de la redirection : passé ce
-// délai, une URL qui aurait fuité ne donne plus accès à la photo patient.
-const SIGNED_URL_TTL_SEC = 60;
-const REQUEST_MEDIA_BUCKET = "request-media";
-
-function isExpectedStoragePath(requestId: string, storagePath: string): boolean {
-  return (
-    storagePath.startsWith(`requests/${requestId}/`) &&
-    !storagePath.includes("\\") &&
-    !storagePath.split("/").includes("..")
-  );
-}
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  await requireUser();
+  if (!isMediaId(id)) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
 
   const supabase = await getServerSupabase();
-  const { data: media, error } = await supabase
-    .from("request_media")
-    .select("id, request_id, storage_bucket, storage_path, original_filename")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error || !media) {
+  const [media] = await loadAccessibleMedia(supabase, [id]);
+  if (!media) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const requestId = media.request_id as string;
-  const storagePath = media.storage_path as string;
-  if (
-    media.storage_bucket !== REQUEST_MEDIA_BUCKET ||
-    !isExpectedStoragePath(requestId, storagePath)
-  ) {
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
-  }
+  const wantsDownload = request.nextUrl.searchParams.get("download") === "1";
+  const variant =
+    !wantsDownload && request.nextUrl.searchParams.get("variant") === "thumb"
+      ? "thumb"
+      : "full";
 
-  const { data: signed, error: signErr } = await supabase.storage
-    .from(REQUEST_MEDIA_BUCKET)
-    .createSignedUrl(storagePath, SIGNED_URL_TTL_SEC, {
-      download: request.nextUrl.searchParams.get("download") === "1"
-        ? sanitizeDownloadFilename(
-            media.original_filename as string | null,
-            "photo",
-          )
-        : undefined,
-    });
+  const signedUrl = await signMediaUrl(supabase, media.storage_path, {
+    variant,
+    download: wantsDownload
+      ? sanitizeDownloadFilename(media.original_filename, "photo")
+      : undefined,
+  });
 
-  if (signErr || !signed?.signedUrl) {
-    console.error("[request-media] échec signature:", signErr?.message ?? "unknown");
+  if (!signedUrl) {
+    console.error("[request-media] échec signature");
     return NextResponse.json({ error: "signing_failed" }, { status: 500 });
   }
 
-  const response = NextResponse.redirect(signed.signedUrl, { status: 302 });
-  response.headers.set("Cache-Control", "private, no-store");
+  const response = NextResponse.redirect(signedUrl, { status: 302 });
+  // Vignettes : petit cache navigateur sous le TTL, pour éviter de re-signer
+  // à chaque ouverture de lightbox sur la même page.
+  response.headers.set(
+    "Cache-Control",
+    variant === "thumb" ? "private, max-age=30" : "private, no-store",
+  );
   return response;
 }

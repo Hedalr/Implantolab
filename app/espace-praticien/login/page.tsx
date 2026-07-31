@@ -5,6 +5,8 @@ import {
 } from "@/components/auth/authFormStyles";
 import { signIn } from "./actions";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { buildMailtoHref } from "@/lib/mailto";
+import { site } from "@/content/fr/site";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +23,10 @@ export default async function LoginPage({
   const configError = params.error === "config" || !configured;
   const credentialsError = params.error === "1";
   const inviteError = params.error === "invite";
+  const forgotPasswordHref = buildMailtoHref({
+    to: site.contact.email,
+    subject: "Mot de passe oublié",
+  });
 
   return (
     <div className="mx-auto max-w-md py-10">
@@ -41,17 +47,17 @@ export default async function LoginPage({
           <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
             Contactez le laboratoire au{" "}
             <a
-              href="tel:+33967359779"
+              href={`tel:${site.contact.phone}`}
               className="underline decoration-[var(--line-strong)] hover:decoration-[var(--ink)]"
             >
-              09 67 35 97 79
+              {site.contact.phoneDisplay}
             </a>{" "}
             ou à{" "}
             <a
-              href="mailto:contact@implantolab.fr"
+              href={buildMailtoHref({ to: site.contact.email })}
               className="underline decoration-[var(--line-strong)] hover:decoration-[var(--ink)]"
             >
-              contact@implantolab.fr
+              {site.contact.email}
             </a>{" "}
             pour obtenir vos accès.
           </p>
@@ -122,7 +128,7 @@ export default async function LoginPage({
             </button>
 
             <Link
-              href="mailto:contact@implantolab.fr?subject=Mot%20de%20passe%20oubli%C3%A9"
+              href={forgotPasswordHref}
               className="text-xs text-[var(--ink-muted)] hover:text-[var(--ink)] underline decoration-[var(--line-strong)] hover:decoration-[var(--ink)]"
             >
               Mot de passe oublié ?

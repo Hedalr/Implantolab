@@ -1,7 +1,10 @@
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { PageHero } from "@/components/sections/PageHero";
-import { ContactForm } from "@/components/sections/ContactForm";
+import {
+  ContactForm,
+  resolveContactSubject,
+} from "@/components/sections/ContactForm";
 import { home } from "@/content/fr/home";
 import { site } from "@/content/fr/site";
 import { pageMetadata } from "@/lib/metadata";
@@ -39,7 +42,13 @@ const jsonLd = {
   ],
 };
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sujet?: string }>;
+}) {
+  const { sujet } = await searchParams;
+  const defaultSubject = resolveContactSubject(sujet);
   const { eyebrow, title, description } = home.contact;
 
   return (
@@ -111,7 +120,11 @@ export default function ContactPage() {
             </Reveal>
 
             <Reveal delay={120} className="lg:col-span-7">
-              <ContactForm theme="light" />
+              <ContactForm
+                key={defaultSubject}
+                theme="light"
+                defaultSubject={defaultSubject}
+              />
             </Reveal>
           </div>
         </Container>
