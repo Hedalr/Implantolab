@@ -14,6 +14,11 @@ export const REQUEST_CATEGORIES = [
 
 export type RequestCategory = (typeof REQUEST_CATEGORIES)[number];
 
+/** Sujets de l'inbox admin / chef de secteur (Question + Urgence). */
+export const REQUEST_INBOX_SUBJECTS = ["Question", "Urgence"] as const;
+
+export const REQUEST_INBOX_LABEL = "Question/Urgence";
+
 export function isRequestCategory(value: string): value is RequestCategory {
   return (REQUEST_CATEGORIES as readonly string[]).includes(value);
 }

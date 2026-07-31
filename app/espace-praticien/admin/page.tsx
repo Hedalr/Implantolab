@@ -4,7 +4,11 @@ import {
   listAdminRequests,
   type AdminRequestRow,
 } from "@/lib/requests/queries";
-import { formatRequestCategory } from "@/lib/requests/types";
+import {
+  formatRequestCategory,
+  REQUEST_INBOX_LABEL,
+  REQUEST_INBOX_SUBJECTS,
+} from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
 
@@ -67,12 +71,18 @@ export default async function AdminDashboardPage() {
     supabase
       .from("requests")
       .select("id", { count: "exact", head: true })
-      .eq("status", "open"),
+      .eq("status", "open")
+      .in("subject", [...REQUEST_INBOX_SUBJECTS]),
     supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("role", "practitioner"),
-    listAdminRequests(supabase, { status: "all", page: 1, pageSize: 5 }),
+    listAdminRequests(supabase, {
+      status: "all",
+      page: 1,
+      pageSize: 5,
+      subjects: REQUEST_INBOX_SUBJECTS,
+    }),
     supabase
       .from("closure_periods")
       .select("id, start_date, end_date, note, profiles(full_name)")
@@ -111,7 +121,7 @@ export default async function AdminDashboardPage() {
           hint="Dentistes fermés dans les 7 jours"
         />
         <Kpi
-          label="Demandes ouvertes"
+          label={`${REQUEST_INBOX_LABEL} ouvertes`}
           value={openRequests}
           hint="À traiter par l'équipe"
         />
@@ -132,7 +142,7 @@ export default async function AdminDashboardPage() {
         />
         <ShortcutLink
           href="/espace-praticien/admin/demandes"
-          label="Demandes praticiens"
+          label={REQUEST_INBOX_LABEL}
         />
         <ShortcutLink
           href="/espace-praticien/admin/praticiens"
@@ -141,9 +151,12 @@ export default async function AdminDashboardPage() {
       </section>
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PanelCard title="Demandes récentes" href="/espace-praticien/admin/demandes">
+        <PanelCard
+          title={`${REQUEST_INBOX_LABEL} récentes`}
+          href="/espace-praticien/admin/demandes"
+        >
           {recentRequests.length === 0 ? (
-            <EmptyState label="Aucune demande pour le moment." />
+            <EmptyState label="Aucune question ou urgence pour le moment." />
           ) : (
             <ul className="divide-y divide-[var(--line)]">
               {recentRequests.map((r) => (

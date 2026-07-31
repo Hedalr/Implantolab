@@ -1,4 +1,5 @@
 import type { NavLink } from "@/content/fr/site";
+import { REQUEST_INBOX_LABEL } from "@/lib/requests/types";
 
 export type ProfileRole =
   | "practitioner"
@@ -12,9 +13,6 @@ export const SECTOR_LAB_ROLES = ["prosthetist", "chef_de_secteur"] as const;
 export type SectorLabRole = (typeof SECTOR_LAB_ROLES)[number];
 
 export type InviteRole = "practitioner" | SectorLabRole;
-
-/** Sujets délégués aux chefs de secteur (inbox dédiée). */
-export const CHEF_INBOX_SUBJECTS = ["Question", "Urgence"] as const;
 
 export function isSectorLabRole(role: ProfileRole): role is SectorLabRole {
   return (SECTOR_LAB_ROLES as readonly string[]).includes(role);
@@ -74,7 +72,7 @@ const adminNav: NavLink[] = [
       { href: "/espace-praticien/admin/conges", label: "Congés employés" },
     ],
   },
-  { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
+  { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
 ];
 
@@ -84,7 +82,7 @@ const prosthetistNav: NavLink[] = [
 ];
 
 const chefNav: NavLink[] = [
-  { href: "/espace-praticien/admin/demandes", label: "Demandes reçues" },
+  { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
   { href: "/espace-praticien/laboratoire", label: "Laboratoire" },
   { href: "/espace-praticien/conges", label: "Mes congés" },
 ];

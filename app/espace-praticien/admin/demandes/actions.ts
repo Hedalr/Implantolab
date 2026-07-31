@@ -6,7 +6,7 @@ import {
   getServerSupabase,
   requireAdminOrChef,
 } from "@/lib/supabase/server";
-import { CHEF_INBOX_SUBJECTS } from "@/lib/roles";
+import { REQUEST_INBOX_SUBJECTS } from "@/lib/requests/types";
 import { parseRequestStatusFilter } from "@/lib/requests/queries";
 
 function pickStatusRedirect(status: FormDataEntryValue | null): string {
@@ -35,7 +35,7 @@ async function updateRequestStatus(
     }
     update = update
       .eq("sector_id", profile.sectorId)
-      .in("subject", [...CHEF_INBOX_SUBJECTS]);
+      .in("subject", [...REQUEST_INBOX_SUBJECTS]);
   }
 
   const { data, error } = await update.select("id").maybeSingle();

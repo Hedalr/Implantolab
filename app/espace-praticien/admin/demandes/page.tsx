@@ -11,8 +11,11 @@ import {
   type AdminRequestRow,
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
-import { formatRequestCategory } from "@/lib/requests/types";
-import { CHEF_INBOX_SUBJECTS } from "@/lib/roles";
+import {
+  formatRequestCategory,
+  REQUEST_INBOX_LABEL,
+  REQUEST_INBOX_SUBJECTS,
+} from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
@@ -90,12 +93,8 @@ export default async function AdminRequestsPage({
     patientQuery: patientQuery || undefined,
     page,
     pageSize: LAB_REQUESTS_PAGE_SIZE,
-    ...(isChef
-      ? {
-          subjects: [...CHEF_INBOX_SUBJECTS],
-          sectorId: profile.sectorId ?? undefined,
-        }
-      : {}),
+    subjects: REQUEST_INBOX_SUBJECTS,
+    ...(isChef ? { sectorId: profile.sectorId ?? undefined } : {}),
   });
 
   const mediaByRequest = await fetchRequestMediaItems(
@@ -110,12 +109,12 @@ export default async function AdminRequestsPage({
           {isChef ? "Chef de secteur" : "Administration"}
         </p>
         <h1 className="mt-3 text-3xl md:text-4xl font-serif text-[var(--ink)]">
-          {isChef ? "Questions & urgences" : "Demandes praticiens"}
+          {REQUEST_INBOX_LABEL}
         </h1>
         <p className="mt-2 text-[var(--ink-muted)]">
           {isChef
             ? `Questions et urgences du secteur ${profile.sectorName ?? "assigné"}.`
-            : "Suivi et traitement des demandes envoyées par les dentistes partenaires."}
+            : "Questions et urgences envoyées par les dentistes partenaires."}
         </p>
       </header>
 
@@ -184,8 +183,8 @@ export default async function AdminRequestsPage({
         <div className="bg-[var(--bg-elevated)] border border-[var(--line)] p-10 text-center">
           <p className="text-sm text-[var(--ink-discreet)]">
             {patientQuery
-              ? `Aucune demande pour un patient commençant par « ${patientQuery} ».`
-              : "Aucune demande à afficher pour ce filtre."}
+              ? `Aucune question/urgence pour un patient commençant par « ${patientQuery} ».`
+              : "Aucune question ou urgence à afficher pour ce filtre."}
           </p>
         </div>
       ) : (
