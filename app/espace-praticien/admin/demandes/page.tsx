@@ -7,6 +7,7 @@ import {
   fetchRequestMediaItems,
   LAB_REQUESTS_PAGE_SIZE,
   listAdminRequests,
+  countUnreadByRequestIds,
   parseRequestStatusFilter,
   type AdminRequestRow,
   type RequestStatusFilter,
@@ -19,10 +20,9 @@ import {
 import { Container } from "@/components/ui/Container";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
-import {
-  RequestMediaGallery,
-  type RequestMediaItem,
-} from "@/components/requests/RequestMediaGallery";
+import { type RequestMediaItem } from "@/components/requests/RequestMediaGallery";
+import { UnreadBadge } from "@/components/requests/UnreadBadge";
+import { RequestChatDetails } from "@/components/requests/RequestChatDetails";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -100,6 +100,11 @@ export default async function AdminRequestsPage({
   const mediaByRequest = await fetchRequestMediaItems(
     supabase,
     requests.map((r) => r.id),
+  );
+  const unreadByRequest = await countUnreadByRequestIds(
+    supabase,
+    requests.map((r) => r.id),
+    profile.id,
   );
 
   return (
@@ -209,6 +214,8 @@ export default async function AdminRequestsPage({
                     row={r}
                     media={mediaByRequest.get(r.id) ?? []}
                     statusFilter={status}
+                    currentUserId={profile.id}
+                    unreadCount={unreadByRequest.get(r.id) ?? 0}
                   />
                 ))}
               </tbody>
@@ -281,10 +288,14 @@ function RequestRowView({
   row,
   media,
   statusFilter,
+  currentUserId,
+  unreadCount,
 }: {
   row: RequestRow;
   media: RequestMediaItem[];
   statusFilter: StatusFilter;
+  currentUserId: string;
+  unreadCount: number;
 }) {
   const practitionerLabel = row.creatorName ?? "—";
 
@@ -294,30 +305,26 @@ function RequestRowView({
         {dateTimeFormatter.format(new Date(row.created_at))}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
-        {practitionerLabel}
+        <span className="inline-flex items-center gap-2">
+          {practitionerLabel}
+          <UnreadBadge count={unreadCount} />
+        </span>
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
         {row.patientName ?? "—"}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)]">
         <CategoryBadge category={row.subject} />
-        <details className="group mt-2">
-          <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
-            <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
-              Voir le message
-              {media.length > 0
-                ? ` (${media.length} photo${media.length > 1 ? "s" : ""})`
-                : ""}
-            </span>
-            <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
-              Masquer
-            </span>
-          </summary>
-          <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--ink-muted)] max-w-2xl">
-            {row.message}
-          </p>
-          <RequestMediaGallery media={media} />
-        </details>
+        <RequestChatDetails
+          requestId={row.id}
+          currentUserId={currentUserId}
+          initialBody={row.message}
+          initialCreatedAt={row.created_at}
+          initialAuthorName={row.creatorName}
+          status={row.status}
+          media={media}
+          unreadCount={unreadCount}
+        />
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">
         {row.sectorName ?? "—"}

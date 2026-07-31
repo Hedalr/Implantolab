@@ -1,4 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  RealtimeChannel,
+  SupabaseClient,
+} from "@supabase/supabase-js";
 import type { RequestMediaItem } from "@/components/requests/RequestMediaGallery";
 import { firstRelation } from "@/lib/supabase/relation";
 import {
@@ -6,6 +9,8 @@ import {
   sortLabSectors,
   type LabSector,
 } from "@/lib/sectors";
+import type { RequestMessage } from "@/lib/requests/types";
+import { REQUEST_MESSAGE_MAX_LENGTH } from "@/lib/requests/types";
 
 export type AdminRequestRow = {
   id: string;
@@ -36,28 +41,34 @@ type RequestQueryRow = {
     | null;
 };
 
+async function resolveProfileNames(
+  supabase: SupabaseClient,
+  ids: string[],
+): Promise<Map<string, string>> {
+  const names = new Map<string, string>();
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return names;
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", unique);
+
+  for (const profile of profiles ?? []) {
+    const row = profile as { id: string; full_name: string | null };
+    if (row.full_name) names.set(row.id, row.full_name);
+  }
+  return names;
+}
+
 async function mapRequestRows(
   supabase: SupabaseClient,
   rows: RequestQueryRow[],
 ): Promise<AdminRequestRow[]> {
-  const creatorIds = [
-    ...new Set(rows.map((row) => row.created_by).filter(Boolean)),
-  ] as string[];
-
-  const profileNames = new Map<string, string>();
-  if (creatorIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", creatorIds);
-
-    for (const profile of profiles ?? []) {
-      const row = profile as { id: string; full_name: string | null };
-      if (row.full_name) {
-        profileNames.set(row.id, row.full_name);
-      }
-    }
-  }
+  const profileNames = await resolveProfileNames(
+    supabase,
+    rows.map((row) => row.created_by).filter((id): id is string => Boolean(id)),
+  );
 
   return rows.map((row) => {
     const sectorRow = firstRelation(row.sectors);
@@ -244,4 +255,181 @@ export async function fetchRequestMediaItems(
     grouped.set(row.request_id, list);
   }
   return grouped;
+}
+
+// ---------------------------------------------------------------------------
+// Chat Question / Urgence
+// ---------------------------------------------------------------------------
+
+type RequestMessageDbRow = {
+  id: string;
+  request_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+};
+
+async function mapRequestMessages(
+  supabase: SupabaseClient,
+  rows: RequestMessageDbRow[],
+): Promise<RequestMessage[]> {
+  const names = await resolveProfileNames(
+    supabase,
+    rows.map((row) => row.sender_id),
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    requestId: row.request_id,
+    senderId: row.sender_id,
+    senderName: names.get(row.sender_id) ?? null,
+    body: row.body,
+    createdAt: row.created_at,
+  }));
+}
+
+function mapRequestMessageRow(row: RequestMessageDbRow): RequestMessage {
+  return {
+    id: row.id,
+    requestId: row.request_id,
+    senderId: row.sender_id,
+    senderName: null,
+    body: row.body,
+    createdAt: row.created_at,
+  };
+}
+
+export async function listRequestMessages(
+  supabase: SupabaseClient,
+  requestId: string,
+): Promise<RequestMessage[]> {
+  const { data, error } = await supabase
+    .from("request_messages")
+    .select("id, request_id, sender_id, body, created_at")
+    .eq("request_id", requestId)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+  return mapRequestMessages(supabase, data as RequestMessageDbRow[]);
+}
+
+export async function sendRequestMessage(
+  supabase: SupabaseClient,
+  requestId: string,
+  senderId: string,
+  body: string,
+): Promise<{ message: RequestMessage | null; error: string | null }> {
+  const trimmed = body.trim();
+  if (trimmed.length < 1 || trimmed.length > REQUEST_MESSAGE_MAX_LENGTH) {
+    return {
+      message: null,
+      error: `Le message doit contenir entre 1 et ${REQUEST_MESSAGE_MAX_LENGTH} caractères.`,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("request_messages")
+    .insert({
+      request_id: requestId,
+      sender_id: senderId,
+      body: trimmed,
+    })
+    .select("id, request_id, sender_id, body, created_at")
+    .single();
+
+  if (error || !data) {
+    return {
+      message: null,
+      error: error?.message ?? "Impossible d’envoyer le message.",
+    };
+  }
+
+  const [mapped] = await mapRequestMessages(supabase, [
+    data as RequestMessageDbRow,
+  ]);
+  return { message: mapped ?? null, error: null };
+}
+
+export async function markRequestThreadRead(
+  supabase: SupabaseClient,
+  requestId: string,
+  profileId: string,
+): Promise<void> {
+  await supabase.from("request_thread_reads").upsert(
+    {
+      request_id: requestId,
+      profile_id: profileId,
+      last_read_at: new Date().toISOString(),
+    },
+    { onConflict: "request_id,profile_id" },
+  );
+}
+
+/**
+ * Compte les messages non lus (envoyés par quelqu’un d’autre) par demande.
+ */
+export async function countUnreadByRequestIds(
+  supabase: SupabaseClient,
+  requestIds: string[],
+  profileId: string,
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  for (const id of requestIds) counts.set(id, 0);
+  if (requestIds.length === 0) return counts;
+
+  const [{ data: messages }, { data: reads }] = await Promise.all([
+    supabase
+      .from("request_messages")
+      .select("request_id, created_at")
+      .in("request_id", requestIds)
+      .neq("sender_id", profileId),
+    supabase
+      .from("request_thread_reads")
+      .select("request_id, last_read_at")
+      .eq("profile_id", profileId)
+      .in("request_id", requestIds),
+  ]);
+
+  const lastRead = new Map<string, string>();
+  for (const row of reads ?? []) {
+    const r = row as { request_id: string; last_read_at: string };
+    lastRead.set(r.request_id, r.last_read_at);
+  }
+
+  for (const row of messages ?? []) {
+    const msg = row as { request_id: string; created_at: string };
+    const cutoff = lastRead.get(msg.request_id);
+    if (!cutoff || msg.created_at > cutoff) {
+      counts.set(msg.request_id, (counts.get(msg.request_id) ?? 0) + 1);
+    }
+  }
+
+  return counts;
+}
+
+export function subscribeRequestMessages(
+  supabase: SupabaseClient,
+  requestId: string,
+  onInsert: (message: RequestMessage) => void,
+): RealtimeChannel {
+  const channel = supabase
+    .channel(`request-messages:${requestId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "request_messages",
+        filter: `request_id=eq.${requestId}`,
+      },
+      (payload) => {
+        const row = payload.new as RequestMessageDbRow;
+        if (!row?.id) return;
+        // Pas de lookup profil ici : le client enrichit le nom via le fil déjà chargé.
+        onInsert(mapRequestMessageRow(row));
+      },
+    )
+    .subscribe();
+
+  return channel;
 }

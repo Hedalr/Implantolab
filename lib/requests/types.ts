@@ -48,3 +48,21 @@ export type RequestMedia = {
   originalFilename: string | null;
   createdAt: string;
 };
+
+/** True si le sujet ouvre un fil de discussion labo (inbox). */
+export function isRequestInboxSubject(
+  subject: string,
+): subject is (typeof REQUEST_INBOX_SUBJECTS)[number] {
+  return (REQUEST_INBOX_SUBJECTS as readonly string[]).includes(subject);
+}
+
+export type RequestMessage = {
+  id: string;
+  requestId: string;
+  senderId: string;
+  senderName: string | null;
+  body: string;
+  createdAt: string;
+};
+
+export const REQUEST_MESSAGE_MAX_LENGTH = 2000;

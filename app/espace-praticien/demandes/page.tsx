@@ -6,8 +6,10 @@ import { getServerSupabase, requireUser } from "@/lib/supabase/server";
 import {
   REQUEST_CATEGORIES,
   formatRequestCategory,
+  isRequestInboxSubject,
 } from "@/lib/requests/types";
 import {
+  countUnreadByRequestIds,
   fetchRequestMediaItems,
   listLabSectors,
 } from "@/lib/requests/queries";
@@ -15,6 +17,8 @@ import {
   RequestMediaGallery,
   type RequestMediaItem,
 } from "@/components/requests/RequestMediaGallery";
+import { RequestChatDetails } from "@/components/requests/RequestChatDetails";
+import { UnreadBadge } from "@/components/requests/UnreadBadge";
 import { createRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -96,10 +100,17 @@ export default async function DemandesPage({
   const openRows = rows.filter((r) => r.status === "open");
   const closedRows = rows.filter((r) => r.status === "closed");
 
-  const mediaByRequest = await fetchRequestMediaItems(
-    supabase,
-    rows.map((r) => r.id),
-  );
+  const chatRequestIds = rows
+    .filter((r) => isRequestInboxSubject(r.subject))
+    .map((r) => r.id);
+
+  const [mediaByRequest, unreadByRequest] = await Promise.all([
+    fetchRequestMediaItems(
+      supabase,
+      rows.map((r) => r.id),
+    ),
+    countUnreadByRequestIds(supabase, chatRequestIds, userId),
+  ]);
 
   return (
     <Container size="wide" className="py-12 md:py-16">
@@ -236,7 +247,12 @@ export default async function DemandesPage({
             <ul className="flex flex-col gap-4">
               {openRows.map((row) => (
                 <li key={row.id}>
-                  <RequestCard row={row} media={mediaByRequest.get(row.id) ?? []} />
+                  <RequestCard
+                    row={row}
+                    media={mediaByRequest.get(row.id) ?? []}
+                    currentUserId={userId}
+                    unreadCount={unreadByRequest.get(row.id) ?? 0}
+                  />
                 </li>
               ))}
             </ul>
@@ -250,27 +266,37 @@ export default async function DemandesPage({
               title="Demandes traitées"
               count={closedRows.length}
             />
-            <Card>
-              <ul className="flex flex-col divide-y divide-[var(--line)]">
-                {closedRows.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex flex-col gap-2 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 text-sm"
-                  >
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-[var(--ink-discreet)] tabular-nums">
-                        {formatShortDate(row.created_at)}
-                      </span>
-                      <span className="text-[var(--ink)]">
-                        {formatRequestCategory(row.subject)}
-                        {row.patient_name ? ` · ${row.patient_name}` : ""}
-                      </span>
-                    </div>
-                    <StatusBadge status="closed" />
+            <ul className="flex flex-col gap-4">
+              {closedRows.map((row) =>
+                isRequestInboxSubject(row.subject) ? (
+                  <li key={row.id}>
+                    <RequestCard
+                      row={row}
+                      media={mediaByRequest.get(row.id) ?? []}
+                      currentUserId={userId}
+                      unreadCount={unreadByRequest.get(row.id) ?? 0}
+                    />
                   </li>
-                ))}
-              </ul>
-            </Card>
+                ) : (
+                  <li key={row.id}>
+                    <Card>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 text-sm">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-[var(--ink-discreet)] tabular-nums">
+                            {formatShortDate(row.created_at)}
+                          </span>
+                          <span className="text-[var(--ink)]">
+                            {formatRequestCategory(row.subject)}
+                            {row.patient_name ? ` · ${row.patient_name}` : ""}
+                          </span>
+                        </div>
+                        <StatusBadge status="closed" />
+                      </div>
+                    </Card>
+                  </li>
+                ),
+              )}
+            </ul>
           </section>
         ) : null}
       </div>
@@ -385,10 +411,16 @@ function SectionHeading({
 function RequestCard({
   row,
   media,
+  currentUserId,
+  unreadCount = 0,
 }: {
   row: RequestRow;
   media: RequestMediaItem[];
+  currentUserId: string;
+  unreadCount?: number;
 }) {
+  const showChat = isRequestInboxSubject(row.subject);
+
   return (
     <article className="bg-[var(--bg-elevated)] border border-[var(--line)] p-6 md:p-7">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
@@ -404,6 +436,7 @@ function RequestCard({
                 color={row.sectors.color}
               />
             ) : null}
+            <UnreadBadge count={unreadCount} />
           </div>
           {row.patient_name ? (
             <p className="text-sm text-[var(--ink)]">
@@ -413,10 +446,25 @@ function RequestCard({
         </div>
         <StatusBadge status={row.status} />
       </header>
-      <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed whitespace-pre-line">
-        {row.message}
-      </p>
+      {!showChat ? (
+        <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed whitespace-pre-line">
+          {row.message}
+        </p>
+      ) : null}
       <RequestMediaGallery media={media} />
+      {showChat ? (
+        <RequestChatDetails
+          requestId={row.id}
+          currentUserId={currentUserId}
+          initialBody={row.message}
+          initialCreatedAt={row.created_at}
+          initialAuthorName="Vous"
+          status={row.status}
+          unreadCount={unreadCount}
+          className="group mt-5"
+          compact={false}
+        />
+      ) : null}
     </article>
   );
 }
