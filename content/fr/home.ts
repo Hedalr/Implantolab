@@ -223,7 +223,7 @@ export const home = {
       {
         title: "Contact",
         description:
-          "Devis, envoi de cas, question technique : notre équipe vous répond sous 1 jour ouvré.",
+          "Devis ou question technique : notre équipe vous répond sous 1 jour ouvré.",
         cta: { label: "Nous écrire", href: "/contact" },
         tone: "warm" as const,
       },

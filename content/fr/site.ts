@@ -126,7 +126,6 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     links: [
       { label: "Espace praticien", href: "/espace-praticien" },
       { label: "Demander un devis", href: "/contact?sujet=devis" },
-      { label: "Envoyer un cas", href: "/contact?sujet=cas" },
       { label: "Question technique", href: "/contact?sujet=technique" },
     ],
   },

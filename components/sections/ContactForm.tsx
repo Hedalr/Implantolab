@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/cn";
+import {
+  CONTACT_SUBJECTS,
+  type ContactSubject,
+} from "@/lib/contact-subjects";
 import { buildMailtoBody, buildMailtoHref, readFormText } from "@/lib/mailto";
 import { site } from "@/content/fr/site";
 import { UnderlineField } from "@/components/ui/UnderlineField";
@@ -10,49 +14,15 @@ import { UnderlineField } from "@/components/ui/UnderlineField";
 type ContactFormProps = {
   theme?: "light" | "dark";
   compact?: boolean;
-  /** Libellé présélectionné (ex. depuis `?sujet=`). */
-  defaultSubject?: string;
+  defaultSubject?: ContactSubject;
 };
-
-/** Le libellé sert à la fois d'option et d'objet de l'email : une seule source. */
-export const CONTACT_SUBJECTS = [
-  "Catalogue & tarifs",
-  "Demande de rendez-vous",
-  "Demande de devis",
-  "Envoyer un cas",
-  "Question technique",
-  "Autre",
-] as const;
-
-export type ContactSubject = (typeof CONTACT_SUBJECTS)[number];
-
-/** Slugs utilisés dans les liens internes (`/contact?sujet=…`). */
-const SUBJECT_SLUGS: Record<string, ContactSubject> = {
-  catalogue: "Catalogue & tarifs",
-  rdv: "Demande de rendez-vous",
-  devis: "Demande de devis",
-  cas: "Envoyer un cas",
-  technique: "Question technique",
-  autre: "Autre",
-};
-
-export function resolveContactSubject(
-  slugOrLabel: string | null | undefined,
-): ContactSubject {
-  if (!slugOrLabel) return CONTACT_SUBJECTS[0];
-  const fromSlug = SUBJECT_SLUGS[slugOrLabel.toLowerCase()];
-  if (fromSlug) return fromSlug;
-  const exact = CONTACT_SUBJECTS.find((s) => s === slugOrLabel);
-  return exact ?? CONTACT_SUBJECTS[0];
-}
 
 export function ContactForm({
   theme = "light",
   compact = false,
-  defaultSubject,
+  defaultSubject = CONTACT_SUBJECTS[0],
 }: ContactFormProps) {
   const [opened, setOpened] = useState(false);
-  const initialSubject = resolveContactSubject(defaultSubject);
 
   const dark = theme === "dark";
 
@@ -101,7 +71,7 @@ export function ContactForm({
       labelClass={labelBase}
       fieldClass={fieldBase}
       as="select"
-      defaultValue={initialSubject}
+      defaultValue={defaultSubject}
     >
       {CONTACT_SUBJECTS.map((subject) => (
         <option key={subject} value={subject}>

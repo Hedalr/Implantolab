@@ -1,12 +1,10 @@
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { PageHero } from "@/components/sections/PageHero";
-import {
-  ContactForm,
-  resolveContactSubject,
-} from "@/components/sections/ContactForm";
+import { ContactForm } from "@/components/sections/ContactForm";
 import { home } from "@/content/fr/home";
 import { site } from "@/content/fr/site";
+import { resolveContactSubject } from "@/lib/contact-subjects";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata({

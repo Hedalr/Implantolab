@@ -75,7 +75,7 @@ export const implantologie: SimplePageContent = {
     title: "Vous avez un cas implantaire à adresser ?",
     description:
       "Décrivez-nous votre cas en quelques lignes : nous revenons rapidement vers vous avec une proposition technique et un délai.",
-    primary: { label: "Envoyer un cas", href: "/contact?sujet=cas" },
+    primary: { label: "Question technique", href: "/contact?sujet=technique" },
     secondary: { label: "Demander un devis", href: "/contact?sujet=devis" },
   },
 };
@@ -318,7 +318,7 @@ export const casCliniques: SimplePageContent = {
     title: "Un cas similaire à discuter ?",
     description:
       "Contactez-nous pour échanger sur votre cas et identifier la solution prothétique la plus adaptée.",
-    primary: { label: "Discuter d’un cas", href: "/contact?sujet=cas" },
+    primary: { label: "Discuter d’un cas", href: "/contact?sujet=technique" },
   },
 };
 

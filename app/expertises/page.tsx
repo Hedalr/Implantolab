@@ -10,6 +10,7 @@ import {
   protheses,
   fluxNumerique,
 } from "@/content/fr/pages";
+import { contactHref } from "@/lib/contact-subjects";
 import { pageMetadata } from "@/lib/metadata";
 
 const pageIntro = {
@@ -148,10 +149,13 @@ export default function ExpertisesPage() {
           title: "Un cas à discuter avec notre équipe technique ?",
           description:
             "Décrivez-nous votre indication clinique : nous revenons rapidement vers vous avec une proposition adaptée et un délai.",
-          primary: { label: "Envoyer un cas", href: "/contact?sujet=cas" },
+          primary: {
+            label: "Question technique",
+            href: contactHref("technique"),
+          },
           secondary: {
             label: "Demander un devis",
-            href: "/contact?sujet=devis",
+            href: contactHref("devis"),
           },
         }}
       />
