@@ -1,5 +1,8 @@
 import type { NavLink } from "@/content/fr/site";
-import { REQUEST_INBOX_LABEL } from "@/lib/requests/types";
+import {
+  MODIFICATION_PROTHESE_CATEGORY,
+  REQUEST_INBOX_LABEL,
+} from "@/lib/requests/types";
 import type { LabSector } from "@/lib/sectors";
 
 export type ProfileRole =
@@ -80,6 +83,10 @@ function buildAdminNav(sectors: LabSector[] = []): NavLink[] {
       ],
     },
     { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
+    {
+      href: "/espace-praticien/admin/modifications-prothese",
+      label: MODIFICATION_PROTHESE_CATEGORY,
+    },
     {
       href: "/espace-praticien/laboratoire",
       label: "Laboratoire",

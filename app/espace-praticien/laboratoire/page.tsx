@@ -8,7 +8,10 @@ import {
   parseRequestStatusFilter,
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
-import { formatRequestCategory } from "@/lib/requests/types";
+import {
+  formatRequestCategory,
+  LAB_EXCLUDED_SUBJECTS,
+} from "@/lib/requests/types";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
 import { Badge } from "./Badge";
@@ -83,6 +86,8 @@ export default async function LaboratoireIndex({
       patientQuery: patientQuery || undefined,
       page,
       pageSize: LAB_REQUESTS_PAGE_SIZE,
+      // Traitées par email / impression d'étiquette — rubrique admin dédiée.
+      excludeSubjects: LAB_EXCLUDED_SUBJECTS,
     });
 
   const activeSector = sectors.find((s) => s.id === sectorFilter) ?? null;

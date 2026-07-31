@@ -28,9 +28,13 @@ export function isRequestCategory(value: string): value is RequestCategory {
  * "Modifications prothèse" (qui déclenche à son tour l'impression d'une
  * étiquette côté laboratoire via une règle Outlook).
  * Voir `lib/email/prothese-notification.ts`.
+ * Exclue du Laboratoire ; consultable uniquement dans l'espace admin.
  */
 export const MODIFICATION_PROTHESE_CATEGORY: RequestCategory =
   "Modifications prothèse";
+
+/** Sujets exclus des listes Laboratoire (email / impression d'étiquette). */
+export const LAB_EXCLUDED_SUBJECTS = [MODIFICATION_PROTHESE_CATEGORY] as const;
 
 /** Affiche les catégories, y compris l'ancienne valeur "Demande". */
 export function formatRequestCategory(subject: string): string {
