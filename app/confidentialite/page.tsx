@@ -72,11 +72,9 @@ export default function ConfidentialitePage() {
                 tiers lors de leur chargement.
               </p>
               <p>
-                Le pied de page propose une carte Google Maps chargée uniquement
-                après un clic explicite (« Afficher la carte »). Tant que vous
-                ne cliquez pas, aucune requête n’est envoyée à Google. Vous
-                pouvez aussi ouvrir l’adresse dans Google Maps via un lien
-                externe.
+                Le pied de page propose une carte Google Maps embarquée. Son
+                chargement peut entraîner l’envoi de données techniques à Google
+                et le dépôt de cookies tiers par Google Maps.
               </p>
             </Block>
 
@@ -273,10 +271,10 @@ export default function ConfidentialitePage() {
                 d’audience tierce n’est utiliséé par Implantolab.
               </p>
               <p>
-                Si vous choisissez d’afficher la carte, Google Maps peut déposer
-                ses propres cookies tiers (voir section 1). Un cookie technique
-                httpOnly peut aussi mémoriser un filtre de recherche patient
-                dans l’espace praticien, sans jamais placer ce nom dans l’URL.
+                Google Maps peut déposer ses propres cookies tiers via la carte
+                du pied de page (voir section 1). Un cookie technique httpOnly
+                peut aussi mémoriser un filtre de recherche patient dans
+                l’espace praticien, sans jamais placer ce nom dans l’URL.
               </p>
             </Block>
 
