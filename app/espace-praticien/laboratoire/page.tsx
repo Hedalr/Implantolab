@@ -10,7 +10,7 @@ import {
 } from "@/lib/requests/queries";
 import {
   formatRequestCategory,
-  LAB_EXCLUDED_SUBJECTS,
+  LAB_SUBJECTS,
 } from "@/lib/requests/types";
 import { getPatientFilter } from "@/lib/requests/patient-filter";
 import { PatientSearchForm } from "@/components/requests/PatientSearchForm";
@@ -86,8 +86,7 @@ export default async function LaboratoireIndex({
       patientQuery: patientQuery || undefined,
       page,
       pageSize: LAB_REQUESTS_PAGE_SIZE,
-      // Traitées par email / impression d'étiquette — rubrique admin dédiée.
-      excludeSubjects: LAB_EXCLUDED_SUBJECTS,
+      subjects: LAB_SUBJECTS,
     });
 
   const activeSector = sectors.find((s) => s.id === sectorFilter) ?? null;
@@ -108,9 +107,9 @@ export default async function LaboratoireIndex({
         </h1>
         <p className="text-sm md:text-base text-[var(--ink-muted)] leading-relaxed">
           {isAdmin
-            ? "Vue consolidée des demandes envoyées par les dentistes, organisée par secteur de production."
+            ? "Infos complémentaires par secteur de production. Les questions et urgences sont dans leur rubrique dédiée."
             : profile.sectorName
-              ? `Demandes adressées au secteur ${profile.sectorName}.`
+              ? `Infos complémentaires adressées au secteur ${profile.sectorName}.`
               : "Aucun secteur n’est encore rattaché à votre compte. Contactez un administrateur."}
         </p>
       </header>
@@ -203,10 +202,7 @@ export default async function LaboratoireIndex({
                           ) : null}
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge
-                            label={formatRequestCategory(r.subject)}
-                            warm={r.subject === "Urgence"}
-                          />
+                          <Badge label={formatRequestCategory(r.subject)} />
                           {r.sectorName ? (
                             <Badge
                               label={r.sectorName}

@@ -123,8 +123,6 @@ export type LabRequestFilters = {
   patientQuery?: string;
   /** Filtre optionnel sur les sujets (ex. inbox Question/Urgence). */
   subjects?: readonly string[];
-  /** Exclut certains sujets (ex. Modifications prothèse hors labo). */
-  excludeSubjects?: readonly string[];
   /** Page 1-indexée. */
   page?: number;
   pageSize?: number;
@@ -164,11 +162,6 @@ export async function listLabRequests(
   }
   if (filters.subjects && filters.subjects.length > 0) {
     query = query.in("subject", [...filters.subjects]);
-  }
-  if (filters.excludeSubjects && filters.excludeSubjects.length > 0) {
-    for (const subject of filters.excludeSubjects) {
-      query = query.neq("subject", subject);
-    }
   }
   if (patientQuery) {
     // Recherche par début de nom patient (ex. "dup" → "Dupont").

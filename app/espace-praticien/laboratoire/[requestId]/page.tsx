@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 import {
   fetchRequestMediaItems,
   getLabRequestById,
 } from "@/lib/requests/queries";
-import { formatRequestCategory } from "@/lib/requests/types";
+import {
+  formatRequestCategory,
+  isLabSubject,
+  isRequestInboxSubject,
+  MODIFICATION_PROTHESE_CATEGORY,
+} from "@/lib/requests/types";
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "../Badge";
@@ -35,13 +40,28 @@ export default async function LabRequestDetailPage({
   params: Promise<{ requestId: string }>;
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
-  await requireLaboStaff();
+  const { profile } = await requireLaboStaff();
   const { requestId } = await params;
   const { ok, error } = await searchParams;
 
   const supabase = await getServerSupabase();
   const request = await getLabRequestById(supabase, requestId);
   if (!request) notFound();
+
+  if (!isLabSubject(request.subject)) {
+    const canOpenInbox =
+      profile.role === "admin" || profile.role === "chef_de_secteur";
+    if (canOpenInbox && isRequestInboxSubject(request.subject)) {
+      redirect(`/espace-praticien/admin/demandes/${requestId}`);
+    }
+    if (
+      profile.role === "admin" &&
+      request.subject === MODIFICATION_PROTHESE_CATEGORY
+    ) {
+      redirect("/espace-praticien/admin/modifications-prothese");
+    }
+    redirect("/espace-praticien/laboratoire");
+  }
 
   const mediaByRequest = await fetchRequestMediaItems(supabase, [requestId]);
   const media = mediaByRequest.get(requestId) ?? [];
@@ -92,10 +112,7 @@ export default async function LabRequestDetailPage({
           {dateTimeFormatter.format(new Date(request.created_at))}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Badge
-            label={formatRequestCategory(request.subject)}
-            warm={request.subject === "Urgence"}
-          />
+          <Badge label={formatRequestCategory(request.subject)} />
           {request.sectorName ? (
             <Badge label={request.sectorName} color={request.sectorColor} />
           ) : null}
