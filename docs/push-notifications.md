@@ -9,6 +9,7 @@ Ce guide complète l’implémentation code (Expo Push + webhooks Supabase / Not
 | Nouvelle demande `Question` / `Urgence` | Tous les `admin` + `chef_de_secteur` du même `sector_id` |
 | Réponse sur un fil Question / Urgence | Le praticien propriétaire (si l’expéditeur n’est pas lui) |
 | Actualité Notion `Publié` = true | Tous les `practitioner` |
+| Annonce admin (espace admin → Annonces) | Tous les `practitioner` |
 
 ## Variables d’environnement (site Next.js / Vercel)
 
@@ -77,9 +78,12 @@ uniquement si `Publié` = true et que la page n’a pas déjà été notifiée
 
 ## 4. Migration SQL
 
-Fichier : `supabase/migrations/20260805120000_push_tokens.sql`
+Fichiers :
 
-Tables : `push_tokens` (RLS owner), `push_actualite_sent` (service_role).
+- `supabase/migrations/20260805120000_push_tokens.sql` — `push_tokens` (RLS owner), `push_actualite_sent` (service_role)
+- `supabase/migrations/20260805140000_admin_announcements.sql` — `admin_announcements` (admin CRUD, praticiens SELECT si non expiré)
+
+Les annonces admin sont envoyées **depuis la Server Action** (pas de webhook `pg_net`) : insert + `notifyAdminAnnouncement`.
 
 ## 5. Test rapide
 
@@ -88,3 +92,4 @@ Tables : `push_tokens` (RLS owner), `push_actualite_sent` (service_role).
 3. Créer une demande Question depuis un autre compte → notif admin / chef.
 4. Répondre depuis l’admin → notif praticien.
 5. Cocher `Publié` sur une actu Notion → notif praticiens.
+6. Admin → Annonces → envoyer un message → notif praticiens + onglet Annonces dans l’app.

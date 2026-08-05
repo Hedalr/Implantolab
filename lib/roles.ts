@@ -83,6 +83,7 @@ function buildAdminNav(sectors: LabSector[] = []): NavLink[] {
         { href: "/espace-praticien/admin/conges", label: "Congés employés" },
       ],
     },
+    { href: "/espace-praticien/admin/annonces", label: "Annonces" },
     { href: "/espace-praticien/admin/demandes", label: REQUEST_INBOX_LABEL },
     {
       href: "/espace-praticien/admin/modifications-prothese",

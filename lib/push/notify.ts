@@ -67,15 +67,10 @@ export async function notifyRequestReply(
     const tokens = await getRequestOwnerTokens(request.profile_id);
     if (tokens.length === 0) return;
 
-    const excerpt =
-      message.body.length > 120
-        ? `${message.body.slice(0, 117)}…`
-        : message.body;
-
     await sendExpoPushMessages(
       tokensToMessages(tokens, {
         title: `Réponse à votre ${request.subject}`,
-        body: excerpt,
+        body: pushExcerpt(message.body),
         data: { type: "request_reply", requestId: request.id },
       }),
     );
@@ -122,5 +117,30 @@ export async function notifyNewActualite(input: {
   } catch (error) {
     console.error("[push/notify] new actualite", error);
     return false;
+  }
+}
+
+function pushExcerpt(text: string, max = 120): string {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 3)}…`;
+}
+
+export async function notifyAdminAnnouncement(input: {
+  title: string;
+  body: string;
+}): Promise<void> {
+  try {
+    const tokens = await getAllPractitionerTokens();
+    if (tokens.length === 0) return;
+
+    await sendExpoPushMessages(
+      tokensToMessages(tokens, {
+        title: input.title,
+        body: pushExcerpt(input.body),
+        data: { type: "admin_announcement" },
+      }),
+    );
+  } catch (error) {
+    console.error("[push/notify] admin announcement", error);
   }
 }

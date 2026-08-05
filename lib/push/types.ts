@@ -1,7 +1,11 @@
 export type PushPlatform = "ios" | "android";
 
 export type PushNotificationData = {
-  type: "new_request" | "request_reply" | "new_actualite";
+  type:
+    | "new_request"
+    | "request_reply"
+    | "new_actualite"
+    | "admin_announcement";
   requestId?: string;
 };
 
