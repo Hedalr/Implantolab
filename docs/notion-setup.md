@@ -129,6 +129,21 @@ les paramètres du projet, pour les environnements **Preview** et
 Le site se met à jour automatiquement sous **10 minutes** (durée du cache
 ISR). Pour forcer une régénération immédiate, redéployer le site.
 
+### Notifications push (app mobile)
+
+Quand `Publié` est coché, un **webhook Notion** peut notifier tous les
+praticiens sur l’app mobile. Configuration détaillée :
+[push-notifications.md](./push-notifications.md).
+
+En résumé :
+
+1. Créer un abonnement webhook Notion pointant vers
+   `https://<domaine>/api/webhooks/notion` (events `page.properties_updated`).
+2. Coller le `verification_token` reçu dans Notion **et** dans
+   `NOTION_WEBHOOK_SECRET` (Vercel).
+3. S’assurer que `PUSH_WEBHOOK_SECRET` + webhooks Supabase sont aussi en place
+   pour les demandes Question / Urgence.
+
 ### Images — comportement automatique
 
 Les fichiers téléversés dans Notion ont des URL signées qui expirent

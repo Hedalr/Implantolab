@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { assertBearerSecret } from "@/lib/api/assert-bearer-secret";
 import { isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { purgeRequestMediaStorage } from "@/lib/requests/purge-request-media";
 
@@ -10,18 +11,8 @@ import { purgeRequestMediaStorage } from "@/lib/requests/purge-request-media";
  * Sécurité : header `Authorization: Bearer ${CRON_SECRET}` (Vercel Cron).
  */
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return NextResponse.json(
-      { error: "CRON_SECRET manquant" },
-      { status: 500 },
-    );
-  }
-
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = assertBearerSecret(request, "CRON_SECRET");
+  if (authError) return authError;
 
   if (!isServiceRoleConfigured()) {
     return NextResponse.json(
