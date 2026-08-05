@@ -26,8 +26,7 @@ export async function POST(request: Request) {
   // Handshake : coller le token dans Notion et NOTION_WEBHOOK_SECRET.
   if (typeof body.verification_token === "string" && body.verification_token) {
     console.info(
-      "[webhooks/notion] verification_token=",
-      body.verification_token,
+      "[webhooks/notion] verification_token reçu — abonnement à vérifier dans Notion.",
     );
     return NextResponse.json({ ok: true });
   }
