@@ -53,8 +53,9 @@ export function deleteOkKey(role: string): string {
 }
 
 const practitionerNav: NavLink[] = [
-  { href: "/espace-praticien/fermetures", label: "Mes fermetures" },
   { href: "/espace-praticien/demandes", label: "Demandes" },
+  { href: "/espace-praticien/fermetures", label: "Fermetures" },
+  { href: "/espace-praticien/actualites", label: "Actualités" },
 ];
 
 function buildAdminNav(sectors: LabSector[] = []): NavLink[] {

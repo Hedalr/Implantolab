@@ -12,7 +12,7 @@ import {
 import { addClosurePeriod, deleteClosurePeriod } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Mes fermetures — Espace praticien",
+  title: "Fermetures — Espace praticien",
   robots: { index: false, follow: false },
 };
 
@@ -66,7 +66,7 @@ export default async function FermeturesPage({
   return (
     <Container size="wide" className="py-12 md:py-16">
       <PageHeader
-        title="Mes fermetures"
+        title="Fermetures"
         intro="Déclarez vos dates de fermeture pour que le laboratoire puisse ajuster le planning de production."
       />
 

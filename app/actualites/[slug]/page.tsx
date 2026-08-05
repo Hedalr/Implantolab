@@ -12,7 +12,7 @@ import { getAllSlugs, getArticleBySlug } from "@/lib/notion";
 import { formatArticleDate } from "@/lib/utils/date";
 import { actualitesCta } from "../cta";
 
-import "./prose.css";
+import "../prose.css";
 
 export const revalidate = 600;
 
