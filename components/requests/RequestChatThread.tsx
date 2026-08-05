@@ -7,6 +7,7 @@ import {
   useTransition,
   type FormEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import {
@@ -49,6 +50,8 @@ type Props = {
   initialCreatedAt: string;
   initialAuthorName: string | null;
   status: "open" | "closed";
+  /** Dentiste : peut répondre même si traitée (réouvre automatiquement). */
+  allowReplyWhenClosed?: boolean;
   className?: string;
   compact?: boolean;
 };
@@ -60,6 +63,7 @@ export function RequestChatThread({
   initialCreatedAt,
   initialAuthorName,
   status,
+  allowReplyWhenClosed = false,
   className,
   compact = false,
 }: Props) {
@@ -69,7 +73,8 @@ export function RequestChatThread({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
-  const canReply = status === "open";
+  const router = useRouter();
+  const canReply = status === "open" || allowReplyWhenClosed;
 
   useEffect(() => {
     const supabase = getBrowserSupabase();
@@ -118,6 +123,7 @@ export function RequestChatThread({
       return;
     }
 
+    const wasClosed = status === "closed";
     setError(null);
     startTransition(async () => {
       const { message, error: sendError } = await sendRequestMessage(
@@ -133,6 +139,9 @@ export function RequestChatThread({
       setDraft("");
       if (message) {
         setMessages((prev) => appendMessage(prev, message, currentUserId));
+      }
+      if (wasClosed && allowReplyWhenClosed) {
+        router.refresh();
       }
     });
   }
@@ -184,6 +193,11 @@ export function RequestChatThread({
           onSubmit={onSubmit}
           className="flex flex-col gap-2 border-t border-[var(--line)] p-3"
         >
+          {status === "closed" && allowReplyWhenClosed ? (
+            <p className="text-xs text-[var(--ink-discreet)]">
+              Votre message rouvrira automatiquement cette demande.
+            </p>
+          ) : null}
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}

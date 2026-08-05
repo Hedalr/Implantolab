@@ -463,6 +463,7 @@ function RequestCard({
           unreadCount={unreadCount}
           className="group mt-5"
           compact={false}
+          allowReplyWhenClosed
         />
       ) : null}
     </article>

@@ -19,6 +19,7 @@ type Props = {
   unreadCount?: number;
   className?: string;
   compact?: boolean;
+  allowReplyWhenClosed?: boolean;
 };
 
 /**
@@ -36,6 +37,7 @@ export function RequestChatDetails({
   unreadCount = 0,
   className,
   compact = true,
+  allowReplyWhenClosed = false,
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -70,6 +72,7 @@ export function RequestChatDetails({
           initialAuthorName={initialAuthorName}
           status={status}
           compact={compact}
+          allowReplyWhenClosed={allowReplyWhenClosed}
         />
       ) : null}
     </details>
