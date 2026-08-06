@@ -78,7 +78,7 @@ function buildAdminNav(sectors: LabSector[] = []): NavLink[] {
     },
     {
       href: "/espace-praticien/admin/employes",
-      label: "Employés",
+      label: "Équipe",
       children: [
         { href: "/espace-praticien/admin/conges", label: "Congés employés" },
       ],

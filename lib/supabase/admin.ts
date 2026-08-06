@@ -58,6 +58,29 @@ export function isServiceRoleConfigured(): boolean {
   );
 }
 
+/** Map Auth user id → email (listUsers). Dégrade en map vide si indisponible. */
+export async function loadAuthEmailById(
+  logContext: string,
+): Promise<Map<string, string>> {
+  const emailById = new Map<string, string>();
+  if (!isServiceRoleConfigured()) return emailById;
+  try {
+    const admin = getServiceRoleSupabase();
+    const { data } = await withAdminTimeout(
+      admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    );
+    for (const user of data.users ?? []) {
+      if (user.email) emailById.set(user.id, user.email);
+    }
+  } catch (err) {
+    console.warn(
+      `[${logContext}] listUsers indisponible, e-mails masqués :`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+  return emailById;
+}
+
 /** URL publique du site (invitations Supabase, callbacks auth). */
 export function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {

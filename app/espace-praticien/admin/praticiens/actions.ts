@@ -14,10 +14,12 @@ import {
   inviteOkKey,
   isSectorLabRole,
   parseInviteRole,
+  type InviteRole,
+  type ProfileRole,
 } from "@/lib/roles";
+import { EQUIPE_PATH } from "@/lib/equipe";
 
 const PRATICIENS_PATH = "/espace-praticien/admin/praticiens";
-const EMPLOYES_PATH = "/espace-praticien/admin/employes";
 const ADMIN_HOME_PATH = "/espace-praticien/admin";
 
 /**
@@ -27,9 +29,39 @@ const ADMIN_HOME_PATH = "/espace-praticien/admin";
  */
 const PERMANENT_BAN_DURATION = "876000h";
 
-function go(params: Record<string, string>): never {
-  const query = new URLSearchParams(params).toString();
-  redirect(`${PRATICIENS_PATH}?${query}`);
+const ALLOWED_RETURN_PATHS = [PRATICIENS_PATH, EQUIPE_PATH] as const;
+
+function resolveReturnBase(
+  formData: FormData | undefined,
+  role?: InviteRole | ProfileRole | string,
+): string {
+  const raw = formData ? readText(formData, "return_path") : "";
+  if (raw) {
+    const pathOnly = raw.split("?")[0];
+    if (
+      (ALLOWED_RETURN_PATHS as readonly string[]).includes(pathOnly) &&
+      raw.startsWith(pathOnly)
+    ) {
+      return raw.includes("?") ? raw : pathOnly;
+    }
+  }
+  if (role && isSectorLabRole(role as ProfileRole)) {
+    return `${EQUIPE_PATH}?tab=invitations`;
+  }
+  return PRATICIENS_PATH;
+}
+
+function go(
+  params: Record<string, string>,
+  options?: { formData?: FormData; role?: InviteRole | ProfileRole | string },
+): never {
+  const base = resolveReturnBase(options?.formData, options?.role);
+  const [path, existingQuery = ""] = base.split("?");
+  const query = new URLSearchParams(existingQuery);
+  for (const [key, value] of Object.entries(params)) {
+    query.set(key, value);
+  }
+  redirect(`${path}?${query.toString()}`);
 }
 
 function readText(formData: FormData, key: string): string {
@@ -89,17 +121,17 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const role = parseInviteRole(rawRole);
 
   if (!email.includes("@")) {
-    go({ error: "invite-validation" });
+    go({ error: "invite-validation" }, { formData, role });
   }
   if (isSectorLabRole(role) && !sectorId) {
-    go({ error: "invite-sector" });
+    go({ error: "invite-sector" }, { formData, role });
   }
 
   let admin;
   try {
     admin = getServiceRoleSupabase();
   } catch {
-    go({ error: "service-role" });
+    go({ error: "service-role" }, { formData, role });
   }
 
   // Anti-doublon : si l'adresse existe déjà, on n'appelle PAS inviteUserByEmail
@@ -111,9 +143,12 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
       .select("deleted_at")
       .eq("id", already.id)
       .maybeSingle();
-    go({
-      error: profile?.deleted_at ? "invite-exists-deleted" : "invite-exists",
-    });
+    go(
+      {
+        error: profile?.deleted_at ? "invite-exists-deleted" : "invite-exists",
+      },
+      { formData, role },
+    );
   }
 
   // Redirect vers /set-password après validation de l'invitation : le user
@@ -154,14 +189,14 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
         })
         .eq("id", createdAfterTimeout.id);
       if (profileError) {
-        go({ error: "invite-profile" });
+        go({ error: "invite-profile" }, { formData, role });
       }
       revalidatePath(PRATICIENS_PATH);
-      revalidatePath(EMPLOYES_PATH);
+      revalidatePath(EQUIPE_PATH);
       revalidatePath("/espace-praticien/admin");
-      go({ ok: inviteOkKey(role) });
+      go({ ok: inviteOkKey(role) }, { formData, role });
     }
-    go({ error: "invite-smtp", detail: message.slice(0, 200) });
+    go({ error: "invite-smtp", detail: message.slice(0, 200) }, { formData, role });
   }
 
   if (error || !data?.user) {
@@ -172,13 +207,16 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     console.error("[invitePractitioner] échec inviteUserByEmail:", rawMessage, error);
     if (message.includes("already") || message.includes("registered")) {
       const deactivated = await isEmailDeactivated(admin, email);
-      go({ error: deactivated ? "invite-exists-deleted" : "invite-exists" });
+      go(
+        { error: deactivated ? "invite-exists-deleted" : "invite-exists" },
+        { formData, role },
+      );
     }
     if (
       message.includes("rate limit") ||
       message.includes("email rate limit")
     ) {
-      go({ error: "invite-rate-limit" });
+      go({ error: "invite-rate-limit" }, { formData, role });
     }
     if (
       message.includes("smtp") ||
@@ -186,12 +224,18 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
       message.includes("email") ||
       message.includes("relay")
     ) {
-      go({
-        error: "invite-smtp",
-        detail: rawMessage.slice(0, 200),
-      });
+      go(
+        {
+          error: "invite-smtp",
+          detail: rawMessage.slice(0, 200),
+        },
+        { formData, role },
+      );
     }
-    go({ error: "invite-failed", detail: rawMessage.slice(0, 200) });
+    go(
+      { error: "invite-failed", detail: rawMessage.slice(0, 200) },
+      { formData, role },
+    );
   }
 
   const { error: profileError } = await admin
@@ -204,13 +248,13 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
     .eq("id", data.user.id);
 
   if (profileError) {
-    go({ error: "invite-profile" });
+    go({ error: "invite-profile" }, { formData, role });
   }
 
   revalidatePath(PRATICIENS_PATH);
-  revalidatePath(EMPLOYES_PATH);
+  revalidatePath(EQUIPE_PATH);
   revalidatePath("/espace-praticien/admin");
-  go({ ok: inviteOkKey(role) });
+  go({ ok: inviteOkKey(role) }, { formData, role });
 }
 
 /**
@@ -226,14 +270,14 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
 
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
-    go({ error: "delete-validation" });
+    go({ error: "delete-validation" }, { formData });
   }
 
   let admin;
   try {
     admin = getServiceRoleSupabase();
   } catch {
-    go({ error: "service-role" });
+    go({ error: "service-role" }, { formData });
   }
 
   const { data: target } = await admin
@@ -245,7 +289,7 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
   // On ne permet la désactivation que des comptes praticien/prothésiste :
   // jamais un admin (aucune UI ne devrait de toute façon en proposer un ici).
   if (!target || target.role === "admin") {
-    go({ error: "delete-validation" });
+    go({ error: "delete-validation" }, { formData });
   }
 
   try {
@@ -257,7 +301,10 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[deletePractitioner] échec du bannissement:", message);
-    go({ error: "delete-failed", detail: message.slice(0, 200) });
+    go(
+      { error: "delete-failed", detail: message.slice(0, 200) },
+      { formData, role: target.role },
+    );
   }
 
   const { error: profileError } = await admin
@@ -270,13 +317,13 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
       "[deletePractitioner] compte banni mais deleted_at non enregistré:",
       profileError.message,
     );
-    go({ error: "delete-failed" });
+    go({ error: "delete-failed" }, { formData, role: target.role });
   }
 
   revalidatePath(PRATICIENS_PATH);
-  revalidatePath(EMPLOYES_PATH);
+  revalidatePath(EQUIPE_PATH);
   revalidatePath(ADMIN_HOME_PATH);
-  go({ ok: deleteOkKey(target.role) });
+  go({ ok: deleteOkKey(target.role) }, { formData, role: target.role });
 }
 
 /**
@@ -292,22 +339,29 @@ export async function reactivatePractitioner(
 
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
-    go({ error: "delete-validation" });
+    go({ error: "delete-validation" }, { formData });
   }
 
   let admin;
   try {
     admin = getServiceRoleSupabase();
   } catch {
-    go({ error: "service-role" });
+    go({ error: "service-role" }, { formData });
   }
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", profileId)
+    .maybeSingle();
+  const role = profile?.role;
 
   const { data: userData, error: userError } = await withAdminTimeout(
     admin.auth.admin.getUserById(profileId),
   );
 
   if (userError || !userData?.user?.email) {
-    go({ error: "reactivate-failed" });
+    go({ error: "reactivate-failed" }, { formData, role });
   }
 
   try {
@@ -317,7 +371,7 @@ export async function reactivatePractitioner(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[reactivatePractitioner] échec de la levée du ban:", message);
-    go({ error: "reactivate-failed" });
+    go({ error: "reactivate-failed" }, { formData, role });
   }
 
   const { error: profileError } = await admin
@@ -330,11 +384,11 @@ export async function reactivatePractitioner(
       "[reactivatePractitioner] ban levé mais deleted_at non réinitialisé:",
       profileError.message,
     );
-    go({ error: "reactivate-failed" });
+    go({ error: "reactivate-failed" }, { formData, role });
   }
 
   revalidatePath(PRATICIENS_PATH);
-  revalidatePath(EMPLOYES_PATH);
+  revalidatePath(EQUIPE_PATH);
   revalidatePath(ADMIN_HOME_PATH);
 
   const redirectTo = `${getSiteUrl()}/espace-praticien/auth/callback?next=/espace-praticien/set-password`;
@@ -350,10 +404,10 @@ export async function reactivatePractitioner(
       "[reactivatePractitioner] e-mail de réinitialisation non envoyé:",
       err instanceof Error ? err.message : err,
     );
-    go({ error: "reactivate-partial" });
+    go({ error: "reactivate-partial" }, { formData, role });
   }
 
-  go({ ok: "reactivated" });
+  go({ ok: "reactivated" }, { formData, role });
 }
 
 /**
@@ -372,14 +426,14 @@ export async function permanentlyDeletePractitioner(
 
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
-    go({ error: "delete-validation" });
+    go({ error: "delete-validation" }, { formData });
   }
 
   let admin;
   try {
     admin = getServiceRoleSupabase();
   } catch {
-    go({ error: "service-role" });
+    go({ error: "service-role" }, { formData });
   }
 
   const { data: target } = await admin
@@ -389,7 +443,7 @@ export async function permanentlyDeletePractitioner(
     .maybeSingle();
 
   if (!target || target.role === "admin" || !target.deleted_at) {
-    go({ error: "delete-validation" });
+    go({ error: "delete-validation" }, { formData });
   }
 
   try {
@@ -400,11 +454,17 @@ export async function permanentlyDeletePractitioner(
       "[permanentlyDeletePractitioner] échec de la suppression:",
       message,
     );
-    go({ error: "delete-failed", detail: message.slice(0, 200) });
+    go(
+      { error: "delete-failed", detail: message.slice(0, 200) },
+      { formData, role: target.role },
+    );
   }
 
   revalidatePath(PRATICIENS_PATH);
-  revalidatePath(EMPLOYES_PATH);
+  revalidatePath(EQUIPE_PATH);
   revalidatePath(ADMIN_HOME_PATH);
-  go({ ok: "deleted-permanently" });
+  go(
+    { ok: "deleted-permanently" },
+    { formData, role: target.role },
+  );
 }

@@ -1,14 +1,9 @@
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
-import {
-  getServiceRoleSupabase,
-  isServiceRoleConfigured,
-  withAdminTimeout,
-} from "@/lib/supabase/admin";
+import { isServiceRoleConfigured, loadAuthEmailById } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
 import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
-import { listLabSectors } from "@/lib/requests/queries";
 import { roleLabel, type ProfileRole } from "@/lib/roles";
 import {
   deletePractitioner,
@@ -34,24 +29,9 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     message:
       "Le praticien recevra un e-mail pour définir son mot de passe et accéder à l’espace.",
   },
-  "invited-prosthetist": {
-    title: "Invitation envoyée",
-    message:
-      "Le prothésiste recevra un e-mail pour définir son mot de passe et accéder au module laboratoire.",
-  },
-  "invited-chef": {
-    title: "Invitation envoyée",
-    message:
-      "Le chef de secteur recevra un e-mail pour définir son mot de passe et accéder aux questions/urgences et au laboratoire.",
-  },
   "invite-validation": {
     title: "Erreur",
     message: "L’e-mail est obligatoire pour inviter un utilisateur.",
-  },
-  "invite-sector": {
-    title: "Erreur",
-    message:
-      "Le secteur (Numérique, Amovible ou Conjoint) est obligatoire pour inviter un prothésiste ou un chef de secteur.",
   },
   "service-role": {
     title: "Configuration requise",
@@ -91,16 +71,6 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Accès révoqué",
     message:
       "Le praticien n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
-  },
-  "deleted-prosthetist": {
-    title: "Accès révoqué",
-    message:
-      "Le prothésiste n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
-  },
-  "deleted-chef": {
-    title: "Accès révoqué",
-    message:
-      "Le chef de secteur n’a plus accès à son espace. Son historique est conservé et son adresse e-mail pourra être réutilisée en le réactivant.",
   },
   reactivated: {
     title: "Compte réactivé",
@@ -144,41 +114,19 @@ export default async function AdminPraticiensPage({
   const canInvite = isServiceRoleConfigured();
 
   const supabase = await getServerSupabase();
-  const [{ data: profilesData }, sectors] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, full_name, role, created_at, deleted_at")
-      .in("role", ["practitioner", "prosthetist", "chef_de_secteur"])
-      .order("created_at", { ascending: false }),
-    listLabSectors(supabase),
-  ]);
+  const { data: profilesData } = await supabase
+    .from("profiles")
+    .select("id, full_name, role, created_at, deleted_at")
+    .eq("role", "practitioner")
+    .order("created_at", { ascending: false });
 
   const profiles = (profilesData ?? []) as ProfileRow[];
   const activeProfiles = profiles.filter((p) => !p.deleted_at);
   const deactivatedProfiles = profiles.filter((p) => p.deleted_at);
 
-  const emailById = new Map<string, string>();
-  if (canInvite) {
-    try {
-      const admin = getServiceRoleSupabase();
-      const { data: listData } = await withAdminTimeout(
-        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-      );
-      for (const user of listData.users ?? []) {
-        if (user.email) {
-          emailById.set(user.id, user.email);
-        }
-      }
-    } catch (err) {
-      // On log l'échec (visible dans les logs Vercel) mais on dégrade
-      // gracieusement : la page s'affiche sans e-mails. Cela évite un
-      // 504 Gateway Timeout si l'API Auth de Supabase ralentit.
-      console.warn(
-        "[admin/praticiens] listUsers indisponible, e-mails masqués :",
-        err instanceof Error ? err.message : err,
-      );
-    }
-  }
+  const emailById = canInvite
+    ? await loadAuthEmailById("admin/praticiens")
+    : new Map<string, string>();
 
   return (
     <Container size="wide" className="py-10 md:py-14">
@@ -188,7 +136,15 @@ export default async function AdminPraticiensPage({
           Praticiens
         </h1>
         <p className="mt-2 text-[var(--ink-muted)] leading-relaxed">
-          Invitez les praticiens et prothésistes par e-mail.
+          Invitez les dentistes par e-mail. Les collaborateurs labo
+          (prothésistes, chefs de secteur) se gèrent dans{" "}
+          <a
+            href="/espace-praticien/admin/employes"
+            className="underline underline-offset-4 hover:text-[var(--ink)]"
+          >
+            Équipe
+          </a>
+          .
         </p>
       </header>
 
@@ -225,23 +181,22 @@ export default async function AdminPraticiensPage({
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <Panel title="Inviter un utilisateur" eyebrow="Invitation">
+          <Panel title="Inviter un praticien" eyebrow="Invitation">
             <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
-              L’utilisateur reçoit un e-mail pour choisir son mot de passe.
-              Choisissez le type de compte : praticien (dentiste) ou
-              prothésiste du laboratoire (avec secteur).
+              Le dentiste reçoit un e-mail pour choisir son mot de passe et
+              accéder à ses fermetures et demandes.
             </p>
-            <InviteUserForm sectors={sectors} canInvite={canInvite} />
+            <InviteUserForm sectors={[]} canInvite={canInvite} mode="practitioner" />
           </Panel>
         </div>
 
         <div className="lg:col-span-7 flex flex-col gap-8">
           <Panel
-            title={`Praticiens & prothésistes (${activeProfiles.length})`}
+            title={`Praticiens actifs (${activeProfiles.length})`}
             eyebrow="Comptes"
           >
             {activeProfiles.length === 0 ? (
-              <Empty label="Aucun compte actif pour le moment." />
+              <Empty label="Aucun praticien actif pour le moment." />
             ) : (
               <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
                 {activeProfiles.map((p) => (
@@ -283,11 +238,8 @@ export default async function AdminPraticiensPage({
               eyebrow="Historique"
             >
               <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
-                Ces comptes n’ont plus accès à l’espace praticien. Leur
-                historique (demandes, congés, fermetures) est conservé.
-                Réactivez un compte pour lui redonner accès, ou supprimez-le
-                définitivement (compte + historique effacés, action
-                irréversible) si vous n’en avez plus besoin.
+                Ces comptes n’ont plus accès. Réactivez un compte pour lui
+                redonner accès, ou supprimez-le définitivement.
               </p>
               <ul className="mt-5 divide-y divide-[var(--line)] border-t border-[var(--line)]">
                 {deactivatedProfiles.map((p) => (
