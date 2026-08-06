@@ -216,15 +216,14 @@ export default async function AdminPraticiensPage({
                       <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
                         {roleLabel(p.role)}
                       </span>
-                      <form action={deletePractitioner}>
-                        <input type="hidden" name="profile_id" value={p.id} />
-                        <button
-                          type="submit"
-                          className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
-                        >
-                          Supprimer l’accès
-                        </button>
-                      </form>
+                      <ConfirmFormButton
+                        action={deletePractitioner}
+                        hiddenFields={{ profile_id: p.id }}
+                        confirmMessage={`Supprimer l’accès de ${p.full_name ?? "ce praticien"} ? Son historique est conservé et vous pourrez le réactiver plus tard.`}
+                        className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
+                      >
+                        Supprimer l’accès
+                      </ConfirmFormButton>
                     </div>
                   </li>
                 ))}

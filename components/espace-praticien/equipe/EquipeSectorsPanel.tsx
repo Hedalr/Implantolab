@@ -4,6 +4,7 @@ import {
   deleteSector,
   updateSector,
 } from "@/app/espace-praticien/admin/employes/actions";
+import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/espace-praticien/FormField";
 
@@ -121,16 +122,14 @@ export function EquipeSectorsPanel({ sectors }: { sectors: EquipeSectorCard[] })
                 </button>
               </form>
 
-              <form action={deleteSector} className="pt-1">
-                <input type="hidden" name="id" value={s.id} />
-                <input type="hidden" name="return_tab" value="secteurs" />
-                <button
-                  type="submit"
-                  className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors"
-                >
-                  Supprimer
-                </button>
-              </form>
+              <ConfirmFormButton
+                action={deleteSector}
+                hiddenFields={{ id: s.id, return_tab: "secteurs" }}
+                confirmMessage={`Supprimer le secteur « ${s.name} » ? Les employés qui y sont rattachés seront non classés.`}
+                className="pt-1 text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors"
+              >
+                Supprimer
+              </ConfirmFormButton>
             </article>
           ))}
         </div>

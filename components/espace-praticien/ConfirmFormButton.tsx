@@ -3,8 +3,8 @@
 import type { ReactNode } from "react";
 
 /**
- * Bouton de formulaire (Server Action) qui demande une confirmation native
- * avant soumission. Réservé aux actions destructrices/irréversibles.
+ * Bouton de formulaire (Server Action) avec confirmation native avant soumission.
+ * Pour les actions destructrices (révocation d’accès, suppression, etc.).
  */
 export function ConfirmFormButton({
   action,

@@ -10,6 +10,7 @@ import {
   updateEmployeeSector,
 } from "@/app/espace-praticien/admin/employes/actions";
 import { deletePractitioner } from "@/app/espace-praticien/admin/praticiens/actions";
+import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
 
 const inputStyle = cn(
   "w-full bg-transparent border-b border-[var(--line-strong)] py-1.5 text-sm text-[var(--ink)]",
@@ -267,20 +268,17 @@ export function EquipeMembersTable({
                         >
                           Congés
                         </Link>
-                        <form action={deletePractitioner}>
-                          <input type="hidden" name="profile_id" value={m.id} />
-                          <input
-                            type="hidden"
-                            name="return_path"
-                            value={equipeHref("membres")}
-                          />
-                          <button
-                            type="submit"
-                            className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)]"
-                          >
-                            Désactiver
-                          </button>
-                        </form>
+                        <ConfirmFormButton
+                          action={deletePractitioner}
+                          hiddenFields={{
+                            profile_id: m.id,
+                            return_path: equipeHref("membres"),
+                          }}
+                          confirmMessage={`Désactiver ${m.fullName ?? "ce membre"} ? Il n’aura plus accès ; son historique est conservé et vous pourrez le réactiver.`}
+                          className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)]"
+                        >
+                          Désactiver
+                        </ConfirmFormButton>
                       </div>
                     </td>
                   </tr>
