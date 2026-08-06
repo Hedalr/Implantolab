@@ -274,7 +274,8 @@ export function EquipeMembersTable({
                             profile_id: m.id,
                             return_path: equipeHref("membres"),
                           }}
-                          confirmMessage={`Désactiver ${m.fullName ?? "ce membre"} ? Il n’aura plus accès ; son historique est conservé et vous pourrez le réactiver.`}
+                          confirmTitle={`Désactiver ${m.fullName ?? "ce membre"} ?`}
+                          confirmMessage="Il n’aura plus accès ; son historique est conservé et vous pourrez le réactiver."
                           className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)]"
                         >
                           Désactiver

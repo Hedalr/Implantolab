@@ -125,7 +125,8 @@ export function EquipeSectorsPanel({ sectors }: { sectors: EquipeSectorCard[] })
               <ConfirmFormButton
                 action={deleteSector}
                 hiddenFields={{ id: s.id, return_tab: "secteurs" }}
-                confirmMessage={`Supprimer le secteur « ${s.name} » ? Les employés qui y sont rattachés seront non classés.`}
+                confirmTitle={`Supprimer le secteur « ${s.name} » ?`}
+                confirmMessage="Les employés qui y sont rattachés seront non classés."
                 className="pt-1 text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors"
               >
                 Supprimer

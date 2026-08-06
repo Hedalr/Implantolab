@@ -246,7 +246,8 @@ function AnnouncementItem({
         <ConfirmFormButton
           action={deleteAnnouncement}
           hiddenFields={{ id: row.id }}
-          confirmMessage="Retirer cette annonce pour tous les dentistes ?"
+          confirmTitle="Retirer cette annonce ?"
+          confirmMessage="Elle ne sera plus visible pour les dentistes."
           className="shrink-0 text-sm text-[var(--ink-muted)] underline underline-offset-4 hover:text-[var(--ink)]"
         >
           Retirer

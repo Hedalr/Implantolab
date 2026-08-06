@@ -219,7 +219,8 @@ export default async function AdminPraticiensPage({
                       <ConfirmFormButton
                         action={deletePractitioner}
                         hiddenFields={{ profile_id: p.id }}
-                        confirmMessage={`Supprimer l’accès de ${p.full_name ?? "ce praticien"} ? Son historique est conservé et vous pourrez le réactiver plus tard.`}
+                        confirmTitle={`Supprimer l’accès de ${p.full_name ?? "ce praticien"} ?`}
+                        confirmMessage="Son historique est conservé et vous pourrez le réactiver plus tard."
                         className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
                       >
                         Supprimer l’accès
@@ -270,7 +271,8 @@ export default async function AdminPraticiensPage({
                       <ConfirmFormButton
                         action={permanentlyDeletePractitioner}
                         hiddenFields={{ profile_id: p.id }}
-                        confirmMessage={`Supprimer définitivement ${p.full_name ?? "ce compte"} ? Son historique (demandes, congés, fermetures) sera effacé. Cette action est irréversible.`}
+                        confirmTitle={`Supprimer définitivement ${p.full_name ?? "ce compte"} ?`}
+                        confirmMessage="Son historique (demandes, congés, fermetures) sera effacé. Cette action est irréversible."
                         className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
                       >
                         Supprimer définitivement

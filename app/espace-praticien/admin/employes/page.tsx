@@ -538,7 +538,8 @@ function InvitationsTab({
                           profile_id: p.id,
                           return_path: equipeHref("invitations"),
                         }}
-                        confirmMessage={`Supprimer définitivement ${p.fullName ?? "ce compte"} ? Cette action est irréversible.`}
+                        confirmTitle={`Supprimer définitivement ${p.fullName ?? "ce compte"} ?`}
+                        confirmMessage="Cette action est irréversible."
                         className="text-xs tracking-wide uppercase text-[var(--ink-discreet)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
                       >
                         Supprimer définitivement
