@@ -256,7 +256,6 @@ function RequestRowView({
         {row.patientName ?? "—"}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)]">
-        <CategoryBadge category={row.subject} />
         <RequestChatDetails
           requestId={row.id}
           currentUserId={currentUserId}
@@ -266,6 +265,7 @@ function RequestRowView({
           status={row.status}
           media={media}
           unreadCount={unreadCount}
+          trigger={<CategoryBadge category={row.subject} />}
         />
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink-muted)]">

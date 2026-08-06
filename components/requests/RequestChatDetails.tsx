@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   RequestMediaGallery,
   type RequestMediaItem,
 } from "@/components/requests/RequestMediaGallery";
 import { RequestChatThread } from "@/components/requests/RequestChatThread";
+import { cn } from "@/lib/cn";
 
 type Props = {
   requestId: string;
@@ -20,6 +21,7 @@ type Props = {
   className?: string;
   compact?: boolean;
   allowReplyWhenClosed?: boolean;
+  trigger?: ReactNode;
 };
 
 /**
@@ -38,18 +40,25 @@ export function RequestChatDetails({
   className,
   compact = true,
   allowReplyWhenClosed = false,
+  trigger,
 }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
     <details
-      className={className ?? "group mt-2"}
+      className={className ?? cn("group", !trigger && "mt-2")}
       onToggle={(e) => {
         setOpen((e.currentTarget as HTMLDetailsElement).open);
       }}
     >
       <summary className="cursor-pointer list-none text-[var(--ink)] hover:text-[var(--accent-warm)]">
-        <span className="text-xs text-[var(--ink-discreet)] group-open:hidden">
+        {trigger}
+        <span
+          className={cn(
+            "block text-xs text-[var(--ink-discreet)] group-open:hidden",
+            trigger ? "mt-2" : undefined,
+          )}
+        >
           Voir la discussion
           {media.length > 0
             ? ` (${media.length} photo${media.length > 1 ? "s" : ""})`
@@ -58,7 +67,12 @@ export function RequestChatDetails({
             ? ` · ${unreadCount} non lu${unreadCount > 1 ? "s" : ""}`
             : ""}
         </span>
-        <span className="text-xs text-[var(--ink-discreet)] hidden group-open:inline">
+        <span
+          className={cn(
+            "hidden text-xs text-[var(--ink-discreet)] group-open:block",
+            trigger ? "mt-2" : undefined,
+          )}
+        >
           Masquer
         </span>
       </summary>
