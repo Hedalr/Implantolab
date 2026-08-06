@@ -84,6 +84,7 @@ uniquement si `Publié` = true et que la page n’a pas déjà été notifiée
 Fichiers :
 
 - `supabase/migrations/20260805120000_push_tokens.sql` — `push_tokens` (RLS owner), `push_actualite_sent` (service_role)
+- `supabase/migrations/20260806170000_register_push_token_rpc.sql` — RPC `register_push_token` (reclaim token entre comptes)
 - `supabase/migrations/20260805140000_admin_announcements.sql` — `admin_announcements` (admin CRUD, praticiens SELECT si non expiré)
 - `supabase/migrations/20260806160000_prothese_email_webhook_pg_net.sql` — email étiquette Modif prothèse (web + mobile)
 
