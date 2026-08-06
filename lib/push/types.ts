@@ -22,12 +22,16 @@ export type PushTokenRow = {
   profile_id: string;
 };
 
-/** Ligne INSERT webhook `requests` (champs utiles au push). */
+/** Ligne INSERT webhook `requests` (push + email prothèse). */
 export type RequestPushRecord = {
   id: string;
   subject: string;
   patient_name: string | null;
   sector_id: string | null;
+  message?: string | null;
+  profile_id?: string | null;
+  created_by?: string | null;
+  created_at?: string | null;
   [key: string]: unknown;
 };
 

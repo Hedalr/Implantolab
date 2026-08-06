@@ -3,7 +3,6 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import {
   detectPhotoMimeType,
   extensionForPhotoMimeType,
@@ -11,11 +10,7 @@ import {
 } from "@/lib/requests/media-security";
 import { getServiceRoleSupabase } from "@/lib/supabase/admin";
 import { getServerSupabase, requireUser } from "@/lib/supabase/server";
-import {
-  isRequestCategory,
-  MODIFICATION_PROTHESE_CATEGORY,
-} from "@/lib/requests/types";
-import { sendProtheseModificationNotification } from "@/lib/email/prothese-notification";
+import { isRequestCategory } from "@/lib/requests/types";
 
 const DEMANDES_PATH = "/espace-praticien/demandes";
 const REQUEST_MEDIA_BUCKET = "request-media";
@@ -28,7 +23,7 @@ function fail(reason: string): never {
 }
 
 export async function createRequest(formData: FormData): Promise<void> {
-  const { userId, profile } = await requireUser();
+  const { userId } = await requireUser();
 
   const subject = String(formData.get("subject") ?? "").trim();
   const patientName = String(formData.get("patient_name") ?? "").trim();
@@ -127,22 +122,8 @@ export async function createRequest(formData: FormData): Promise<void> {
 
   const requestId = inserted.id as string;
 
-  // Effets de bord best-effort (notification email, upload photos) : la
-  // demande est déjà enregistrée à ce stade, ils ne doivent jamais la faire
-  // échouer. La notification est différée via `after()` pour ne pas
-  // ralentir la redirection avec l'appel réseau vers Resend.
-  if (subject === MODIFICATION_PROTHESE_CATEGORY) {
-    after(() =>
-      sendProtheseModificationNotification({
-        requestId,
-        patientName,
-        practitionerName: profile.fullName,
-        practitionerEmail: profile.email,
-        message,
-        createdAt: new Date(),
-      }),
-    );
-  }
+  // Email "Modifications prothèse" : webhook pg_net → /api/prothese/on-request
+  // (couvre web + app mobile). Upload photos best-effort ci-dessous.
 
   for (const photo of preparedPhotos) {
     if (!storageAdmin) continue;

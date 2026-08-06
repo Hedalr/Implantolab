@@ -32,10 +32,13 @@ Les webhooks sont créés via triggers `pg_net` (migration
 
 - `push_on_request_insert` sur `public.requests` (INSERT, sujets Question/Urgence)
 - `push_on_message_insert` sur `public.request_messages` (INSERT)
+- `prothese_email_on_request_insert` sur `public.requests` (INSERT, sujet
+  `Modifications prothèse` → email Resend / étiquette labo, web + mobile)
 
 Le Bearer est lu depuis le secret Vault `push_webhook_secret` (même valeur
-que `PUSH_WEBHOOK_SECRET` sur Vercel). URL cible :
-`https://implantolab.vercel.app/api/push/...`
+que `PUSH_WEBHOOK_SECRET` sur Vercel). URL cibles :
+`https://implantolab.vercel.app/api/push/...` et
+`https://implantolab.vercel.app/api/prothese/on-request`.
 
 Pour mettre à jour le secret plus tard :
 
@@ -82,6 +85,7 @@ Fichiers :
 
 - `supabase/migrations/20260805120000_push_tokens.sql` — `push_tokens` (RLS owner), `push_actualite_sent` (service_role)
 - `supabase/migrations/20260805140000_admin_announcements.sql` — `admin_announcements` (admin CRUD, praticiens SELECT si non expiré)
+- `supabase/migrations/20260806160000_prothese_email_webhook_pg_net.sql` — email étiquette Modif prothèse (web + mobile)
 
 Les annonces admin sont envoyées **depuis la Server Action** (pas de webhook `pg_net`) : insert + `notifyAdminAnnouncement`.
 

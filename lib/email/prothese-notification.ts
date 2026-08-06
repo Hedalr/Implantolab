@@ -1,4 +1,13 @@
+import "server-only";
+
 import { getResendClient, isResendConfigured } from "@/lib/email/resend";
+import type { RequestPushRecord } from "@/lib/push/types";
+import { MODIFICATION_PROTHESE_CATEGORY } from "@/lib/requests/types";
+import {
+  getServiceRoleSupabase,
+  isServiceRoleConfigured,
+  withAdminTimeout,
+} from "@/lib/supabase/admin";
 import { formatDateTime } from "@/lib/utils/date";
 
 /**
@@ -6,6 +15,9 @@ import { formatDateTime } from "@/lib/utils/date";
  * reçu y déclenche l'impression automatique d'une étiquette côté
  * laboratoire (règle Outlook + imprimante Brother QL-800 dédiée).
  * Peut être surchargée via `PROTHESE_REQUEST_NOTIFICATION_EMAIL`.
+ *
+ * Envoi via webhook DB (`/api/prothese/on-request`) à l'INSERT `requests`
+ * (web + app mobile).
  */
 const DEFAULT_NOTIFICATION_EMAIL = "modif-prothese@outlook.fr";
 
@@ -26,38 +38,31 @@ export type ProtheseModificationNotification = {
 };
 
 /**
- * Construit le corps texte de l'email envoyé à la boîte dédiée. Cette
- * boîte déclenche l'impression d'une étiquette via une règle Outlook côté
- * laboratoire ("l'imprimer" sur les mails reçus) : le texte doit rester
- * court, en texte brut, sans mise en forme complexe.
- *
- * NOTE — format provisoire : à ajuster dès réception d'une photo d'une
- * étiquette réelle + du texte de l'email correspondant côté client, pour
- * coller exactement au rendu attendu sur l'étiquette.
+ * Corps texte brut pour la règle Outlook « l'imprimer » (étiquette labo).
+ * Format provisoire : à caler sur une étiquette réelle côté client.
  */
 export function buildProtheseModificationEmailText(
   notification: ProtheseModificationNotification,
 ): string {
-  const lines = [
+  const praticien =
+    notification.practitionerName?.trim() ||
+    notification.practitionerEmail.trim() ||
+    "—";
+
+  return [
     "MODIFICATION PROTHESE",
     "",
     `Patient : ${notification.patientName}`,
-    `Praticien : ${notification.practitionerName ?? notification.practitionerEmail}`,
+    `Praticien : ${praticien}`,
     "",
     notification.message,
     "",
     `Reçu le ${formatDateTime(notification.createdAt)}`,
-  ];
-  return lines.join("\n");
+  ].join("\n");
 }
 
 /**
- * Envoie la notification "Modifications prothèse" qui déclenche
- * l'impression d'étiquette côté laboratoire.
- *
- * Best-effort : ne fait jamais échouer la création de la demande, toute
- * erreur (config manquante, échec Resend, panne réseau) est uniquement
- * loguée ici — l'appelant peut donc `await` sans try/catch.
+ * Best-effort Resend : logue les erreurs, ne les remonte pas.
  */
 export async function sendProtheseModificationNotification(
   notification: ProtheseModificationNotification,
@@ -96,4 +101,54 @@ export async function sendProtheseModificationNotification(
   } catch (err) {
     console.error("[prothese-notification] Exception lors de l'envoi :", err);
   }
+}
+
+/**
+ * Adapter webhook INSERT `requests` → email étiquette (web + mobile).
+ */
+export async function notifyProtheseModificationFromRequest(
+  record: RequestPushRecord,
+): Promise<void> {
+  if (record.subject !== MODIFICATION_PROTHESE_CATEGORY) return;
+
+  const message = record.message?.trim();
+  const patientName = record.patient_name?.trim();
+  if (!record.id || !message || !patientName) return;
+
+  const profileId = record.profile_id ?? record.created_by ?? null;
+  let practitionerName: string | null = null;
+  let practitionerEmail = "";
+
+  if (profileId && isServiceRoleConfigured()) {
+    try {
+      const admin = getServiceRoleSupabase();
+      const [{ data: profile }, userResult] = await Promise.all([
+        admin
+          .from("profiles")
+          .select("full_name")
+          .eq("id", profileId)
+          .maybeSingle(),
+        withAdminTimeout(admin.auth.admin.getUserById(profileId), 4_000),
+      ]);
+
+      practitionerName = profile?.full_name ?? null;
+      practitionerEmail = userResult.data.user?.email ?? "";
+    } catch (err) {
+      console.warn(
+        "[prothese-notification] profil praticien indisponible :",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  }
+
+  const createdAt = new Date(record.created_at ?? Date.now());
+
+  await sendProtheseModificationNotification({
+    requestId: record.id,
+    patientName,
+    practitionerName,
+    practitionerEmail,
+    message,
+    createdAt: Number.isNaN(createdAt.getTime()) ? new Date() : createdAt,
+  });
 }
