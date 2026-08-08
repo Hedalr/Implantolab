@@ -2,9 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
-import { SECTOR_LAB_ROLES } from "@/lib/roles";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { EQUIPE_PATH, parseEquipeTab, type EquipeTab } from "@/lib/equipe";
+import {
+  createSectorPg,
+  deleteSectorPg,
+  updateEmployeeLeaveBalancePg,
+  updateEmployeeSectorPg,
+  updateSectorPg,
+} from "@/lib/rh/pg";
+import { SECTOR_LAB_ROLES } from "@/lib/roles";
+import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 
 const CONGES_PATH = "/espace-praticien/admin/conges";
 
@@ -40,14 +48,21 @@ export async function createSector(formData: FormData): Promise<void> {
     go({ error: "sector-color" }, tab);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase.from("sectors").insert({ name, color });
-
-  if (error) {
-    if (error.code === "23505") {
-      go({ error: "sector-duplicate" }, tab);
+  if (isPostgresBackend()) {
+    const result = await createSectorPg({ name, color });
+    if (!result.ok) {
+      go({ error: result.error }, tab);
     }
-    go({ error: "sector-save" }, tab);
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase.from("sectors").insert({ name, color });
+
+    if (error) {
+      if (error.code === "23505") {
+        go({ error: "sector-duplicate" }, tab);
+      }
+      go({ error: "sector-save" }, tab);
+    }
   }
 
   revalidatePath(EQUIPE_PATH);
@@ -73,17 +88,30 @@ export async function updateSector(formData: FormData): Promise<void> {
     go({ error: "sector-color" }, tab);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("sectors")
-    .update({ name, color })
-    .eq("id", id);
-
-  if (error) {
-    if (error.code === "23505") {
-      go({ error: "sector-duplicate" }, tab);
+  if (isPostgresBackend()) {
+    const result = await updateSectorPg({ id, name, color });
+    if (!result.ok) {
+      go(
+        {
+          error:
+            result.error === "not_found" ? "sector-validation" : result.error,
+        },
+        tab,
+      );
     }
-    go({ error: "sector-save" }, tab);
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("sectors")
+      .update({ name, color })
+      .eq("id", id);
+
+    if (error) {
+      if (error.code === "23505") {
+        go({ error: "sector-duplicate" }, tab);
+      }
+      go({ error: "sector-save" }, tab);
+    }
   }
 
   revalidatePath(EQUIPE_PATH);
@@ -100,11 +128,18 @@ export async function deleteSector(formData: FormData): Promise<void> {
     go({ error: "sector-validation" }, tab);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase.from("sectors").delete().eq("id", id);
+  if (isPostgresBackend()) {
+    const result = await deleteSectorPg(id);
+    if (!result.ok) {
+      go({ error: "sector-delete" }, tab);
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase.from("sectors").delete().eq("id", id);
 
-  if (error) {
-    go({ error: "sector-delete" }, tab);
+    if (error) {
+      go({ error: "sector-delete" }, tab);
+    }
   }
 
   revalidatePath(EQUIPE_PATH);
@@ -124,15 +159,22 @@ export async function updateEmployeeSector(formData: FormData): Promise<void> {
     go({ error: "employee-validation" }, tab);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ sector_id: sectorId })
-    .eq("id", profileId)
-    .in("role", [...SECTOR_LAB_ROLES]);
+  if (isPostgresBackend()) {
+    const result = await updateEmployeeSectorPg({ profileId, sectorId });
+    if (!result.ok) {
+      go({ error: "employee-save" }, tab);
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ sector_id: sectorId })
+      .eq("id", profileId)
+      .in("role", [...SECTOR_LAB_ROLES]);
 
-  if (error) {
-    go({ error: "employee-save" }, tab);
+    if (error) {
+      go({ error: "employee-save" }, tab);
+    }
   }
 
   revalidatePath(EQUIPE_PATH);
@@ -157,15 +199,33 @@ export async function updateEmployeeLeaveBalance(
     go({ error: "employee-balance-invalid" }, tab);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ leave_balance_days: balance })
-    .eq("id", profileId)
-    .in("role", [...SECTOR_LAB_ROLES]);
+  if (isPostgresBackend()) {
+    const result = await updateEmployeeLeaveBalancePg({
+      profileId,
+      leaveBalanceDays: balance,
+    });
+    if (!result.ok) {
+      go(
+        {
+          error:
+            result.error === "employee-balance-invalid"
+              ? "employee-balance-invalid"
+              : "employee-save",
+        },
+        tab,
+      );
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ leave_balance_days: balance })
+      .eq("id", profileId)
+      .in("role", [...SECTOR_LAB_ROLES]);
 
-  if (error) {
-    go({ error: "employee-save" }, tab);
+    if (error) {
+      go({ error: "employee-save" }, tab);
+    }
   }
 
   revalidatePath(EQUIPE_PATH);

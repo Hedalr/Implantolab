@@ -5,13 +5,38 @@ import {
   isServiceRoleConfigured,
 } from "@/lib/supabase/admin";
 import type { PushTokenRow } from "@/lib/push/types";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getSql } from "@/lib/db/client";
 
 /**
- * Tokens des admins + chefs de secteur du secteur donné (1–2 requêtes profils en parallèle + tokens).
+ * Tokens des admins + chefs de secteur du secteur donné.
  */
 export async function getAdminAndSectorChefTokens(
   sectorId: string | null,
 ): Promise<PushTokenRow[]> {
+  if (isPostgresBackend()) {
+    const sql = getSql();
+    const rows = sectorId
+      ? await sql<{ token: string; profile_id: string }[]>`
+          select t.token, t.profile_id::text
+            from public.push_tokens t
+            join public.profiles p on p.id = t.profile_id
+           where p.deleted_at is null
+             and (
+               p.role = 'admin'
+               or (p.role = 'chef_de_secteur' and p.sector_id = ${sectorId}::uuid)
+             )
+        `
+      : await sql<{ token: string; profile_id: string }[]>`
+          select t.token, t.profile_id::text
+            from public.push_tokens t
+            join public.profiles p on p.id = t.profile_id
+           where p.deleted_at is null
+             and p.role = 'admin'
+        `;
+    return rows;
+  }
+
   if (!isServiceRoleConfigured()) return [];
 
   const supabase = getServiceRoleSupabase();
@@ -58,6 +83,17 @@ export async function getRequestOwnerTokens(
 
 /** Tokens praticiens actifs — jointure unique push_tokens ↔ profiles. */
 export async function getAllPractitionerTokens(): Promise<PushTokenRow[]> {
+  if (isPostgresBackend()) {
+    const sql = getSql();
+    return sql<{ token: string; profile_id: string }[]>`
+      select t.token, t.profile_id::text
+        from public.push_tokens t
+        join public.profiles p on p.id = t.profile_id
+       where p.role = 'practitioner'
+         and p.deleted_at is null
+    `;
+  }
+
   if (!isServiceRoleConfigured()) return [];
 
   const supabase = getServiceRoleSupabase();
@@ -81,7 +117,18 @@ export async function getAllPractitionerTokens(): Promise<PushTokenRow[]> {
 async function fetchTokensForProfiles(
   profileIds: string[],
 ): Promise<PushTokenRow[]> {
-  if (profileIds.length === 0 || !isServiceRoleConfigured()) return [];
+  if (profileIds.length === 0) return [];
+
+  if (isPostgresBackend()) {
+    const sql = getSql();
+    return sql<{ token: string; profile_id: string }[]>`
+      select token, profile_id::text
+        from public.push_tokens
+       where profile_id = any(${profileIds}::uuid[])
+    `;
+  }
+
+  if (!isServiceRoleConfigured()) return [];
 
   const supabase = getServiceRoleSupabase();
   const { data, error } = await supabase

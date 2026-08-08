@@ -6,9 +6,16 @@ import { redirect } from "next/navigation";
 import { firstRelation } from "@/lib/supabase/relation";
 import { SUPABASE_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import {
+  homePathForRole,
   isSectorLabRole,
   type ProfileRole,
 } from "@/lib/roles";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getDatabaseUrl } from "@/lib/db/client";
+import {
+  getPgProfile,
+  getPgSessionUser,
+} from "@/lib/auth/postgres/session";
 
 export type { ProfileRole };
 export { isSectorLabRole };
@@ -34,9 +41,16 @@ export type Profile = {
 const LOGIN_PATH = "/espace-praticien/login";
 const DEFAULT_PRACTITIONER_HOME = "/espace-praticien/demandes";
 const DEFAULT_LABO_HOME = "/espace-praticien/laboratoire";
-const DEFAULT_CHEF_HOME = "/espace-praticien/admin/demandes";
 
 export function isSupabaseConfigured(): boolean {
+  if (isPostgresBackend()) {
+    try {
+      getDatabaseUrl();
+      return true;
+    } catch {
+      return false;
+    }
+  }
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -49,6 +63,12 @@ export function isSupabaseConfigured(): boolean {
  * @throws si Supabase n'est pas configuré — tester avec `isSupabaseConfigured()`.
  */
 export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
+  if (isPostgresBackend()) {
+    throw new Error(
+      "getServerSupabase() is disabled when DATA_BACKEND=postgres (fail-closed dual-mode).",
+    );
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -84,9 +104,14 @@ export const getServerSupabase = cache(async (): Promise<SupabaseClient> => {
 export const getSessionUser = cache(async (): Promise<{
   id: string;
   email: string;
+  mustSetPassword?: boolean;
 } | null> => {
   if (!isSupabaseConfigured()) {
     return null;
+  }
+
+  if (isPostgresBackend()) {
+    return getPgSessionUser();
   }
 
   const supabase = await getServerSupabase();
@@ -107,6 +132,10 @@ export const getSessionUser = cache(async (): Promise<{
  * Mis en `cache()` pour éviter les doubles lectures dans layout + page.
  */
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
+  if (isPostgresBackend()) {
+    return getPgProfile();
+  }
+
   const user = await getSessionUser();
   if (!user) return null;
 
@@ -173,11 +202,23 @@ export async function requireAdmin(): Promise<{
 }> {
   const session = await requireUser();
   if (session.profile.role !== "admin") {
-    redirect(
-      session.profile.role === "chef_de_secteur"
-        ? DEFAULT_CHEF_HOME
-        : DEFAULT_PRACTITIONER_HOME,
-    );
+    redirect(homePathForRole(session.profile.role));
+  }
+  return session;
+}
+
+/**
+ * Praticien uniquement (création demandes / fermetures cabinet).
+ * Aligné API v1 : lab/admin/chef → redirect home rôle.
+ */
+export async function requirePractitioner(): Promise<{
+  userId: string;
+  email: string;
+  profile: Profile;
+}> {
+  const session = await requireUser();
+  if (session.profile.role !== "practitioner") {
+    redirect(homePathForRole(session.profile.role));
   }
   return session;
 }

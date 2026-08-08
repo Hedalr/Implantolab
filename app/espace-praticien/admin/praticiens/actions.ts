@@ -3,6 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { sendInviteEmail } from "@/lib/email/invite";
+import {
+  inviteUserPg,
+  permanentlyDeleteUserPg,
+  reactivateUserPg,
+  resendInviteUserPg,
+  softDeleteUserPg,
+} from "@/lib/rh/pg";
 import {
   getServiceRoleSupabase,
   getSiteUrl,
@@ -13,7 +22,6 @@ import {
   deleteOkKey,
   inviteOkKey,
   isSectorLabRole,
-  parseInviteRole,
   type InviteRole,
   type ProfileRole,
 } from "@/lib/roles";
@@ -118,13 +126,53 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
   const fullName = readText(formData, "full_name");
   const sectorId = readText(formData, "sector_id");
   const rawRole = readText(formData, "role") || "practitioner";
-  const role = parseInviteRole(rawRole);
+  // Allowlist stricte (pas de parse soft → admin) — même matrice que l’API RH.
+  if (
+    rawRole !== "practitioner" &&
+    rawRole !== "prosthetist" &&
+    rawRole !== "chef_de_secteur"
+  ) {
+    go({ error: "invite-validation" }, { formData });
+  }
+  const role = rawRole as InviteRole;
 
   if (!email.includes("@")) {
     go({ error: "invite-validation" }, { formData, role });
   }
   if (isSectorLabRole(role) && !sectorId) {
     go({ error: "invite-sector" }, { formData, role });
+  }
+
+  if (isPostgresBackend()) {
+    const result = await inviteUserPg({
+      email,
+      fullName,
+      role,
+      sectorId: sectorId || null,
+      siteUrl: getSiteUrl(),
+    });
+    if (!result.ok) {
+      go({ error: result.error }, { formData, role });
+    }
+    if (!result.data) {
+      go({ error: "invite-failed" }, { formData, role });
+    }
+    const emailResult = await sendInviteEmail({
+      to: result.data.email,
+      inviteUrl: result.data.inviteUrl,
+      kind: "invite",
+      fullName,
+    });
+    if (emailResult.error) {
+      console.warn(
+        "[invitePractitioner] email non envoyé (compte créé):",
+        emailResult.error,
+      );
+    }
+    revalidatePath(PRATICIENS_PATH);
+    revalidatePath(EQUIPE_PATH);
+    revalidatePath("/espace-praticien/admin");
+    go({ ok: inviteOkKey(role) }, { formData, role });
   }
 
   let admin;
@@ -258,6 +306,52 @@ export async function invitePractitioner(formData: FormData): Promise<void> {
 }
 
 /**
+ * Renvoie l’e-mail d’invitation (re-mint token) pour un compte encore pending.
+ * Ne renvoie jamais le token au client — e-mail uniquement (P2-6 / S11).
+ */
+export async function resendInvite(formData: FormData): Promise<void> {
+  await requireAdmin();
+
+  const profileId = readText(formData, "profile_id");
+  if (!profileId) {
+    go({ error: "invite-validation" }, { formData });
+  }
+
+  if (!isPostgresBackend()) {
+    go({ error: "service-role" }, { formData });
+  }
+
+  const result = await resendInviteUserPg({
+    profileId,
+    siteUrl: getSiteUrl(),
+  });
+  if (!result.ok) {
+    go({ error: result.error }, { formData });
+  }
+  if (!result.data) {
+    go({ error: "invite-failed" }, { formData });
+  }
+
+  const emailResult = await sendInviteEmail({
+    to: result.data.email,
+    inviteUrl: result.data.inviteUrl,
+    kind: "invite",
+  });
+
+  revalidatePath(PRATICIENS_PATH);
+  revalidatePath(EQUIPE_PATH);
+  revalidatePath(ADMIN_HOME_PATH);
+
+  if (!emailResult.sent) {
+    go(
+      { error: "invite-resend-partial" },
+      { formData, role: result.data.role },
+    );
+  }
+  go({ ok: "invite-resent" }, { formData, role: result.data.role });
+}
+
+/**
  * Révoque l'accès d'un praticien ou d'un employé (bannissement Supabase Auth
  * + `profiles.deleted_at`). L'historique (demandes, congés, fermetures) et le
  * compte lui-même sont conservés : rien n'est supprimé, donc rien à
@@ -271,6 +365,23 @@ export async function deletePractitioner(formData: FormData): Promise<void> {
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
     go({ error: "delete-validation" }, { formData });
+  }
+
+  if (isPostgresBackend()) {
+    const result = await softDeleteUserPg(profileId);
+    if (!result.ok) {
+      go({ error: result.error }, { formData });
+    }
+    if (!result.data) {
+      go({ error: "delete-failed" }, { formData });
+    }
+    revalidatePath(PRATICIENS_PATH);
+    revalidatePath(EQUIPE_PATH);
+    revalidatePath(ADMIN_HOME_PATH);
+    go(
+      { ok: deleteOkKey(result.data.role) },
+      { formData, role: result.data.role },
+    );
   }
 
   let admin;
@@ -340,6 +451,34 @@ export async function reactivatePractitioner(
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
     go({ error: "delete-validation" }, { formData });
+  }
+
+  if (isPostgresBackend()) {
+    const result = await reactivateUserPg({
+      profileId,
+      siteUrl: getSiteUrl(),
+    });
+    if (!result.ok) {
+      go({ error: result.error }, { formData });
+    }
+    if (!result.data) {
+      go({ error: "reactivate-failed" }, { formData });
+    }
+    revalidatePath(PRATICIENS_PATH);
+    revalidatePath(EQUIPE_PATH);
+    revalidatePath(ADMIN_HOME_PATH);
+    const emailResult = await sendInviteEmail({
+      to: result.data.email,
+      inviteUrl: result.data.inviteUrl,
+      kind: "reactivate",
+    });
+    if (emailResult.error) {
+      go(
+        { error: "reactivate-partial" },
+        { formData, role: result.data.role },
+      );
+    }
+    go({ ok: "reactivated" }, { formData, role: result.data.role });
   }
 
   let admin;
@@ -427,6 +566,23 @@ export async function permanentlyDeletePractitioner(
   const profileId = readText(formData, "profile_id");
   if (!profileId) {
     go({ error: "delete-validation" }, { formData });
+  }
+
+  if (isPostgresBackend()) {
+    const result = await permanentlyDeleteUserPg(profileId);
+    if (!result.ok) {
+      go({ error: result.error }, { formData });
+    }
+    if (!result.data) {
+      go({ error: "delete-failed" }, { formData });
+    }
+    revalidatePath(PRATICIENS_PATH);
+    revalidatePath(EQUIPE_PATH);
+    revalidatePath(ADMIN_HOME_PATH);
+    go(
+      { ok: "deleted-permanently" },
+      { formData, role: result.data.role },
+    );
   }
 
   let admin;

@@ -1,7 +1,9 @@
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
+import { listAllAnnouncementsPg } from "@/lib/announcements/pg";
 import { cn } from "@/lib/cn";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { createAnnouncement, deleteAnnouncement } from "./actions";
 
@@ -42,6 +44,11 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
   "save-failed": {
     title: "Erreur",
     message: "Impossible d’enregistrer l’annonce. Réessayez.",
+  },
+  "rate-limit": {
+    title: "Trop de requêtes",
+    message:
+      "Trop d’annonces ont été créées récemment. Réessayez dans quelques minutes.",
   },
   "delete-validation": {
     title: "Erreur",
@@ -87,14 +94,26 @@ export default async function AdminAnnoncesPage({
   const feedbackKey = ok ?? error;
   const feedback = feedbackKey ? FEEDBACK[feedbackKey] : null;
 
-  const supabase = await getServerSupabase();
-  const { data } = await supabase
-    .from("admin_announcements")
-    .select("id, title, body, created_at, expires_at")
-    .order("created_at", { ascending: false });
+  let rows: AnnouncementRow[];
+  if (isPostgresBackend()) {
+    const data = await listAllAnnouncementsPg();
+    rows = data.map((r) => ({
+      id: r.id,
+      title: r.title,
+      body: r.body,
+      created_at: r.created_at,
+      expires_at: r.expires_at,
+    }));
+  } else {
+    const supabase = await getServerSupabase();
+    const { data } = await supabase
+      .from("admin_announcements")
+      .select("id, title, body, created_at, expires_at")
+      .order("created_at", { ascending: false });
+    rows = (data ?? []) as AnnouncementRow[];
+  }
 
   const now = Date.now();
-  const rows = (data ?? []) as AnnouncementRow[];
   const active: AnnouncementRow[] = [];
   const expired: AnnouncementRow[] = [];
   for (const row of rows) {

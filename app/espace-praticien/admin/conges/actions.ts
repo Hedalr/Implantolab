@@ -2,6 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isUuid } from "@/lib/api/v1/ids";
+import { isPostgresBackend } from "@/lib/db/backend";
+import {
+  deleteLeaveRequestAsAdminPg,
+  reviewLeaveRequestPg,
+} from "@/lib/leave/pg";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { EQUIPE_PATH } from "@/lib/equipe";
 
@@ -50,31 +56,45 @@ export async function adminApproveLeaveRequest(
   const { userId } = await requireAdmin();
 
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) {
+  if (!id || (isPostgresBackend() && !isUuid(id))) {
     go({ error: "validation" }, formData);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("leave_requests")
-    .update({
+  if (isPostgresBackend()) {
+    const result = await reviewLeaveRequestPg({
+      leaveId: id,
+      reviewerId: userId,
       status: "approved",
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("status", "pending");
+    });
+    if (!result.ok) {
+      if (result.error === "balance") go({ error: "balance" }, formData);
+      if (result.error === "conflict") go({ error: "conflict" }, formData);
+      console.error("[adminApproveLeaveRequest] postgres:", result);
+      go({ error: "review" }, formData);
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("leave_requests")
+      .update({
+        status: "approved",
+        reviewed_by: userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("status", "pending");
 
-  if (error) {
-    const message = error.message ?? "";
-    if (message.startsWith("INSUFFICIENT_BALANCE")) {
-      go({ error: "balance" }, formData);
+    if (error) {
+      const message = error.message ?? "";
+      if (message.startsWith("INSUFFICIENT_BALANCE")) {
+        go({ error: "balance" }, formData);
+      }
+      if (message.startsWith("SECTOR_CONFLICT")) {
+        go({ error: "conflict" }, formData);
+      }
+      console.error("[adminApproveLeaveRequest] échec:", error);
+      go({ error: "review" }, formData);
     }
-    if (message.startsWith("SECTOR_CONFLICT")) {
-      go({ error: "conflict" }, formData);
-    }
-    console.error("[adminApproveLeaveRequest] échec:", error);
-    go({ error: "review" }, formData);
   }
 
   revalidateLeavePaths();
@@ -87,24 +107,36 @@ export async function adminRejectLeaveRequest(
   const { userId } = await requireAdmin();
 
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) {
+  if (!id || (isPostgresBackend() && !isUuid(id))) {
     go({ error: "validation" }, formData);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase
-    .from("leave_requests")
-    .update({
+  if (isPostgresBackend()) {
+    const result = await reviewLeaveRequestPg({
+      leaveId: id,
+      reviewerId: userId,
       status: "rejected",
-      reviewed_by: userId,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("status", "pending");
+    });
+    if (!result.ok) {
+      console.error("[adminRejectLeaveRequest] postgres:", result);
+      go({ error: "review" }, formData);
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("leave_requests")
+      .update({
+        status: "rejected",
+        reviewed_by: userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("status", "pending");
 
-  if (error) {
-    console.error("[adminRejectLeaveRequest] échec:", error);
-    go({ error: "review" }, formData);
+    if (error) {
+      console.error("[adminRejectLeaveRequest] échec:", error);
+      go({ error: "review" }, formData);
+    }
   }
 
   revalidateLeavePaths();
@@ -117,15 +149,22 @@ export async function adminDeleteLeaveRequest(
   await requireAdmin();
 
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) {
+  if (!id || (isPostgresBackend() && !isUuid(id))) {
     go({ error: "validation" }, formData);
   }
 
-  const supabase = await getServerSupabase();
-  const { error } = await supabase.from("leave_requests").delete().eq("id", id);
+  if (isPostgresBackend()) {
+    const result = await deleteLeaveRequestAsAdminPg(id);
+    if (!result.ok) {
+      go({ error: "delete" }, formData);
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase.from("leave_requests").delete().eq("id", id);
 
-  if (error) {
-    go({ error: "delete" }, formData);
+    if (error) {
+      go({ error: "delete" }, formData);
+    }
   }
 
   revalidateLeavePaths();

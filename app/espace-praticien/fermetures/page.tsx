@@ -3,7 +3,12 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/espace-praticien/FormField";
 import { cn } from "@/lib/cn";
-import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import { listMyClosurePeriodsPg } from "@/lib/closures/pg";
+import { isPostgresBackend } from "@/lib/db/backend";
+import {
+  getServerSupabase,
+  requirePractitioner,
+} from "@/lib/supabase/server";
 import {
   countInclusiveDays,
   formatDateRange,
@@ -15,6 +20,8 @@ export const metadata: Metadata = {
   title: "Fermetures — Espace praticien",
   robots: { index: false, follow: false },
 };
+
+export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{ ok?: string; error?: string }>;
 
@@ -33,6 +40,8 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   note: "La note doit contenir au plus 500 caractères.",
   save: "Une erreur est survenue lors de l’enregistrement. Merci de réessayer.",
   delete: "Impossible de supprimer cette fermeture. Merci de réessayer.",
+  "rate-limit":
+    "Trop de fermetures ont été enregistrées récemment. Réessayez dans quelques minutes.",
 };
 
 export default async function FermeturesPage({
@@ -40,17 +49,27 @@ export default async function FermeturesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { userId } = await requireUser();
+  const { userId } = await requirePractitioner();
   const { ok, error } = await searchParams;
 
-  const supabase = await getServerSupabase();
-  const { data } = await supabase
-    .from("closure_periods")
-    .select("id, start_date, end_date, note")
-    .eq("profile_id", userId)
-    .order("start_date", { ascending: true });
-
-  const rows = (data ?? []) as ClosurePeriodRow[];
+  let rows: ClosurePeriodRow[];
+  if (isPostgresBackend()) {
+    const data = await listMyClosurePeriodsPg(userId);
+    rows = data.map((r) => ({
+      id: r.id,
+      start_date: r.start_date,
+      end_date: r.end_date,
+      note: r.note,
+    }));
+  } else {
+    const supabase = await getServerSupabase();
+    const { data } = await supabase
+      .from("closure_periods")
+      .select("id, start_date, end_date, note")
+      .eq("profile_id", userId)
+      .order("start_date", { ascending: true });
+    rows = (data ?? []) as ClosurePeriodRow[];
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

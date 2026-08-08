@@ -18,9 +18,10 @@ export const dynamic = "force-dynamic";
 type SearchParams = Promise<{ error?: string; detail?: string }>;
 
 const ERROR_MESSAGES: Record<string, string> = {
-  short: "Le mot de passe doit contenir au moins 8 caractères.",
+  short: "Le mot de passe doit contenir au moins 10 caractères.",
   mismatch: "Les deux mots de passe ne correspondent pas.",
-  weak: "Ce mot de passe est trop courant. Choisissez-en un plus complexe.",
+  weak:
+    "Le mot de passe doit contenir au moins une lettre et un chiffre.",
   "same-password":
     "Ce mot de passe est identique à l’ancien. Choisissez-en un différent.",
   "session-expired":
@@ -66,10 +67,10 @@ export default async function SetPasswordPage({
             type="password"
             name="password"
             required
-            minLength={8}
+            minLength={10}
             autoComplete="new-password"
             className={authFieldClassName}
-            placeholder="Au moins 8 caractères"
+            placeholder="Au moins 10 caractères, lettre et chiffre"
           />
         </label>
 
@@ -79,7 +80,7 @@ export default async function SetPasswordPage({
             type="password"
             name="confirm"
             required
-            minLength={8}
+            minLength={10}
             autoComplete="new-password"
             className={authFieldClassName}
           />

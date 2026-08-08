@@ -5,6 +5,8 @@
  * `supabase/migrations/001_init.sql` et `004_request_media.sql`.
  */
 
+import type { ProfileRole } from "@/lib/roles";
+
 export const REQUEST_CATEGORIES = [
   "Infos complémentaires",
   "Urgence",
@@ -19,8 +21,44 @@ export const REQUEST_INBOX_SUBJECTS = ["Question", "Urgence"] as const;
 
 export const REQUEST_INBOX_LABEL = "Question/Urgence";
 
+/** Sujets affichés dans Laboratoire (admin / chef / prothésiste). */
+export const LAB_SUBJECTS = ["Infos complémentaires"] as const;
+
+/** Legacy DB value for Infos complémentaires. */
+const LAB_SUBJECT_LEGACY = "Demande";
+
+/**
+ * Aperçu `message` sur `GET /api/v1/requests` (list) — détail reste complet.
+ * P2-7 / S6.
+ */
+export const REQUEST_LIST_MESSAGE_PREVIEW_CHARS = 120;
+
 export function isRequestCategory(value: string): value is RequestCategory {
   return (REQUEST_CATEGORIES as readonly string[]).includes(value);
+}
+
+/**
+ * Sujets autorisés côté API pour un rôle lab (P2-7 / S5).
+ * - prosthetist → labo only
+ * - chef → labo + inbox Q/U
+ * - admin / practitioner → null (pas de filtre forcé)
+ */
+export function allowedSubjectsForRole(
+  role: ProfileRole,
+): readonly string[] | null {
+  if (role === "prosthetist") {
+    return [...LAB_SUBJECTS, LAB_SUBJECT_LEGACY];
+  }
+  if (role === "chef_de_secteur") {
+    return [...LAB_SUBJECTS, LAB_SUBJECT_LEGACY, ...REQUEST_INBOX_SUBJECTS];
+  }
+  return null;
+}
+
+/** Tronque le message pour les listes API (patient_name inchangé). */
+export function previewRequestMessage(message: string): string {
+  if (message.length <= REQUEST_LIST_MESSAGE_PREVIEW_CHARS) return message;
+  return `${message.slice(0, REQUEST_LIST_MESSAGE_PREVIEW_CHARS)}…`;
 }
 
 /**
@@ -32,9 +70,6 @@ export function isRequestCategory(value: string): value is RequestCategory {
  */
 export const MODIFICATION_PROTHESE_CATEGORY: RequestCategory =
   "Modifications prothèse";
-
-/** Sujets affichés dans Laboratoire (admin / chef / prothésiste). */
-export const LAB_SUBJECTS = ["Infos complémentaires"] as const;
 
 export function isLabSubject(
   subject: string,

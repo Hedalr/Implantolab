@@ -1,7 +1,13 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { PG_SESSION_COOKIE } from "@/lib/auth/postgres/cookies";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { checkPasswordPolicy, setPasswordPg } from "@/lib/rh/pg";
+import { homePathForRole } from "@/lib/roles";
 import {
+  getCurrentProfile,
   getServerSupabase,
   getSessionUser,
   isSupabaseConfigured,
@@ -21,11 +27,42 @@ export async function setPassword(formData: FormData): Promise<void> {
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
 
-  if (password.length < 8) {
+  const policyError = checkPasswordPolicy(password, confirm);
+  if (policyError === "password-short") {
     redirect("/espace-praticien/set-password?error=short");
   }
-  if (password !== confirm) {
+  if (policyError === "password-mismatch") {
     redirect("/espace-praticien/set-password?error=mismatch");
+  }
+  if (policyError === "password-weak") {
+    redirect("/espace-praticien/set-password?error=weak");
+  }
+
+  if (isPostgresBackend()) {
+    const cookieStore = await cookies();
+    const keepSessionToken =
+      cookieStore.get(PG_SESSION_COOKIE)?.value ?? null;
+    const result = await setPasswordPg({
+      userId: user.id,
+      password,
+      confirm,
+      keepSessionToken,
+    });
+    if (!result.ok) {
+      const key =
+        result.error === "password-short"
+          ? "short"
+          : result.error === "password-mismatch"
+            ? "mismatch"
+            : result.error === "password-weak"
+              ? "weak"
+              : "update-failed";
+      redirect(`/espace-praticien/set-password?error=${key}`);
+    }
+    const profile = await getCurrentProfile();
+    redirect(
+      `${homePathForRole(profile?.role)}?ok=password-set`,
+    );
   }
 
   const supabase = await getServerSupabase();

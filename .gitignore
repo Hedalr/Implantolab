@@ -37,3 +37,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# postgres local storage + dumps
+.data/
+db/dumps/

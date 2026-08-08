@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import { isPostgresBackend } from "@/lib/db/backend";
+import {
+  getServerSupabase,
+  requirePractitioner,
+} from "@/lib/supabase/server";
 import {
   REQUEST_CATEGORIES,
   formatRequestCategory,
@@ -13,6 +17,12 @@ import {
   fetchRequestMediaItems,
   listLabSectors,
 } from "@/lib/requests/queries";
+import {
+  countUnreadByRequestIdsPg,
+  fetchRequestMediaItemsPg,
+  listLabSectorsPg,
+  listMyRequestsPg,
+} from "@/lib/requests/pg";
 import {
   RequestMediaGallery,
   type RequestMediaItem,
@@ -81,36 +91,56 @@ export default async function DemandesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { userId } = await requireUser();
+  const { userId } = await requirePractitioner();
   const { ok, error } = await searchParams;
+  const postgres = isPostgresBackend();
 
-  const supabase = await getServerSupabase();
-  const [sectors, requestsRes] = await Promise.all([
-    listLabSectors(supabase),
-    supabase
-      .from("requests")
-      .select(
-        "id, subject, message, status, created_at, patient_name, sectors ( name, color )",
-      )
-      .eq("profile_id", userId)
-      .order("created_at", { ascending: false }),
-  ]);
+  let sectors;
+  let rows: RequestRow[];
+  let mediaByRequest: Map<string, RequestMediaItem[]>;
+  let unreadByRequest: Map<string, number>;
 
-  const rows = (requestsRes.data ?? []) as unknown as RequestRow[];
-  const openRows = rows.filter((r) => r.status === "open");
-  const closedRows = rows.filter((r) => r.status === "closed");
+  if (postgres) {
+    [sectors, rows] = await Promise.all([
+      listLabSectorsPg(),
+      listMyRequestsPg(userId),
+    ]);
+  } else {
+    const supabase = await getServerSupabase();
+    const [sectorsSb, requestsRes] = await Promise.all([
+      listLabSectors(supabase),
+      supabase
+        .from("requests")
+        .select(
+          "id, subject, message, status, created_at, patient_name, sectors ( name, color )",
+        )
+        .eq("profile_id", userId)
+        .order("created_at", { ascending: false }),
+    ]);
+    sectors = sectorsSb;
+    rows = (requestsRes.data ?? []) as unknown as RequestRow[];
+  }
 
+  const requestIds = rows.map((r) => r.id);
   const chatRequestIds = rows
     .filter((r) => isRequestInboxSubject(r.subject))
     .map((r) => r.id);
 
-  const [mediaByRequest, unreadByRequest] = await Promise.all([
-    fetchRequestMediaItems(
-      supabase,
-      rows.map((r) => r.id),
-    ),
-    countUnreadByRequestIds(supabase, chatRequestIds, userId),
-  ]);
+  if (postgres) {
+    [mediaByRequest, unreadByRequest] = await Promise.all([
+      fetchRequestMediaItemsPg(requestIds),
+      countUnreadByRequestIdsPg(chatRequestIds, userId),
+    ]);
+  } else {
+    const supabase = await getServerSupabase();
+    [mediaByRequest, unreadByRequest] = await Promise.all([
+      fetchRequestMediaItems(supabase, requestIds),
+      countUnreadByRequestIds(supabase, chatRequestIds, userId),
+    ]);
+  }
+
+  const openRows = rows.filter((r) => r.status === "open");
+  const closedRows = rows.filter((r) => r.status === "closed");
 
   return (
     <Container size="wide" className="py-12 md:py-16">
@@ -252,6 +282,7 @@ export default async function DemandesPage({
                     media={mediaByRequest.get(row.id) ?? []}
                     currentUserId={userId}
                     unreadCount={unreadByRequest.get(row.id) ?? 0}
+                    messageTransport={postgres ? "api" : "supabase"}
                   />
                 </li>
               ))}
@@ -275,6 +306,7 @@ export default async function DemandesPage({
                       media={mediaByRequest.get(row.id) ?? []}
                       currentUserId={userId}
                       unreadCount={unreadByRequest.get(row.id) ?? 0}
+                      messageTransport={postgres ? "api" : "supabase"}
                     />
                   </li>
                 ) : (
@@ -413,11 +445,13 @@ function RequestCard({
   media,
   currentUserId,
   unreadCount = 0,
+  messageTransport = "supabase",
 }: {
   row: RequestRow;
   media: RequestMediaItem[];
   currentUserId: string;
   unreadCount?: number;
+  messageTransport?: "supabase" | "api";
 }) {
   const showChat = isRequestInboxSubject(row.subject);
 
@@ -464,6 +498,7 @@ function RequestCard({
           className="group mt-5"
           compact={false}
           allowReplyWhenClosed
+          messageTransport={messageTransport}
         />
       ) : null}
     </article>

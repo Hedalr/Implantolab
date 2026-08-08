@@ -3,7 +3,6 @@ import {
   authFieldClassName,
   authLabelClassName,
 } from "@/components/auth/authFormStyles";
-import { signIn } from "./actions";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { buildMailtoHref } from "@/lib/mailto";
 import { site } from "@/content/fr/site";
@@ -63,7 +62,12 @@ export default async function LoginPage({
           </p>
         </div>
       ) : (
-        <form action={signIn} className="mt-10 flex flex-col gap-7" noValidate>
+        <form
+          action="/espace-praticien/auth/password"
+          method="post"
+          className="mt-10 flex flex-col gap-7"
+          noValidate
+        >
           <label className="flex flex-col gap-3">
             <span className={authLabelClassName}>Email</span>
             <input

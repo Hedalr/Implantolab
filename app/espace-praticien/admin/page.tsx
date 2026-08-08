@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getAdminDashboardStatsPg } from "@/lib/admin/dashboard-pg";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
   listAdminRequests,
@@ -47,7 +49,6 @@ function isoDate(date: Date): string {
 
 export default async function AdminDashboardPage() {
   const { profile } = await requireAdmin();
-  const supabase = await getServerSupabase();
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -56,46 +57,70 @@ export default async function AdminDashboardPage() {
   const todayIso = isoDate(today);
   const inSevenDaysIso = isoDate(inSevenDays);
 
-  const [
-    closuresThisWeekRes,
-    openRequestsRes,
-    practitionersRes,
-    recentRequestsRes,
-    upcomingClosuresRes,
-  ] = await Promise.all([
-    supabase
-      .from("closure_periods")
-      .select("id", { count: "exact", head: true })
-      .lte("start_date", inSevenDaysIso)
-      .gte("end_date", todayIso),
-    supabase
-      .from("requests")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "open")
-      .in("subject", [...REQUEST_INBOX_SUBJECTS]),
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "practitioner"),
-    listAdminRequests(supabase, {
-      status: "all",
-      page: 1,
-      pageSize: 5,
-      subjects: REQUEST_INBOX_SUBJECTS,
-    }),
-    supabase
-      .from("closure_periods")
-      .select("id, start_date, end_date, note, profiles(full_name)")
-      .gte("start_date", todayIso)
-      .order("start_date", { ascending: true })
-      .limit(5),
-  ]);
+  let closuresThisWeek: number;
+  let openRequests: number;
+  let practitionersCount: number;
+  let recentRequests: RequestRow[];
+  let upcomingClosures: ClosureRow[];
 
-  const closuresThisWeek = closuresThisWeekRes.count ?? 0;
-  const openRequests = openRequestsRes.count ?? 0;
-  const practitionersCount = practitionersRes.count ?? 0;
-  const recentRequests = recentRequestsRes.rows;
-  const upcomingClosures = (upcomingClosuresRes.data ?? []) as unknown as ClosureRow[];
+  if (isPostgresBackend()) {
+    const stats = await getAdminDashboardStatsPg();
+    closuresThisWeek = stats.closuresThisWeek;
+    openRequests = stats.openRequests;
+    practitionersCount = stats.practitionersCount;
+    recentRequests = stats.recentRequests;
+    upcomingClosures = stats.upcomingClosures.map((c) => ({
+      id: c.id,
+      start_date: c.start_date,
+      end_date: c.end_date,
+      note: c.note,
+      profiles: { full_name: c.full_name },
+    }));
+  } else {
+    const supabase = await getServerSupabase();
+
+    const [
+      closuresThisWeekRes,
+      openRequestsRes,
+      practitionersRes,
+      recentRequestsRes,
+      upcomingClosuresRes,
+    ] = await Promise.all([
+      supabase
+        .from("closure_periods")
+        .select("id", { count: "exact", head: true })
+        .lte("start_date", inSevenDaysIso)
+        .gte("end_date", todayIso),
+      supabase
+        .from("requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open")
+        .in("subject", [...REQUEST_INBOX_SUBJECTS]),
+      supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "practitioner"),
+      listAdminRequests(supabase, {
+        status: "all",
+        page: 1,
+        pageSize: 5,
+        subjects: REQUEST_INBOX_SUBJECTS,
+      }),
+      supabase
+        .from("closure_periods")
+        .select("id, start_date, end_date, note, profiles(full_name)")
+        .gte("start_date", todayIso)
+        .order("start_date", { ascending: true })
+        .limit(5),
+    ]);
+
+    closuresThisWeek = closuresThisWeekRes.count ?? 0;
+    openRequests = openRequestsRes.count ?? 0;
+    practitionersCount = practitionersRes.count ?? 0;
+    recentRequests = recentRequestsRes.rows;
+    upcomingClosures = (upcomingClosuresRes.data ??
+      []) as unknown as ClosureRow[];
+  }
 
   const displayName = profile.fullName ?? profile.email;
 

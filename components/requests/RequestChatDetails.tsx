@@ -21,6 +21,8 @@ type Props = {
   className?: string;
   compact?: boolean;
   allowReplyWhenClosed?: boolean;
+  /** `api` = polling cookie `/api/v1` (postgres local / Scalingo). */
+  messageTransport?: "supabase" | "api";
   trigger?: ReactNode;
 };
 
@@ -40,6 +42,7 @@ export function RequestChatDetails({
   className,
   compact = true,
   allowReplyWhenClosed = false,
+  messageTransport = "supabase",
   trigger,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -87,6 +90,7 @@ export function RequestChatDetails({
           status={status}
           compact={compact}
           allowReplyWhenClosed={allowReplyWhenClosed}
+          messageTransport={messageTransport}
         />
       ) : null}
     </details>

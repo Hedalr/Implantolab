@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { updatePgSession } from "@/lib/auth/postgres/middleware";
+import {
+  clearPgSessionCookie,
+  PG_SESSION_COOKIE,
+} from "@/lib/auth/postgres/cookies";
 
 function isPublicAuthPath(pathname: string): boolean {
   return [
@@ -9,18 +15,34 @@ function isPublicAuthPath(pathname: string): boolean {
   ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-function redirectToLogin(request: NextRequest): NextResponse {
+function isSetPasswordPath(pathname: string): boolean {
+  return (
+    pathname === "/espace-praticien/set-password" ||
+    pathname.startsWith("/espace-praticien/set-password/")
+  );
+}
+
+function redirectToLogin(
+  request: NextRequest,
+  options?: { clearSessionCookie?: boolean },
+): NextResponse {
   const redirectUrl = request.nextUrl.clone();
   redirectUrl.pathname = "/espace-praticien/login";
   redirectUrl.search = "";
-  return NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(redirectUrl);
+  // updatePgSession pose le clear sur `NextResponse.next` — si on redirige
+  // à la place, il faut reposer le Set-Cookie ici, sinon le cookie mort reste.
+  if (options?.clearSessionCookie) {
+    clearPgSessionCookie(response);
+  }
+  return response;
 }
 
 /**
  * Proxy Next.js 16 (ex-middleware).
  * Protège uniquement la section /espace-praticien.
  *
- * - Rafraîchit la session Supabase.
+ * - Rafraîchit la session (Supabase ou Postgres selon DATA_BACKEND).
  * - Redirige vers /espace-praticien/login si aucune session valide,
  *   sauf sur login / callback auth / logout.
  *
@@ -33,18 +55,44 @@ export async function proxy(request: NextRequest) {
   const isPublicPath = isPublicAuthPath(pathname);
 
   try {
-    const { response, user } = await updateSession(request);
+    const { response, user } = isPostgresBackend()
+      ? await updatePgSession(request)
+      : await updateSession(request);
 
     if (!user && !isPublicPath) {
-      return redirectToLogin(request);
+      const hadPgCookie = Boolean(
+        request.cookies.get(PG_SESSION_COOKIE)?.value,
+      );
+      return redirectToLogin(request, {
+        clearSessionCookie: isPostgresBackend() && hadPgCookie,
+      });
+    }
+
+    // Invite acceptée mais mdp pas encore défini → uniquement set-password.
+    if (
+      isPostgresBackend() &&
+      user &&
+      "mustSetPassword" in user &&
+      user.mustSetPassword &&
+      !isPublicPath &&
+      !isSetPasswordPath(pathname)
+    ) {
+      const dest = request.nextUrl.clone();
+      dest.pathname = "/espace-praticien/set-password";
+      dest.search = "";
+      return NextResponse.redirect(dest);
     }
 
     return response;
   } catch (error) {
     console.error("[proxy] échec session:", error);
-    return isPublicPath
-      ? NextResponse.next({ request })
-      : redirectToLogin(request);
+    if (isPublicPath) {
+      return NextResponse.next({ request });
+    }
+    const hadPgCookie =
+      isPostgresBackend() &&
+      Boolean(request.cookies.get(PG_SESSION_COOKIE)?.value);
+    return redirectToLogin(request, { clearSessionCookie: hadPgCookie });
   }
 }
 

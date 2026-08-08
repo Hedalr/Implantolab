@@ -9,7 +9,10 @@ import {
   updateEmployeeLeaveBalance,
   updateEmployeeSector,
 } from "@/app/espace-praticien/admin/employes/actions";
-import { deletePractitioner } from "@/app/espace-praticien/admin/praticiens/actions";
+import {
+  deletePractitioner,
+  resendInvite,
+} from "@/app/espace-praticien/admin/praticiens/actions";
 import { ConfirmFormButton } from "@/components/espace-praticien/ConfirmFormButton";
 
 const inputStyle = cn(
@@ -27,6 +30,7 @@ export type EquipeMember = {
   sectorColor: string | null;
   leaveBalanceDays: number;
   usedDays: number;
+  invitePending?: boolean;
 };
 
 export type EquipeSectorOption = {
@@ -236,6 +240,26 @@ export function EquipeMembersTable({
                     </td>
                     <td className="py-4 text-right">
                       <div className="inline-flex flex-col items-end gap-2">
+                        {m.invitePending ? (
+                          <form action={resendInvite}>
+                            <input
+                              type="hidden"
+                              name="profile_id"
+                              value={m.id}
+                            />
+                            <input
+                              type="hidden"
+                              name="return_path"
+                              value={equipeHref("membres")}
+                            />
+                            <button
+                              type="submit"
+                              className="text-xs tracking-wide uppercase text-[var(--ink)] hover:text-[var(--accent-warm)]"
+                            >
+                              Renvoyer l’invitation
+                            </button>
+                          </form>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() =>

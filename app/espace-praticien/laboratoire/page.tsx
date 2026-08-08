@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 import {
   LAB_REQUESTS_PAGE_SIZE,
@@ -8,6 +9,10 @@ import {
   parseRequestStatusFilter,
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
+import {
+  listLabRequestsPg,
+  listLabSectorsPg,
+} from "@/lib/requests/pg";
 import {
   formatRequestCategory,
   LAB_SUBJECTS,
@@ -57,37 +62,61 @@ export default async function LaboratoireIndex({
   const status = parseRequestStatusFilter(rawStatus);
   const patientQuery = await getPatientFilter("laboratoire");
   const page = parsePage(rawPage);
-
-  const supabase = await getServerSupabase();
-  const sectors = await listLabSectors(supabase);
+  const postgres = isPostgresBackend();
 
   const isAdmin = profile.role === "admin";
-  const defaultSectorId = isAdmin
-    ? "all"
-    : (profile.sectorId ?? sectors[0]?.id ?? "all");
+  // Fail-closed : lab sans secteur ne doit jamais lister (ni 1er secteur, ni "all").
+  const labDenied = !isAdmin && !profile.sectorId;
+
+  const sectors = postgres
+    ? await listLabSectorsPg()
+    : await listLabSectors(await getServerSupabase());
+
+  const defaultSectorId = isAdmin ? "all" : (profile.sectorId ?? "all");
   const activeSectorId =
     rawSector &&
     (rawSector === "all" || sectors.some((s) => s.id === rawSector))
       ? rawSector
       : defaultSectorId;
 
-  // Un prothésiste ne peut pas naviguer hors de son secteur.
-  const sectorFilter =
-    !isAdmin && profile.sectorId
-      ? profile.sectorId
+  // Un prothésiste / chef ne peut pas naviguer hors de son secteur.
+  const sectorFilter: string | "all" = labDenied
+    ? "all"
+    : !isAdmin
+      ? (profile.sectorId as string)
       : activeSectorId === "all"
         ? "all"
         : activeSectorId;
 
-  const { rows: requests, total, pageSize, totalPages, page: currentPage } =
-    await listLabRequests(supabase, {
+  let requests: Awaited<ReturnType<typeof listLabRequestsPg>>["rows"] = [];
+  let total = 0;
+  let pageSize = LAB_REQUESTS_PAGE_SIZE;
+  let totalPages = 0;
+  let currentPage = page;
+
+  if (!labDenied) {
+    const listFilters = {
       status,
       sectorId: sectorFilter,
       patientQuery: patientQuery || undefined,
       page,
       pageSize: LAB_REQUESTS_PAGE_SIZE,
       subjects: LAB_SUBJECTS,
-    });
+    };
+    const pageResult = postgres
+      ? await listLabRequestsPg({
+          ...listFilters,
+          scope: isAdmin
+            ? "admin"
+            : { sectorId: profile.sectorId as string },
+        })
+      : await listLabRequests(await getServerSupabase(), listFilters);
+    requests = pageResult.rows;
+    total = pageResult.total;
+    pageSize = pageResult.pageSize;
+    totalPages = pageResult.totalPages;
+    currentPage = pageResult.page;
+  }
 
   const activeSector = sectors.find((s) => s.id === sectorFilter) ?? null;
 

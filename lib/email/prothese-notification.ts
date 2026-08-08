@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getSql } from "@/lib/db/client";
 import { getResendClient, isResendConfigured } from "@/lib/email/resend";
 import type { RequestPushRecord } from "@/lib/push/types";
 import { MODIFICATION_PROTHESE_CATEGORY } from "@/lib/requests/types";
@@ -16,8 +18,12 @@ import { formatDateTime } from "@/lib/utils/date";
  * laboratoire (règle Outlook + imprimante Brother QL-800 dédiée).
  * Peut être surchargée via `PROTHESE_REQUEST_NOTIFICATION_EMAIL`.
  *
- * Envoi via webhook DB (`/api/prothese/on-request`) à l'INSERT `requests`
- * (web + app mobile).
+ * Envoi via webhook DB (`/api/prothese/on-request`) en mode supabase,
+ * ou `notifyAfterRequestCreated` en mode postgres.
+ *
+ * Format calé sur rouleau DK 62×29 mm : un corps trop long + les en-têtes
+ * Outlook (De / À / Objet) produisent un job multipage → une étiquette
+ * quasi vide par page (symptôme « impression en boucle »).
  */
 const DEFAULT_NOTIFICATION_EMAIL = "modif-prothese@outlook.fr";
 
@@ -28,6 +34,10 @@ const DEFAULT_NOTIFICATION_EMAIL = "modif-prothese@outlook.fr";
  */
 const DEFAULT_FROM_EMAIL = "Implantolab <onboarding@resend.dev>";
 
+/** Largeur utile typique d'une DK 62×29 mm en caractères monospace ~11–12 pt. */
+const LABEL_LINE_MAX = 34;
+const LABEL_MESSAGE_MAX = 90;
+
 export type ProtheseModificationNotification = {
   requestId: string;
   patientName: string;
@@ -37,9 +47,19 @@ export type ProtheseModificationNotification = {
   createdAt: Date;
 };
 
+function collapseWhitespace(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function clipLabelLine(value: string, max = LABEL_LINE_MAX): string {
+  const cleaned = collapseWhitespace(value);
+  if (cleaned.length <= max) return cleaned;
+  return `${cleaned.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+}
+
 /**
  * Corps texte brut pour la règle Outlook « l'imprimer » (étiquette labo).
- * Format provisoire : à caler sur une étiquette réelle côté client.
+ * Compact volontairement : 62×29 mm ≈ 4–5 lignes lisibles.
  */
 export function buildProtheseModificationEmailText(
   notification: ProtheseModificationNotification,
@@ -48,17 +68,57 @@ export function buildProtheseModificationEmailText(
     notification.practitionerName?.trim() ||
     notification.practitionerEmail.trim() ||
     "—";
+  const message = clipLabelLine(
+    notification.message,
+    LABEL_MESSAGE_MAX,
+  );
 
   return [
-    "MODIFICATION PROTHESE",
-    "",
-    `Patient : ${notification.patientName}`,
-    `Praticien : ${praticien}`,
-    "",
-    notification.message,
-    "",
-    `Reçu le ${formatDateTime(notification.createdAt)}`,
+    "MODIF PROTHESE",
+    `P: ${clipLabelLine(notification.patientName)}`,
+    `D: ${clipLabelLine(praticien)}`,
+    message,
+    formatDateTime(notification.createdAt),
   ].join("\n");
+}
+
+/**
+ * Variante HTML (Outlook Word) : police large, pas de marges, pas de
+ * mise en page longue. Les en-têtes De/À restent gérés côté style
+ * d'impression Outlook — à désactiver sur le PC labo.
+ */
+export function buildProtheseModificationEmailHtml(
+  notification: ProtheseModificationNotification,
+): string {
+  const praticien =
+    notification.practitionerName?.trim() ||
+    notification.practitionerEmail.trim() ||
+    "—";
+  const escape = (value: string) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+
+  const patient = escape(clipLabelLine(notification.patientName, 40));
+  const dentist = escape(clipLabelLine(praticien, 40));
+  const message = escape(
+    clipLabelLine(notification.message, LABEL_MESSAGE_MAX),
+  );
+  const when = escape(formatDateTime(notification.createdAt));
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:2mm;font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.15;color:#000;">
+<div style="font-weight:700;font-size:12pt;text-decoration:underline;">MODIF PROTHESE</div>
+<div><b>P:</b> ${patient}</div>
+<div><b>D:</b> ${dentist}</div>
+<div>${message}</div>
+<div style="font-size:9pt;">${when}</div>
+</body>
+</html>`;
 }
 
 /**
@@ -91,8 +151,10 @@ export async function sendProtheseModificationNotification(
     const { error } = await getResendClient().emails.send({
       from,
       to,
-      subject: `Modification prothèse — ${notification.patientName}`,
+      // Doit contenir "Modification prothèse" : la règle Outlook filtre sur l'objet.
+      subject: `Modification prothèse — ${clipLabelLine(notification.patientName, 40)}`,
       text: buildProtheseModificationEmailText(notification),
+      html: buildProtheseModificationEmailHtml(notification),
     });
 
     if (error) {
@@ -116,28 +178,56 @@ export async function notifyProtheseModificationFromRequest(
   if (!record.id || !message || !patientName) return;
 
   const profileId = record.profile_id ?? record.created_by ?? null;
-  let practitionerName: string | null = null;
-  let practitionerEmail = "";
+  let practitionerName =
+    typeof record.practitioner_name === "string"
+      ? record.practitioner_name
+      : null;
+  let practitionerEmail =
+    typeof record.practitioner_email === "string"
+      ? record.practitioner_email
+      : "";
 
-  if (profileId && isServiceRoleConfigured()) {
-    try {
-      const admin = getServiceRoleSupabase();
-      const [{ data: profile }, userResult] = await Promise.all([
-        admin
-          .from("profiles")
-          .select("full_name")
-          .eq("id", profileId)
-          .maybeSingle(),
-        withAdminTimeout(admin.auth.admin.getUserById(profileId), 4_000),
-      ]);
+  if (!practitionerName && !practitionerEmail && profileId) {
+    if (isPostgresBackend()) {
+      try {
+        const sql = getSql();
+        const rows = await sql<
+          { full_name: string | null; email: string }[]
+        >`
+          select p.full_name, u.email
+            from public.profiles p
+            join public.users u on u.id = p.id
+           where p.id = ${profileId}::uuid
+           limit 1
+        `;
+        practitionerName = rows[0]?.full_name ?? null;
+        practitionerEmail = rows[0]?.email ?? "";
+      } catch (err) {
+        console.warn(
+          "[prothese-notification] profil praticien indisponible (postgres) :",
+          err instanceof Error ? err.message : err,
+        );
+      }
+    } else if (isServiceRoleConfigured()) {
+      try {
+        const admin = getServiceRoleSupabase();
+        const [{ data: profile }, userResult] = await Promise.all([
+          admin
+            .from("profiles")
+            .select("full_name")
+            .eq("id", profileId)
+            .maybeSingle(),
+          withAdminTimeout(admin.auth.admin.getUserById(profileId), 4_000),
+        ]);
 
-      practitionerName = profile?.full_name ?? null;
-      practitionerEmail = userResult.data.user?.email ?? "";
-    } catch (err) {
-      console.warn(
-        "[prothese-notification] profil praticien indisponible :",
-        err instanceof Error ? err.message : err,
-      );
+        practitionerName = profile?.full_name ?? null;
+        practitionerEmail = userResult.data.user?.email ?? "";
+      } catch (err) {
+        console.warn(
+          "[prothese-notification] profil praticien indisponible :",
+          err instanceof Error ? err.message : err,
+        );
+      }
     }
   }
 

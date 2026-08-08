@@ -1,6 +1,11 @@
-import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { Container } from "@/components/ui/Container";
 import { AdminCalendar } from "@/components/espace-praticien/AdminCalendar";
+import {
+  listAllClosurePeriodsPg,
+  listPractitionersPg,
+} from "@/lib/closures/pg";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -20,36 +25,66 @@ type DentistRow = {
 
 export default async function AdminCalendarPage() {
   await requireAdmin();
-  const supabase = await getServerSupabase();
 
-  const [closuresRes, dentistsRes] = await Promise.all([
-    supabase
-      .from("closure_periods")
-      .select("id, profile_id, start_date, end_date, note, profiles(full_name)")
-      .order("start_date", { ascending: true }),
-    supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("role", "practitioner")
-      .order("full_name", { ascending: true }),
-  ]);
+  let closures: {
+    id: string;
+    dentistId: string;
+    dentistName: string;
+    startDate: string;
+    endDate: string;
+    note: string | null;
+  }[];
+  let dentists: { id: string; name: string }[];
 
-  const rows = (closuresRes.data ?? []) as unknown as ClosureRow[];
-  const dentistRows = (dentistsRes.data ?? []) as DentistRow[];
+  if (isPostgresBackend()) {
+    const [closureRows, dentistRows] = await Promise.all([
+      listAllClosurePeriodsPg(),
+      listPractitionersPg(),
+    ]);
+    closures = closureRows.map((r) => ({
+      id: r.id,
+      dentistId: r.profile_id,
+      dentistName: r.full_name ?? "Dentiste",
+      startDate: r.start_date,
+      endDate: r.end_date,
+      note: r.note,
+    }));
+    dentists = dentistRows.map((d) => ({
+      id: d.id,
+      name: d.full_name ?? "Dentiste",
+    }));
+  } else {
+    const supabase = await getServerSupabase();
 
-  const closures = rows.map((r) => ({
-    id: r.id,
-    dentistId: r.profile_id,
-    dentistName: r.profiles?.full_name ?? "Dentiste",
-    startDate: r.start_date,
-    endDate: r.end_date,
-    note: r.note,
-  }));
+    const [closuresRes, dentistsRes] = await Promise.all([
+      supabase
+        .from("closure_periods")
+        .select("id, profile_id, start_date, end_date, note, profiles(full_name)")
+        .order("start_date", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("role", "practitioner")
+        .order("full_name", { ascending: true }),
+    ]);
 
-  const dentists = dentistRows.map((d) => ({
-    id: d.id,
-    name: d.full_name ?? "Dentiste",
-  }));
+    const rows = (closuresRes.data ?? []) as unknown as ClosureRow[];
+    const dentistRows = (dentistsRes.data ?? []) as DentistRow[];
+
+    closures = rows.map((r) => ({
+      id: r.id,
+      dentistId: r.profile_id,
+      dentistName: r.profiles?.full_name ?? "Dentiste",
+      startDate: r.start_date,
+      endDate: r.end_date,
+      note: r.note,
+    }));
+
+    dentists = dentistRows.map((d) => ({
+      id: d.id,
+      name: d.full_name ?? "Dentiste",
+    }));
+  }
 
   return (
     <Container size="wide" className="py-10 md:py-14">

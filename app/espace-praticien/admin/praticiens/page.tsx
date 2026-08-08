@@ -1,5 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { listPractitionersPg } from "@/lib/rh/pg";
 import { isServiceRoleConfigured, loadAuthEmailById } from "@/lib/supabase/admin";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { InviteUserForm } from "@/components/espace-praticien/InviteUserForm";
@@ -9,6 +11,7 @@ import {
   deletePractitioner,
   permanentlyDeletePractitioner,
   reactivatePractitioner,
+  resendInvite,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +24,7 @@ type ProfileRow = {
   role: ProfileRole;
   created_at: string;
   deleted_at: string | null;
+  invite_pending?: boolean;
 };
 
 const FEEDBACK: Record<string, { title: string; message: string }> = {
@@ -28,6 +32,21 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Invitation envoyée",
     message:
       "Le praticien recevra un e-mail pour définir son mot de passe et accéder à l’espace.",
+  },
+  "invite-resent": {
+    title: "Invitation renvoyée",
+    message:
+      "Un nouvel e-mail d’invitation a été envoyé. L’ancien lien n’est plus valide.",
+  },
+  "invite-resend-partial": {
+    title: "Invitation régénérée",
+    message:
+      "Le lien a été régénéré mais l’e-mail n’a pas pu être envoyé (SMTP). Réessayez « Renvoyer l’invitation ».",
+  },
+  "invite-not-pending": {
+    title: "Compte déjà activé",
+    message:
+      "Ce compte a déjà défini son mot de passe. Impossible de renvoyer une invitation.",
   },
   "invite-validation": {
     title: "Erreur",
@@ -111,22 +130,38 @@ export default async function AdminPraticiensPage({
   const { ok, error, detail } = await searchParams;
   const feedbackKey = ok ?? error;
   const feedback = feedbackKey ? FEEDBACK[feedbackKey] : null;
-  const canInvite = isServiceRoleConfigured();
+  const canInvite = isPostgresBackend() || isServiceRoleConfigured();
 
-  const supabase = await getServerSupabase();
-  const { data: profilesData } = await supabase
-    .from("profiles")
-    .select("id, full_name, role, created_at, deleted_at")
-    .eq("role", "practitioner")
-    .order("created_at", { ascending: false });
+  let profiles: ProfileRow[] = [];
+  let emailById = new Map<string, string>();
 
-  const profiles = (profilesData ?? []) as ProfileRow[];
+  if (isPostgresBackend()) {
+    const rows = await listPractitionersPg();
+    profiles = rows.map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      role: p.role,
+      created_at: p.created_at,
+      deleted_at: p.deleted_at,
+      invite_pending: p.invite_pending,
+    }));
+    emailById = new Map(rows.map((p) => [p.id, p.email]));
+  } else {
+    const supabase = await getServerSupabase();
+    const { data: profilesData } = await supabase
+      .from("profiles")
+      .select("id, full_name, role, created_at, deleted_at")
+      .eq("role", "practitioner")
+      .order("created_at", { ascending: false });
+
+    profiles = (profilesData ?? []) as ProfileRow[];
+    emailById = canInvite
+      ? await loadAuthEmailById("admin/praticiens")
+      : new Map<string, string>();
+  }
+
   const activeProfiles = profiles.filter((p) => !p.deleted_at);
   const deactivatedProfiles = profiles.filter((p) => p.deleted_at);
-
-  const emailById = canInvite
-    ? await loadAuthEmailById("admin/praticiens")
-    : new Map<string, string>();
 
   return (
     <Container size="wide" className="py-10 md:py-14">
@@ -170,11 +205,12 @@ export default async function AdminPraticiensPage({
         <div className="mb-8 border border-[var(--line-strong)] bg-[var(--bg-elevated)] p-5 max-w-3xl">
           <p className="text-eyebrow text-[var(--accent-warm)]">Configuration</p>
           <p className="mt-2 text-sm text-[var(--ink-muted)] leading-relaxed">
-            Pour envoyer des invitations par e-mail, ajoutez{" "}
+            Mode Supabase : ajoutez{" "}
             <code className="text-[var(--ink)]">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-            dans <code className="text-[var(--ink)]">.env.local</code> (local) ou
-            Vercel (production). Récupérez-la dans Supabase → Project Settings →
-            API → service_role.
+            dans <code className="text-[var(--ink)]">.env.local</code> ou Vercel
+            pour envoyer des invitations. En mode postgres local, les invitations
+            utilisent <code className="text-[var(--ink)]">public.users</code>{" "}
+            (Resend optionnel).
           </p>
         </div>
       ) : null}
@@ -216,6 +252,17 @@ export default async function AdminPraticiensPage({
                       <span className="text-xs tracking-wide uppercase text-[var(--ink-discreet)]">
                         {roleLabel(p.role)}
                       </span>
+                      {p.invite_pending ? (
+                        <form action={resendInvite}>
+                          <input type="hidden" name="profile_id" value={p.id} />
+                          <button
+                            type="submit"
+                            className="text-xs tracking-wide uppercase text-[var(--ink)] hover:text-[var(--accent-warm)] transition-colors whitespace-nowrap"
+                          >
+                            Renvoyer l’invitation
+                          </button>
+                        </form>
+                      ) : null}
                       <ConfirmFormButton
                         action={deletePractitioner}
                         hiddenFields={{ profile_id: p.id }}

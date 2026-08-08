@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
   fetchRequestMediaItems,
@@ -8,6 +9,10 @@ import {
   type AdminRequestRow,
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
+import {
+  fetchRequestMediaItemsPg,
+  listLabRequestsPg,
+} from "@/lib/requests/pg";
 import {
   MODIFICATION_PROTHESE_CATEGORY,
 } from "@/lib/requests/types";
@@ -61,26 +66,49 @@ export default async function AdminModificationsProthesePage({
   const status = parseRequestStatusFilter(rawStatus);
   const patientQuery = await getPatientFilter("adminProthese");
   const page = parsePage(rawPage);
+  const postgres = isPostgresBackend();
 
-  const supabase = await getServerSupabase();
-  const {
-    rows: requests,
-    total,
-    pageSize,
-    totalPages,
-    page: currentPage,
-  } = await listAdminRequests(supabase, {
+  const listFilters = {
     status,
     patientQuery: patientQuery || undefined,
     page,
     pageSize: LAB_REQUESTS_PAGE_SIZE,
     subjects: [MODIFICATION_PROTHESE_CATEGORY],
-  });
+  };
 
-  const mediaByRequest = await fetchRequestMediaItems(
-    supabase,
-    requests.map((r) => r.id),
-  );
+  let requests: AdminRequestRow[];
+  let total: number;
+  let pageSize: number;
+  let totalPages: number;
+  let currentPage: number;
+  let mediaByRequest: Map<string, RequestMediaItem[]>;
+
+  if (postgres) {
+    const pageResult = await listLabRequestsPg({
+      ...listFilters,
+      scope: "admin",
+    });
+    requests = pageResult.rows;
+    total = pageResult.total;
+    pageSize = pageResult.pageSize;
+    totalPages = pageResult.totalPages;
+    currentPage = pageResult.page;
+    mediaByRequest = await fetchRequestMediaItemsPg(
+      requests.map((r) => r.id),
+    );
+  } else {
+    const supabase = await getServerSupabase();
+    const pageResult = await listAdminRequests(supabase, listFilters);
+    requests = pageResult.rows;
+    total = pageResult.total;
+    pageSize = pageResult.pageSize;
+    totalPages = pageResult.totalPages;
+    currentPage = pageResult.page;
+    mediaByRequest = await fetchRequestMediaItems(
+      supabase,
+      requests.map((r) => r.id),
+    );
+  }
 
   return (
     <Container size="wide" className="py-10 md:py-14">

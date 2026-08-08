@@ -79,7 +79,28 @@ uniquement si `Publié` = true et que la page n’a pas déjà été notifiée
   ```
   Configurer APNs (iOS) et FCM (Android) pour les profils preview / production.
 
-## 4. Migration SQL
+## 4. Ownership token + handoff (postgres API)
+
+Route : `POST|DELETE /api/v1/push/register` (`DATA_BACKEND=postgres`).
+
+- Format accepté : `ExponentPushToken[…]` (sinon `400 invalid_token_format`).
+- Upsert **owner-only** : un token déjà lié à un autre profil → **`409
+  token_owned_by_other`** (pas de reclaim / hijack notifs).
+- **Handoff appareil** (changement de compte sur le même device) :
+  le client doit `DELETE` le token (unregister) **avant** que le nouveau
+  compte le ré-enregistre. Sans unregister → 409 **volontaire** jusqu’à
+  suppression de la row.
+- **TTL optionnel** : `PUSH_TOKEN_TTL_DAYS` (jours). Si défini, le cron
+  quotidien `/api/cron/purge-request-media` purge les tokens dont
+  `updated_at` est plus vieux que ce délai — libère alors le unique
+  constraint pour un handoff tardif sans unregister. Absent = désactivé.
+- Après envoi Expo, les tickets `DeviceNotRegistered` sont purgés aussi en
+  mode postgres (`lib/push/expo.ts`).
+
+Chemin mobile **Supabase** (`register_push_token` RPC) : reclaim encore actif
+en prod actuelle — hors cutover postgres.
+
+## 5. Migration SQL
 
 Fichiers :
 
@@ -87,10 +108,11 @@ Fichiers :
 - `supabase/migrations/20260806170000_register_push_token_rpc.sql` — RPC `register_push_token` (reclaim token entre comptes)
 - `supabase/migrations/20260805140000_admin_announcements.sql` — `admin_announcements` (admin CRUD, praticiens SELECT si non expiré)
 - `supabase/migrations/20260806160000_prothese_email_webhook_pg_net.sql` — email étiquette Modif prothèse (web + mobile)
+- `db/migrations/003_push_tokens_updated_at_idx.sql` — index `updated_at` (TTL stale)
 
 Les annonces admin sont envoyées **depuis la Server Action** (pas de webhook `pg_net`) : insert + `notifyAdminAnnouncement`.
 
-## 5. Test rapide
+## 6. Test rapide
 
 1. Se connecter sur un appareil physique (build dev) → accepter les notifs.
 2. Vérifier une ligne dans `push_tokens`.

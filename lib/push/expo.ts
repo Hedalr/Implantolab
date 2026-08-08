@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getSql } from "@/lib/db/client";
 import {
   getServiceRoleSupabase,
   isServiceRoleConfigured,
@@ -73,6 +75,21 @@ export async function sendExpoPushMessages(
 }
 
 async function deleteInvalidTokens(tokens: string[]): Promise<void> {
+  if (tokens.length === 0) return;
+
+  if (isPostgresBackend()) {
+    try {
+      const sql = getSql();
+      await sql`
+        delete from public.push_tokens
+         where token = any(${tokens}::text[])
+      `;
+    } catch (error) {
+      console.error("[push/expo] purge tokens invalides (postgres)", error);
+    }
+    return;
+  }
+
   if (!isServiceRoleConfigured()) return;
   const supabase = getServiceRoleSupabase();
   const { error } = await supabase

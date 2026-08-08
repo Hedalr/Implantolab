@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isUuid } from "@/lib/api/v1/ids";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { updateLabRequestStatusPg } from "@/lib/requests/pg";
 import {
   getServerSupabase,
   requireAdminOrChef,
@@ -22,30 +25,50 @@ async function updateRequestStatus(
 ): Promise<void> {
   const { profile } = await requireAdminOrChef();
   const id = formData.get("id");
-  if (typeof id !== "string" || id.length === 0) {
+  if (
+    typeof id !== "string" ||
+    id.length === 0 ||
+    (isPostgresBackend() && !isUuid(id))
+  ) {
     throw new Error("Identifiant de demande manquant.");
   }
 
-  const supabase = await getServerSupabase();
-  let update = supabase.from("requests").update({ status }).eq("id", id);
-
-  if (profile.role === "chef_de_secteur") {
-    if (!profile.sectorId) {
-      throw new Error("Secteur manquant pour ce chef de secteur.");
-    }
-    update = update
-      .eq("sector_id", profile.sectorId)
-      .in("subject", [...REQUEST_INBOX_SUBJECTS]);
+  const isChef = profile.role === "chef_de_secteur";
+  if (isChef && !profile.sectorId) {
+    throw new Error("Secteur manquant pour ce chef de secteur.");
   }
 
-  const { data, error } = await update.select("id").maybeSingle();
+  if (isPostgresBackend()) {
+    const ok = await updateLabRequestStatusPg({
+      requestId: id,
+      status,
+      scope: isChef
+        ? { sectorId: profile.sectorId as string }
+        : "admin",
+      subjects: isChef ? REQUEST_INBOX_SUBJECTS : null,
+    });
+    if (!ok) {
+      throw new Error("Demande introuvable ou hors périmètre.");
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    let update = supabase.from("requests").update({ status }).eq("id", id);
 
-  if (error || !data) {
-    throw new Error(
-      error
-        ? `Impossible de mettre à jour la demande : ${error.message}`
-        : "Demande introuvable ou hors périmètre.",
-    );
+    if (isChef) {
+      update = update
+        .eq("sector_id", profile.sectorId)
+        .in("subject", [...REQUEST_INBOX_SUBJECTS]);
+    }
+
+    const { data, error } = await update.select("id").maybeSingle();
+
+    if (error || !data) {
+      throw new Error(
+        error
+          ? `Impossible de mettre à jour la demande : ${error.message}`
+          : "Demande introuvable ou hors périmètre.",
+      );
+    }
   }
 
   revalidatePath("/espace-praticien/admin/demandes");

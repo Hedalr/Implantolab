@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/ui/Container";
+import { isPostgresBackend } from "@/lib/db/backend";
+import {
+  listAllLeaveRequestsPg,
+  listLeaveEmployeesPg,
+  toLeaveRequestDbRow,
+} from "@/lib/leave/pg";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import { SECTOR_LAB_ROLES } from "@/lib/roles";
 import { firstRelation } from "@/lib/supabase/relation";
@@ -36,39 +42,57 @@ export default async function AdminCongesPage({
   await requireAdmin();
   const { ok, error } = await searchParams;
 
-  const supabase = await getServerSupabase();
+  let employees: EquipeLeaveEmployee[];
+  let leaves: ReturnType<typeof mapLeaveRows>;
 
-  const [{ data: employeesData }, { data: leavesData }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, full_name, sector_id, sectors ( name, color )")
-      .in("role", [...SECTOR_LAB_ROLES])
-      .is("deleted_at", null)
-      .order("full_name", { ascending: true }),
-    supabase
-      .from("leave_requests")
-      .select(
-        "id, profile_id, start_date, end_date, days_count, note, status, profiles ( full_name, sector_id, sectors ( name, color ) )",
-      )
-      .order("start_date", { ascending: true }),
-  ]);
-
-  const employees: EquipeLeaveEmployee[] = (
-    (employeesData ?? []) as unknown as EmployeeRow[]
-  ).map((e) => {
-    const sector = firstRelation(e.sectors);
-    return {
+  if (isPostgresBackend()) {
+    const [employeeRows, leaveRows] = await Promise.all([
+      listLeaveEmployeesPg(),
+      listAllLeaveRequestsPg(),
+    ]);
+    employees = employeeRows.map((e) => ({
       id: e.id,
       fullName: e.full_name,
       sectorId: e.sector_id,
-      sectorName: sector?.name ?? null,
-      sectorColor: sector?.color ?? null,
-    };
-  });
+      sectorName: e.sector_name,
+      sectorColor: e.sector_color,
+    }));
+    leaves = mapLeaveRows(leaveRows.map(toLeaveRequestDbRow));
+  } else {
+    const supabase = await getServerSupabase();
 
-  const leaves = mapLeaveRows(
-    (leavesData ?? []) as unknown as LeaveRequestDbRow[],
-  );
+    const [{ data: employeesData }, { data: leavesData }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, sector_id, sectors ( name, color )")
+        .in("role", [...SECTOR_LAB_ROLES])
+        .is("deleted_at", null)
+        .order("full_name", { ascending: true }),
+      supabase
+        .from("leave_requests")
+        .select(
+          "id, profile_id, start_date, end_date, days_count, note, status, profiles ( full_name, sector_id, sectors ( name, color ) )",
+        )
+        .order("start_date", { ascending: true }),
+    ]);
+
+    employees = ((employeesData ?? []) as unknown as EmployeeRow[]).map(
+      (e) => {
+        const sector = firstRelation(e.sectors);
+        return {
+          id: e.id,
+          fullName: e.full_name,
+          sectorId: e.sector_id,
+          sectorName: sector?.name ?? null,
+          sectorColor: sector?.color ?? null,
+        };
+      },
+    );
+
+    leaves = mapLeaveRows(
+      (leavesData ?? []) as unknown as LeaveRequestDbRow[],
+    );
+  }
 
   return (
     <Container size="wide" className="py-10 md:py-14">

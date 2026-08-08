@@ -2,7 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getServerSupabase, isSectorLabRole, requireLaboStaff } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/api/v1/ids";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { updateLabRequestStatusPg } from "@/lib/requests/pg";
+import {
+  getServerSupabase,
+  isSectorLabRole,
+  requireLaboStaff,
+} from "@/lib/supabase/server";
 
 async function updateRequestStatus(
   formData: FormData,
@@ -11,25 +18,38 @@ async function updateRequestStatus(
   const { profile } = await requireLaboStaff();
 
   const id = String(formData.get("id") ?? "").trim();
-  if (!id) {
+  if (!id || (isPostgresBackend() && !isUuid(id))) {
     redirect("/espace-praticien/laboratoire?error=missing");
   }
   if (isSectorLabRole(profile.role) && !profile.sectorId) {
     redirect("/espace-praticien/laboratoire?error=forbidden");
   }
 
-  const supabase = await getServerSupabase();
-  const update = supabase
-    .from("requests")
-    .update({ status })
-    .eq("id", id);
-  const scopedUpdate = isSectorLabRole(profile.role)
+  if (isPostgresBackend()) {
+    const ok = await updateLabRequestStatusPg({
+      requestId: id,
+      status,
+      scope: isSectorLabRole(profile.role)
+        ? { sectorId: profile.sectorId as string }
+        : "admin",
+    });
+    if (!ok) {
+      redirect("/espace-praticien/laboratoire?error=forbidden");
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const update = supabase
+      .from("requests")
+      .update({ status })
+      .eq("id", id);
+    const scopedUpdate = isSectorLabRole(profile.role)
       ? update.eq("sector_id", profile.sectorId)
       : update;
-  const { data, error } = await scopedUpdate.select("id").maybeSingle();
+    const { data, error } = await scopedUpdate.select("id").maybeSingle();
 
-  if (error || !data) {
-    redirect("/espace-praticien/laboratoire?error=forbidden");
+    if (error || !data) {
+      redirect("/espace-praticien/laboratoire?error=forbidden");
+    }
   }
 
   revalidatePath("/espace-praticien/laboratoire");

@@ -46,21 +46,43 @@ export async function notifyNewInboxRequest(
 export async function notifyRequestReply(
   message: MessagePushRecord,
 ): Promise<void> {
-  if (!isServiceRoleConfigured()) return;
-
   try {
-    const supabase = getServiceRoleSupabase();
-    const { data: request, error } = await supabase
-      .from("requests")
-      .select("id, subject, profile_id")
-      .eq("id", message.request_id)
-      .maybeSingle();
+    const { isPostgresBackend } = await import("@/lib/db/backend");
 
-    if (error || !request) {
-      if (error) console.error("[push/notify] load request", error.message);
-      return;
+    let request: {
+      id: string;
+      subject: string;
+      profile_id: string;
+    } | null = null;
+
+    if (isPostgresBackend()) {
+      const { getSql } = await import("@/lib/db/client");
+      const sql = getSql();
+      const rows = await sql<
+        { id: string; subject: string; profile_id: string }[]
+      >`
+        select id::text, subject, profile_id::text
+          from public.requests
+         where id = ${message.request_id}::uuid
+         limit 1
+      `;
+      request = rows[0] ?? null;
+    } else {
+      if (!isServiceRoleConfigured()) return;
+      const supabase = getServiceRoleSupabase();
+      const { data, error } = await supabase
+        .from("requests")
+        .select("id, subject, profile_id")
+        .eq("id", message.request_id)
+        .maybeSingle();
+      if (error) {
+        console.error("[push/notify] load request", error.message);
+        return;
+      }
+      request = data;
     }
 
+    if (!request) return;
     if (!isRequestInboxSubject(request.subject)) return;
     if (message.sender_id === request.profile_id) return;
 

@@ -3,6 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
+import {
+  createAnnouncementPg,
+  deleteAnnouncementPg,
+} from "@/lib/announcements/pg";
+import { isUuid } from "@/lib/api/v1/ids";
+import {
+  consumeRateLimit,
+  RATE_LIMITS,
+} from "@/lib/api/v1/rate-limit";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { notifyAdminAnnouncement } from "@/lib/push/notify";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 
@@ -27,7 +37,13 @@ function parseExpiresAt(raw: string): Date | null {
 
 export async function createAnnouncement(formData: FormData): Promise<void> {
   const { profile } = await requireAdmin();
-  const supabase = await getServerSupabase();
+
+  const rate = consumeRateLimit(
+    "announcementCreate",
+    profile.id,
+    RATE_LIMITS.announcementCreate,
+  );
+  if (rate.limited) go({ error: "rate-limit" });
 
   const title = readText(formData, "title");
   const body = readText(formData, "body");
@@ -45,16 +61,38 @@ export async function createAnnouncement(formData: FormData): Promise<void> {
     go({ error: "expires-validation" });
   }
 
-  const { error } = await supabase.from("admin_announcements").insert({
-    title,
-    body,
-    created_by: profile.id,
-    expires_at: expiresAt.toISOString(),
-  });
+  if (isPostgresBackend()) {
+    const result = await createAnnouncementPg({
+      title,
+      body,
+      expiresAt,
+      createdBy: profile.id,
+    });
+    if (!result.ok) {
+      go({
+        error:
+          result.error === "title"
+            ? "title-validation"
+            : result.error === "body"
+              ? "body-validation"
+              : result.error === "expires"
+                ? "expires-validation"
+                : "save-failed",
+      });
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase.from("admin_announcements").insert({
+      title,
+      body,
+      created_by: profile.id,
+      expires_at: expiresAt.toISOString(),
+    });
 
-  if (error) {
-    console.error("[admin/annonces] insert", error.message);
-    go({ error: "save-failed" });
+    if (error) {
+      console.error("[admin/annonces] insert", error.message);
+      go({ error: "save-failed" });
+    }
   }
 
   // Push best-effort : ne doit pas retarder la redirection (fan-out Expo).
@@ -66,21 +104,30 @@ export async function createAnnouncement(formData: FormData): Promise<void> {
 
 export async function deleteAnnouncement(formData: FormData): Promise<void> {
   await requireAdmin();
-  const supabase = await getServerSupabase();
 
   const id = readText(formData, "id");
-  if (!id) {
+  if (!id || (isPostgresBackend() && !isUuid(id))) {
     go({ error: "delete-validation" });
   }
 
-  const { error } = await supabase
-    .from("admin_announcements")
-    .delete()
-    .eq("id", id);
+  if (isPostgresBackend()) {
+    const result = await deleteAnnouncementPg(id);
+    if (!result.ok) {
+      go({
+        error: result.error === "not_found" ? "delete-validation" : "delete-failed",
+      });
+    }
+  } else {
+    const supabase = await getServerSupabase();
+    const { error } = await supabase
+      .from("admin_announcements")
+      .delete()
+      .eq("id", id);
 
-  if (error) {
-    console.error("[admin/annonces] delete", error.message);
-    go({ error: "delete-failed" });
+    if (error) {
+      console.error("[admin/annonces] delete", error.message);
+      go({ error: "delete-failed" });
+    }
   }
 
   revalidatePath(ANNONCES_PATH);

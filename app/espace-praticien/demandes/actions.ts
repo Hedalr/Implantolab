@@ -3,19 +3,33 @@
 import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { getSql } from "@/lib/db/client";
+import { notifyAfterRequestCreated } from "@/lib/api/v1/notify";
 import {
   detectPhotoMimeType,
   extensionForPhotoMimeType,
   sanitizeDownloadFilename,
 } from "@/lib/requests/media-security";
+import { sectorExistsPg } from "@/lib/requests/pg";
+import { REQUEST_MEDIA_BUCKET } from "@/lib/requests/request-media-access";
+import { putObject } from "@/lib/storage/local";
 import { getServiceRoleSupabase } from "@/lib/supabase/admin";
-import { getServerSupabase, requireUser } from "@/lib/supabase/server";
+import {
+  getServerSupabase,
+  requirePractitioner,
+} from "@/lib/supabase/server";
 import { isRequestCategory } from "@/lib/requests/types";
+import { isUuid } from "@/lib/api/v1/ids";
+import {
+  consumeRateLimit,
+  MAX_REQUEST_PHOTOS,
+  RATE_LIMITS,
+} from "@/lib/api/v1/rate-limit";
 
 const DEMANDES_PATH = "/espace-praticien/demandes";
-const REQUEST_MEDIA_BUCKET = "request-media";
 
-const MAX_PHOTOS = 6;
+const MAX_PHOTOS = MAX_REQUEST_PHOTOS;
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
 function fail(reason: string): never {
@@ -23,7 +37,15 @@ function fail(reason: string): never {
 }
 
 export async function createRequest(formData: FormData): Promise<void> {
-  const { userId } = await requireUser();
+  // Parité API POST /api/v1/requests — praticien only.
+  const { userId } = await requirePractitioner();
+
+  const rate = consumeRateLimit(
+    "requestCreateAction",
+    userId,
+    RATE_LIMITS.requestCreateAction,
+  );
+  if (rate.limited) fail("rate-limit");
 
   const subject = String(formData.get("subject") ?? "").trim();
   const patientName = String(formData.get("patient_name") ?? "").trim();
@@ -79,6 +101,72 @@ export async function createRequest(formData: FormData): Promise<void> {
     });
   }
 
+  if (isPostgresBackend()) {
+    if (!isUuid(sectorId) || !(await sectorExistsPg(sectorId))) {
+      fail("sector");
+    }
+
+    const sql = getSql();
+    let requestId: string;
+    try {
+      const rows = await sql<{ id: string }[]>`
+        insert into public.requests (
+          profile_id, sector_id, subject, message, patient_name, created_by, status
+        )
+        values (
+          ${userId}::uuid,
+          ${sectorId}::uuid,
+          ${subject},
+          ${message},
+          ${patientName},
+          ${userId}::uuid,
+          'open'
+        )
+        returning id::text
+      `;
+      requestId = rows[0]?.id ?? "";
+      if (!requestId) fail("save");
+    } catch (error) {
+      const messageText =
+        error instanceof Error ? error.message : String(error);
+      if (messageText.includes("REQUEST_RATE_LIMIT")) {
+        fail("rate-limit");
+      }
+      fail("save");
+    }
+
+    await Promise.all(
+      preparedPhotos.map(async (photo) => {
+        const path = `requests/${requestId}/${randomUUID()}.${photo.extension}`;
+        try {
+          await putObject(REQUEST_MEDIA_BUCKET, path, photo.buffer);
+          await sql`
+            insert into public.request_media (
+              request_id, storage_bucket, storage_path, mime_type, size_bytes, original_filename
+            )
+            values (
+              ${requestId}::uuid,
+              ${REQUEST_MEDIA_BUCKET},
+              ${path},
+              ${photo.mimeType},
+              ${photo.size},
+              ${photo.originalFilename}
+            )
+          `;
+        } catch (err) {
+          console.error("[demandes/createRequest] photo upload:", err);
+        }
+      }),
+    );
+
+    void notifyAfterRequestCreated(requestId).catch((err) => {
+      console.error("[demandes/createRequest] notify:", err);
+    });
+
+    revalidatePath(DEMANDES_PATH);
+    redirect(`${DEMANDES_PATH}?ok=sent`);
+  }
+
   const supabase = await getServerSupabase();
   let storageAdmin: ReturnType<typeof getServiceRoleSupabase> | null = null;
   if (preparedPhotos.length > 0) {
@@ -121,9 +209,6 @@ export async function createRequest(formData: FormData): Promise<void> {
   }
 
   const requestId = inserted.id as string;
-
-  // Email "Modifications prothèse" : webhook pg_net → /api/prothese/on-request
-  // (couvre web + app mobile). Upload photos best-effort ci-dessous.
 
   for (const photo of preparedPhotos) {
     if (!storageAdmin) continue;

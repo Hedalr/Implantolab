@@ -5,6 +5,15 @@ import {
   isServiceRoleConfigured,
   loadAuthEmailById,
 } from "@/lib/supabase/admin";
+import { isPostgresBackend } from "@/lib/db/backend";
+import {
+  listAllLeaveRequestsPg,
+  toLeaveRequestDbRow,
+} from "@/lib/leave/pg";
+import {
+  listLabEmployeesPg,
+  listSectorsPg,
+} from "@/lib/rh/pg";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
 import {
   SECTOR_LAB_ROLES,
@@ -66,6 +75,7 @@ type ProfileRow = {
   leave_balance_days: number | null;
   deleted_at: string | null;
   sectors: { name: string | null; color: string | null } | null;
+  invite_pending?: boolean;
 };
 
 const FEEDBACK: Record<string, { title: string; message: string }> = {
@@ -141,6 +151,21 @@ const FEEDBACK: Record<string, { title: string; message: string }> = {
     title: "Invitation envoyée",
     message:
       "Le chef de secteur recevra un e-mail pour définir son mot de passe et accéder aux questions/urgences et au laboratoire.",
+  },
+  "invite-resent": {
+    title: "Invitation renvoyée",
+    message:
+      "Un nouvel e-mail d’invitation a été envoyé. L’ancien lien n’est plus valide.",
+  },
+  "invite-resend-partial": {
+    title: "Invitation régénérée",
+    message:
+      "Le lien a été régénéré mais l’e-mail n’a pas pu être envoyé (SMTP). Réessayez « Renvoyer l’invitation ».",
+  },
+  "invite-not-pending": {
+    title: "Compte déjà activé",
+    message:
+      "Ce compte a déjà défini son mot de passe. Impossible de renvoyer une invitation.",
   },
   "invite-validation": {
     title: "Erreur",
@@ -241,46 +266,79 @@ export default async function AdminEquipePage({
   const isLeaveFeedback = Boolean(
     feedbackKey && feedbackKey in EQUIPE_LEAVE_FEEDBACK,
   );
-  const canInvite = isServiceRoleConfigured();
+  const canInvite = isPostgresBackend() || isServiceRoleConfigured();
   const needsEmails = tab === "membres" || tab === "invitations";
 
-  const supabase = await getServerSupabase();
+  let sectors: SectorRow[] = [];
+  let profiles: ProfileRow[] = [];
+  let leaves: ReturnType<typeof mapLeaveRows> = [];
+  let emailById = new Map<string, string>();
 
-  const [
-    { data: sectorsData },
-    { data: profilesData },
-    { data: leavesData },
-    emailById,
-  ] = await Promise.all([
-    supabase.from("sectors").select("id, name, color").order("name", {
-      ascending: true,
-    }),
-    supabase
-      .from("profiles")
-      .select(
-        "id, full_name, role, sector_id, leave_balance_days, deleted_at, sectors ( name, color )",
-      )
-      .in("role", [...SECTOR_LAB_ROLES])
-      .order("full_name", { ascending: true }),
-    supabase
-      .from("leave_requests")
-      .select(
-        "id, profile_id, start_date, end_date, days_count, note, status, profiles ( full_name, sector_id, sectors ( name, color ) )",
-      )
-      .order("start_date", { ascending: true }),
-    needsEmails
-      ? loadAuthEmailById("admin/employes")
-      : Promise.resolve(new Map<string, string>()),
-  ]);
+  if (isPostgresBackend()) {
+    const [sectorRows, employeeRows, leaveRows] = await Promise.all([
+      listSectorsPg(),
+      listLabEmployeesPg(),
+      listAllLeaveRequestsPg(),
+    ]);
+    sectors = sectorRows.map((s) => ({
+      id: s.id,
+      name: s.name,
+      color: s.color,
+    }));
+    profiles = employeeRows.map((p) => ({
+      id: p.id,
+      full_name: p.full_name,
+      role: p.role as SectorLabRole,
+      sector_id: p.sector_id,
+      leave_balance_days: p.leave_balance_days,
+      deleted_at: p.deleted_at,
+      invite_pending: p.invite_pending,
+      sectors:
+        p.sector_name != null
+          ? { name: p.sector_name, color: p.sector_color }
+          : null,
+    }));
+    leaves = mapLeaveRows(leaveRows.map(toLeaveRequestDbRow));
+    emailById = new Map(employeeRows.map((p) => [p.id, p.email]));
+  } else {
+    const supabase = await getServerSupabase();
+    const [
+      { data: sectorsData },
+      { data: profilesData },
+      { data: leavesData },
+      emails,
+    ] = await Promise.all([
+      supabase.from("sectors").select("id, name, color").order("name", {
+        ascending: true,
+      }),
+      supabase
+        .from("profiles")
+        .select(
+          "id, full_name, role, sector_id, leave_balance_days, deleted_at, sectors ( name, color )",
+        )
+        .in("role", [...SECTOR_LAB_ROLES])
+        .order("full_name", { ascending: true }),
+      supabase
+        .from("leave_requests")
+        .select(
+          "id, profile_id, start_date, end_date, days_count, note, status, profiles ( full_name, sector_id, sectors ( name, color ) )",
+        )
+        .order("start_date", { ascending: true }),
+      needsEmails
+        ? loadAuthEmailById("admin/employes")
+        : Promise.resolve(new Map<string, string>()),
+    ]);
 
-  const sectors = (sectorsData ?? []) as SectorRow[];
-  const profiles = (profilesData ?? []) as unknown as ProfileRow[];
+    sectors = (sectorsData ?? []) as SectorRow[];
+    profiles = (profilesData ?? []) as unknown as ProfileRow[];
+    leaves = mapLeaveRows(
+      (leavesData ?? []) as unknown as LeaveRequestDbRow[],
+    );
+    emailById = emails;
+  }
+
   const activeProfiles = profiles.filter((p) => !p.deleted_at);
   const deactivatedProfiles = profiles.filter((p) => p.deleted_at);
-
-  const leaves = mapLeaveRows(
-    (leavesData ?? []) as unknown as LeaveRequestDbRow[],
-  );
   const usedByProfile = usedDaysByProfile(leaves);
 
   const members: EquipeMember[] = activeProfiles.map((p) => {
@@ -295,6 +353,7 @@ export default async function AdminEquipePage({
       sectorColor: sector?.color ?? null,
       leaveBalanceDays: p.leave_balance_days ?? 0,
       usedDays: usedByProfile.get(p.id) ?? 0,
+      invitePending: Boolean(p.invite_pending),
     };
   });
 
@@ -473,7 +532,7 @@ function InvitationsTab({
             <p className="mt-4 text-sm text-[var(--ink-muted)] leading-relaxed border border-[var(--line-strong)] p-4">
               Ajoutez{" "}
               <code className="text-[var(--ink)]">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-              pour envoyer des invitations.
+              (mode Supabase) pour envoyer des invitations.
             </p>
           ) : null}
           <InviteUserForm

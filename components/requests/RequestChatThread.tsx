@@ -9,6 +9,10 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
+import {
+  fetchMessagesViaApi,
+  sendMessageViaApi,
+} from "@/lib/requests/api-chat";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import {
   listRequestMessages,
@@ -27,6 +31,8 @@ const timeFormatter = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
 });
+
+const POLL_MS = 4000;
 
 function appendMessage(
   prev: RequestMessage[],
@@ -50,10 +56,10 @@ type Props = {
   initialCreatedAt: string;
   initialAuthorName: string | null;
   status: "open" | "closed";
-  /** Dentiste : peut répondre même si traitée (réouvre automatiquement). */
   allowReplyWhenClosed?: boolean;
   className?: string;
   compact?: boolean;
+  messageTransport?: "supabase" | "api";
 };
 
 export function RequestChatThread({
@@ -66,6 +72,7 @@ export function RequestChatThread({
   allowReplyWhenClosed = false,
   className,
   compact = false,
+  messageTransport = "supabase",
 }: Props) {
   const [messages, setMessages] = useState<RequestMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,40 +80,89 @@ export function RequestChatThread({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastCreatedAtRef = useRef<string | undefined>(undefined);
+  const pollInFlightRef = useRef(false);
   const router = useRouter();
   const canReply = status === "open" || allowReplyWhenClosed;
+  const useApi = messageTransport === "api";
 
   useEffect(() => {
+    let cancelled = false;
+
+    if (useApi) {
+      async function boot() {
+        const { messages: rows, ok } = await fetchMessagesViaApi(requestId);
+        if (cancelled) return;
+        if (!ok) {
+          setError("Impossible de charger la discussion.");
+          setLoading(false);
+          return;
+        }
+        setMessages(rows);
+        lastCreatedAtRef.current = rows[rows.length - 1]?.createdAt;
+        setLoading(false);
+      }
+      void boot();
+
+      const timer = window.setInterval(() => {
+        if (document.hidden || pollInFlightRef.current) return;
+        pollInFlightRef.current = true;
+        void (async () => {
+          try {
+            const { messages: newer, ok } = await fetchMessagesViaApi(
+              requestId,
+              lastCreatedAtRef.current,
+            );
+            if (cancelled || !ok || newer.length === 0) return;
+            setMessages((prev) => {
+              let next = prev;
+              for (const msg of newer) {
+                next = appendMessage(next, msg, currentUserId);
+              }
+              lastCreatedAtRef.current = next[next.length - 1]?.createdAt;
+              return next;
+            });
+          } finally {
+            pollInFlightRef.current = false;
+          }
+        })();
+      }, POLL_MS);
+
+      return () => {
+        cancelled = true;
+        window.clearInterval(timer);
+      };
+    }
+
     const supabase = getBrowserSupabase();
     if (!supabase) {
       setLoading(false);
       return;
     }
-
-    let cancelled = false;
+    const client = supabase;
 
     async function boot() {
-      const rows = await listRequestMessages(supabase!, requestId);
+      const rows = await listRequestMessages(client, requestId);
       if (cancelled) return;
       setMessages(rows);
       setLoading(false);
-      await markRequestThreadRead(supabase!, requestId, currentUserId);
+      await markRequestThreadRead(client, requestId, currentUserId);
     }
 
     void boot();
 
-    const channel = subscribeRequestMessages(supabase, requestId, (msg) => {
+    const channel = subscribeRequestMessages(client, requestId, (msg) => {
       setMessages((prev) => appendMessage(prev, msg, currentUserId));
       if (msg.senderId !== currentUserId) {
-        void markRequestThreadRead(supabase, requestId, currentUserId);
+        void markRequestThreadRead(client, requestId, currentUserId);
       }
     });
 
     return () => {
       cancelled = true;
-      void supabase.removeChannel(channel);
+      void client.removeChannel(channel);
     };
-  }, [requestId, currentUserId]);
+  }, [requestId, currentUserId, useApi]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -117,15 +173,35 @@ export function RequestChatThread({
     const body = draft.trim();
     if (!body || !canReply || pending) return;
 
-    const supabase = getBrowserSupabase();
-    if (!supabase) {
-      setError("Connexion indisponible.");
-      return;
-    }
-
     const wasClosed = status === "closed";
     setError(null);
     startTransition(async () => {
+      if (useApi) {
+        const { message, error: sendError } = await sendMessageViaApi(
+          requestId,
+          body,
+        );
+        if (sendError) {
+          setError(sendError);
+          return;
+        }
+        setDraft("");
+        if (message) {
+          setMessages((prev) => appendMessage(prev, message, currentUserId));
+          lastCreatedAtRef.current = message.createdAt;
+        }
+        if (wasClosed && allowReplyWhenClosed) {
+          router.refresh();
+        }
+        return;
+      }
+
+      const supabase = getBrowserSupabase();
+      if (!supabase) {
+        setError("Connexion indisponible.");
+        return;
+      }
+
       const { message, error: sendError } = await sendRequestMessage(
         supabase,
         requestId,

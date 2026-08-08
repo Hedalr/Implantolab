@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isPostgresBackend } from "@/lib/db/backend";
 import {
   getServerSupabase,
   requireAdminOrChef,
@@ -12,6 +13,11 @@ import {
   type AdminRequestRow,
   type RequestStatusFilter,
 } from "@/lib/requests/queries";
+import {
+  countUnreadByRequestIdsPg,
+  fetchRequestMediaItemsPg,
+  listLabRequestsPg,
+} from "@/lib/requests/pg";
 import {
   formatRequestCategory,
   REQUEST_INBOX_LABEL,
@@ -71,32 +77,69 @@ export default async function AdminRequestsPage({
   const status = parseRequestStatusFilter(rawStatus);
   const patientQuery = await getPatientFilter("adminDemandes");
   const page = parsePage(rawPage);
+  const postgres = isPostgresBackend();
+  const messageTransport = postgres ? "api" : "supabase";
 
-  const supabase = await getServerSupabase();
-  const {
-    rows: requests,
-    total,
-    pageSize,
-    totalPages,
-    page: currentPage,
-  } = await listAdminRequests(supabase, {
+  // Fail-closed : chef sans secteur ne doit pas voir l'inbox multi-secteurs.
+  const chefDenied = isChef && !profile.sectorId;
+
+  const listFilters = {
     status,
     patientQuery: patientQuery || undefined,
     page,
     pageSize: LAB_REQUESTS_PAGE_SIZE,
     subjects: REQUEST_INBOX_SUBJECTS,
-    ...(isChef ? { sectorId: profile.sectorId ?? undefined } : {}),
-  });
+    ...(isChef && profile.sectorId ? { sectorId: profile.sectorId } : {}),
+  };
 
-  const mediaByRequest = await fetchRequestMediaItems(
-    supabase,
-    requests.map((r) => r.id),
-  );
-  const unreadByRequest = await countUnreadByRequestIds(
-    supabase,
-    requests.map((r) => r.id),
-    profile.id,
-  );
+  let requests: AdminRequestRow[];
+  let total: number;
+  let pageSize: number;
+  let totalPages: number;
+  let currentPage: number;
+  let mediaByRequest: Map<string, RequestMediaItem[]>;
+  let unreadByRequest: Map<string, number>;
+
+  if (chefDenied) {
+    requests = [];
+    total = 0;
+    pageSize = LAB_REQUESTS_PAGE_SIZE;
+    totalPages = 0;
+    currentPage = page;
+    mediaByRequest = new Map();
+    unreadByRequest = new Map();
+  } else if (postgres) {
+    const pageResult = await listLabRequestsPg({
+      ...listFilters,
+      scope:
+        isChef && profile.sectorId
+          ? { sectorId: profile.sectorId }
+          : "admin",
+    });
+    requests = pageResult.rows;
+    total = pageResult.total;
+    pageSize = pageResult.pageSize;
+    totalPages = pageResult.totalPages;
+    currentPage = pageResult.page;
+    const requestIds = requests.map((r) => r.id);
+    [mediaByRequest, unreadByRequest] = await Promise.all([
+      fetchRequestMediaItemsPg(requestIds),
+      countUnreadByRequestIdsPg(requestIds, profile.id),
+    ]);
+  } else {
+    const supabase = await getServerSupabase();
+    const pageResult = await listAdminRequests(supabase, listFilters);
+    requests = pageResult.rows;
+    total = pageResult.total;
+    pageSize = pageResult.pageSize;
+    totalPages = pageResult.totalPages;
+    currentPage = pageResult.page;
+    const requestIds = requests.map((r) => r.id);
+    [mediaByRequest, unreadByRequest] = await Promise.all([
+      fetchRequestMediaItems(supabase, requestIds),
+      countUnreadByRequestIds(supabase, requestIds, profile.id),
+    ]);
+  }
 
   return (
     <Container size="wide" className="py-10 md:py-14">
@@ -108,11 +151,20 @@ export default async function AdminRequestsPage({
           {REQUEST_INBOX_LABEL}
         </h1>
         <p className="mt-2 text-[var(--ink-muted)]">
-          {isChef
-            ? `Questions et urgences du secteur ${profile.sectorName ?? "assigné"}.`
-            : "Questions et urgences envoyées par les dentistes partenaires."}
+          {chefDenied
+            ? "Aucun secteur n’est rattaché à votre compte. Contactez un administrateur."
+            : isChef
+              ? `Questions et urgences du secteur ${profile.sectorName ?? "assigné"}.`
+              : "Questions et urgences envoyées par les dentistes partenaires."}
         </p>
       </header>
+
+      {chefDenied ? (
+        <div className="mb-6 border-l-2 border-[var(--accent-warm)] pl-4 py-2 bg-[var(--bg-elevated)] text-sm text-[var(--ink)]">
+          Votre compte chef de secteur n’a pas de secteur. L’inbox reste vide
+          jusqu’à attribution d’un secteur par un admin.
+        </div>
+      ) : null}
 
       <PatientSearchForm
         scope="adminDemandes"
@@ -162,6 +214,7 @@ export default async function AdminRequestsPage({
                     statusFilter={status}
                     currentUserId={profile.id}
                     unreadCount={unreadByRequest.get(r.id) ?? 0}
+                    messageTransport={messageTransport}
                   />
                 ))}
               </tbody>
@@ -232,12 +285,14 @@ function RequestRowView({
   statusFilter,
   currentUserId,
   unreadCount,
+  messageTransport,
 }: {
   row: RequestRow;
   media: RequestMediaItem[];
   statusFilter: StatusFilter;
   currentUserId: string;
   unreadCount: number;
+  messageTransport: "supabase" | "api";
 }) {
   const practitionerLabel = row.creatorName ?? "—";
 
@@ -265,6 +320,7 @@ function RequestRowView({
           status={row.status}
           media={media}
           unreadCount={unreadCount}
+          messageTransport={messageTransport}
           trigger={<CategoryBadge category={row.subject} />}
         />
       </td>

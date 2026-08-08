@@ -3,6 +3,8 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/espace-praticien/FormField";
 import { cn } from "@/lib/cn";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { listMyLeaveRequestsPg } from "@/lib/leave/pg";
 import { getServerSupabase, requireLabCollaborator } from "@/lib/supabase/server";
 import { formatDateRange, parseDateOnly } from "@/lib/utils/date";
 import { addLeaveRequest, deleteLeaveRequest } from "./actions";
@@ -42,6 +44,8 @@ const FEEDBACK: Record<string, string> = {
   save: "Une erreur est survenue lors de l’enregistrement. Merci de réessayer.",
   delete: "Impossible d’annuler cette demande. Merci de réessayer.",
   profile: "Votre profil est incomplet. Contactez l’administrateur.",
+  "rate-limit":
+    "Trop de demandes de congé ont été envoyées récemment. Réessayez dans quelques minutes.",
 };
 
 export default async function CongesPage({
@@ -52,14 +56,26 @@ export default async function CongesPage({
   const { userId, profile } = await requireLabCollaborator();
   const { ok, error, detail } = await searchParams;
 
-  const supabase = await getServerSupabase();
-  const { data } = await supabase
-    .from("leave_requests")
-    .select("id, start_date, end_date, days_count, note, status")
-    .eq("profile_id", userId)
-    .order("start_date", { ascending: true });
-
-  const rows = (data ?? []) as LeaveRow[];
+  let rows: LeaveRow[];
+  if (isPostgresBackend()) {
+    const data = await listMyLeaveRequestsPg(userId);
+    rows = data.map((r) => ({
+      id: r.id,
+      start_date: r.start_date,
+      end_date: r.end_date,
+      days_count: r.days_count,
+      note: r.note,
+      status: r.status,
+    }));
+  } else {
+    const supabase = await getServerSupabase();
+    const { data } = await supabase
+      .from("leave_requests")
+      .select("id, start_date, end_date, days_count, note, status")
+      .eq("profile_id", userId)
+      .order("start_date", { ascending: true });
+    rows = (data ?? []) as LeaveRow[];
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

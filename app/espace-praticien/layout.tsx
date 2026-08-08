@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { listLabSectorsPg } from "@/lib/requests/pg";
 import { listLabSectors } from "@/lib/requests/queries";
 import { navForRole, spaceLabelForRole } from "@/lib/roles";
 import {
@@ -23,7 +25,9 @@ export default async function EspacePraticienLayout({
 
   const sectors =
     configured && profile?.role === "admin"
-      ? await listLabSectors(await getServerSupabase())
+      ? isPostgresBackend()
+        ? await listLabSectorsPg()
+        : await listLabSectors(await getServerSupabase())
       : [];
 
   const nav = navForRole(profile?.role, { sectors });

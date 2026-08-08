@@ -31,6 +31,18 @@ export function isExpectedStoragePath(
   );
 }
 
+/** Defense-in-depth avant lecture FS locale (bucket + path attendus). */
+export function isReadableLocalMedia(row: {
+  request_id: string;
+  storage_bucket: string;
+  storage_path: string;
+}): boolean {
+  return (
+    row.storage_bucket === REQUEST_MEDIA_BUCKET &&
+    isExpectedStoragePath(row.request_id, row.storage_path)
+  );
+}
+
 export type RequestMediaRow = {
   id: string;
   request_id: string;

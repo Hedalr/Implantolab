@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { isPostgresBackend } from "@/lib/db/backend";
+import { canAccessRequestRow } from "@/lib/api/v1/access";
 import { getServerSupabase, requireLaboStaff } from "@/lib/supabase/server";
 import {
   fetchRequestMediaItems,
   getLabRequestById,
 } from "@/lib/requests/queries";
+import {
+  fetchRequestMediaItemsPg,
+  getLabRequestByIdPg,
+} from "@/lib/requests/pg";
 import {
   formatRequestCategory,
   isLabSubject,
@@ -43,10 +49,31 @@ export default async function LabRequestDetailPage({
   const { profile } = await requireLaboStaff();
   const { requestId } = await params;
   const { ok, error } = await searchParams;
+  const postgres = isPostgresBackend();
+  const isAdmin = profile.role === "admin";
 
-  const supabase = await getServerSupabase();
-  const request = await getLabRequestById(supabase, requestId);
+  // Lab sans secteur → deny (pas d'IDOR via deep-link UUID).
+  if (!isAdmin && !profile.sectorId) {
+    redirect("/espace-praticien/laboratoire?error=forbidden");
+  }
+
+  const request = postgres
+    ? await getLabRequestByIdPg(
+        requestId,
+        isAdmin ? undefined : { sectorId: profile.sectorId },
+      )
+    : await getLabRequestById(await getServerSupabase(), requestId);
   if (!request) notFound();
+
+  // Defense-in-depth hors RLS (chemin Supabase) + cohérence postgres.
+  if (
+    !canAccessRequestRow(profile, {
+      sectorId: request.sectorId,
+      subject: request.subject,
+    })
+  ) {
+    notFound();
+  }
 
   if (!isLabSubject(request.subject)) {
     const canOpenInbox =
@@ -63,7 +90,9 @@ export default async function LabRequestDetailPage({
     redirect("/espace-praticien/laboratoire");
   }
 
-  const mediaByRequest = await fetchRequestMediaItems(supabase, [requestId]);
+  const mediaByRequest = postgres
+    ? await fetchRequestMediaItemsPg([requestId])
+    : await fetchRequestMediaItems(await getServerSupabase(), [requestId]);
   const media = mediaByRequest.get(requestId) ?? [];
 
   return (

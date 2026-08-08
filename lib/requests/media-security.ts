@@ -67,3 +67,21 @@ export function sanitizeDownloadFilename(
 
   return safeName || fallback;
 }
+
+/** Headers communs download/inline — nosniff + disposition sanitisée. */
+export function mediaContentHeaders(options: {
+  mimeType: string | null | undefined;
+  filename?: string | null;
+  download?: boolean;
+}): Record<string, string> {
+  const filename = sanitizeDownloadFilename(options.filename, "photo");
+  const disposition = options.download
+    ? `attachment; filename="${filename}"`
+    : `inline; filename="${filename}"`;
+  return {
+    "Content-Type": options.mimeType ?? "application/octet-stream",
+    "Content-Disposition": disposition,
+    "Cache-Control": "private, max-age=60",
+    "X-Content-Type-Options": "nosniff",
+  };
+}
