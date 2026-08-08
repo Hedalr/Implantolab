@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { Container } from "@/components/ui/Container";
 import { EspacePraticienNav } from "@/components/layout/EspacePraticienNav";
+import { EspacePraticienNavFallback } from "@/components/layout/EspacePraticienNavFallback";
 import { isPostgresBackend } from "@/lib/db/backend";
 import { listLabSectorsPg } from "@/lib/requests/pg";
 import { listLabSectors } from "@/lib/requests/queries";
@@ -45,7 +46,11 @@ export default async function EspacePraticienLayout({
               </span>
 
               {showNav ? (
-                <Suspense fallback={null}>
+                <Suspense
+                  fallback={
+                    <EspacePraticienNavFallback items={nav} variant="desktop" />
+                  }
+                >
                   <EspacePraticienNav items={nav} variant="desktop" />
                 </Suspense>
               ) : null}
@@ -74,7 +79,11 @@ export default async function EspacePraticienLayout({
           </div>
 
           {showNav ? (
-            <Suspense fallback={null}>
+            <Suspense
+              fallback={
+                <EspacePraticienNavFallback items={nav} variant="mobile" />
+              }
+            >
               <EspacePraticienNav items={nav} variant="mobile" />
             </Suspense>
           ) : null}

@@ -173,6 +173,22 @@ export default async function AdminDashboardPage() {
           href="/espace-praticien/admin/praticiens"
           label="Praticiens"
         />
+        <ShortcutLink
+          href="/espace-praticien/admin/employes"
+          label="Équipe / employés"
+        />
+        <ShortcutLink
+          href="/espace-praticien/admin/conges"
+          label="Congés employés"
+        />
+        <ShortcutLink
+          href="/espace-praticien/admin/annonces"
+          label="Annonces"
+        />
+        <ShortcutLink
+          href="/espace-praticien/laboratoire"
+          label="Laboratoire"
+        />
       </section>
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
