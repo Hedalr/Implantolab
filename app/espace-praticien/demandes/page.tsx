@@ -29,6 +29,10 @@ import {
 } from "@/components/requests/RequestMediaGallery";
 import { RequestChatDetails } from "@/components/requests/RequestChatDetails";
 import { UnreadBadge } from "@/components/requests/UnreadBadge";
+import {
+  formatDateShort,
+  formatDateTimeLong,
+} from "@/lib/utils/date";
 import { createRequest } from "./actions";
 
 export const metadata: Metadata = {
@@ -63,28 +67,6 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   "rate-limit":
     "Trop de demandes ont été envoyées récemment. Réessayez dans quelques minutes.",
 };
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const shortDateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-function formatDateTime(iso: string): string {
-  return dateTimeFormatter.format(new Date(iso));
-}
-
-function formatShortDate(iso: string): string {
-  return shortDateFormatter.format(new Date(iso));
-}
 
 export default async function DemandesPage({
   searchParams,
@@ -315,7 +297,7 @@ export default async function DemandesPage({
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 text-sm">
                         <div className="flex items-baseline gap-3">
                           <span className="text-[var(--ink-discreet)] tabular-nums">
-                            {formatShortDate(row.created_at)}
+                            {formatDateShort(row.created_at)}
                           </span>
                           <span className="text-[var(--ink)]">
                             {formatRequestCategory(row.subject)}
@@ -460,7 +442,7 @@ function RequestCard({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div className="flex flex-col gap-2">
           <p className="text-eyebrow tabular-nums">
-            {formatDateTime(row.created_at)}
+            {formatDateTimeLong(row.created_at)}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <CategoryBadge category={row.subject} />

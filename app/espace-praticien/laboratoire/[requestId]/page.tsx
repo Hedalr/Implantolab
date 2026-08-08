@@ -21,6 +21,7 @@ import {
 import { RequestMediaGallery } from "@/components/requests/RequestMediaGallery";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "../Badge";
+import { formatDateTimeLong } from "@/lib/utils/date";
 import {
   markLabRequestClosed,
   markLabRequestOpen,
@@ -30,14 +31,6 @@ export const metadata: Metadata = {
   title: "Demande — Laboratoire",
   robots: { index: false, follow: false },
 };
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export default async function LabRequestDetailPage({
   params,
@@ -138,7 +131,7 @@ export default async function LabRequestDetailPage({
           ) : null}
         </h1>
         <p className="text-sm text-[var(--ink-muted)]">
-          {dateTimeFormatter.format(new Date(request.created_at))}
+          {formatDateTimeLong(request.created_at)}
         </p>
         <div className="flex flex-wrap gap-2">
           <Badge label={formatRequestCategory(request.subject)} />

@@ -31,6 +31,7 @@ import { cn } from "@/lib/cn";
 import { type RequestMediaItem } from "@/components/requests/RequestMediaGallery";
 import { UnreadBadge } from "@/components/requests/UnreadBadge";
 import { RequestChatDetails } from "@/components/requests/RequestChatDetails";
+import { formatDateTimeMedium } from "@/lib/utils/date";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -54,14 +55,6 @@ function buildAdminDemandesHref(status: StatusFilter, page = 1): string {
     ? `/espace-praticien/admin/demandes?${q}`
     : "/espace-praticien/admin/demandes";
 }
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export default async function AdminRequestsPage({
   searchParams,
@@ -299,7 +292,7 @@ function RequestRowView({
   return (
     <tr className="align-top">
       <td className="px-4 py-3 border-b border-[var(--line)] text-numeral text-xs text-[var(--ink-muted)]">
-        {dateTimeFormatter.format(new Date(row.created_at))}
+        {formatDateTimeMedium(row.created_at)}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
         <span className="inline-flex items-center gap-2">

@@ -13,6 +13,10 @@ import {
 } from "@/lib/requests/types";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/cn";
+import {
+  formatDateLong,
+  formatDateTimeMedium,
+} from "@/lib/utils/date";
 
 export const dynamic = "force-dynamic";
 
@@ -25,20 +29,6 @@ type ClosureRow = {
   note: string | null;
   profiles: { full_name: string | null } | null;
 };
-
-const dateFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-});
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 function isoDate(date: Date): string {
   const y = date.getFullYear();
@@ -211,7 +201,7 @@ export default async function AdminDashboardPage() {
                   <p className="mt-1 text-xs text-[var(--ink-discreet)]">
                     {r.creatorName ?? "Dentiste inconnu"}
                     {r.patientName ? ` • ${r.patientName}` : ""} •{" "}
-                    {dateTimeFormatter.format(new Date(r.created_at))}
+                    {formatDateTimeMedium(r.created_at)}
                   </p>
                 </li>
               ))}
@@ -233,8 +223,8 @@ export default async function AdminDashboardPage() {
                     {c.profiles?.full_name ?? "Dentiste inconnu"}
                   </p>
                   <p className="mt-1 text-xs text-[var(--ink-discreet)] text-numeral">
-                    {dateFormatter.format(new Date(c.start_date))} →{" "}
-                    {dateFormatter.format(new Date(c.end_date))}
+                    {formatDateLong(c.start_date)} →{" "}
+                    {formatDateLong(c.end_date)}
                   </p>
                   {c.note ? (
                     <p className="mt-1 text-xs text-[var(--ink-muted)] line-clamp-2">

@@ -21,6 +21,7 @@ import { getPatientFilter } from "@/lib/requests/patient-filter";
 import { PatientSearchForm } from "@/components/requests/PatientSearchForm";
 import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/lib/cn";
+import { formatDateTimeCompact } from "@/lib/utils/date";
 import { Badge } from "./Badge";
 
 export const metadata: Metadata = {
@@ -40,13 +41,6 @@ function parsePage(value: string | undefined): number {
   const n = Number.parseInt(value ?? "1", 10);
   return Number.isFinite(n) && n > 0 ? n : 1;
 }
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export default async function LaboratoireIndex({
   searchParams,
@@ -219,7 +213,7 @@ export default async function LaboratoireIndex({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex flex-col gap-2 min-w-0">
                         <p className="text-eyebrow tabular-nums">
-                          {dateTimeFormatter.format(new Date(r.created_at))}
+                          {formatDateTimeCompact(r.created_at)}
                         </p>
                         <p className="font-serif text-lg text-[var(--ink)] truncate">
                           {dentistLabel}

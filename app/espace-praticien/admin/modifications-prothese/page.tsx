@@ -25,6 +25,7 @@ import {
   RequestMediaGallery,
   type RequestMediaItem,
 } from "@/components/requests/RequestMediaGallery";
+import { formatDateTimeMedium } from "@/lib/utils/date";
 import { markRequestClosed, markRequestOpen } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -44,14 +45,6 @@ function buildHref(status: RequestStatusFilter, page = 1): string {
     ? `/espace-praticien/admin/modifications-prothese?${q}`
     : "/espace-praticien/admin/modifications-prothese";
 }
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 export default async function AdminModificationsProthesePage({
   searchParams,
@@ -245,7 +238,7 @@ function RequestRowView({
   return (
     <tr className="align-top">
       <td className="px-4 py-3 border-b border-[var(--line)] text-numeral text-xs text-[var(--ink-muted)]">
-        {dateTimeFormatter.format(new Date(row.created_at))}
+        {formatDateTimeMedium(row.created_at)}
       </td>
       <td className="px-4 py-3 border-b border-[var(--line)] text-[var(--ink)]">
         {row.creatorName ?? "—"}

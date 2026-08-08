@@ -5,6 +5,7 @@ import { listAllAnnouncementsPg } from "@/lib/announcements/pg";
 import { cn } from "@/lib/cn";
 import { isPostgresBackend } from "@/lib/db/backend";
 import { getServerSupabase, requireAdmin } from "@/lib/supabase/server";
+import { formatDateTimeMedium } from "@/lib/utils/date";
 import { createAnnouncement, deleteAnnouncement } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -64,14 +65,6 @@ const inputStyle = cn(
   "w-full bg-transparent border-b border-[var(--line-strong)] py-2.5 text-base text-[var(--ink)]",
   "placeholder:text-[var(--ink-discreet)] focus:outline-none focus:border-[var(--ink)] transition-colors",
 );
-
-const dateTimeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 function defaultExpiresLocal(): string {
   const d = new Date();
@@ -256,9 +249,9 @@ function AnnouncementItem({
           {row.body}
         </p>
         <p className="mt-2 text-xs text-[var(--ink-discreet)]">
-          Publiée le {dateTimeFormatter.format(new Date(row.created_at))} ·
+          Publiée le {formatDateTimeMedium(row.created_at)} ·
           Visible jusqu’au{" "}
-          {dateTimeFormatter.format(new Date(row.expires_at))}
+          {formatDateTimeMedium(row.expires_at)}
         </p>
       </div>
       {canDelete ? (

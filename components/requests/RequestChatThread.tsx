@@ -24,13 +24,7 @@ import {
   REQUEST_MESSAGE_MAX_LENGTH,
   type RequestMessage,
 } from "@/lib/requests/types";
-
-const timeFormatter = new Intl.DateTimeFormat("fr-FR", {
-  day: "2-digit",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+import { formatDateTimeCompact } from "@/lib/utils/date";
 
 const POLL_MS = 4000;
 
@@ -340,7 +334,7 @@ function Bubble({
       <div className="flex items-baseline gap-2 text-[10px] uppercase tracking-wider text-[var(--ink-discreet)]">
         <span>{author}</span>
         <span className="tabular-nums normal-case tracking-normal">
-          {timeFormatter.format(new Date(at))}
+          {formatDateTimeCompact(at)}
         </span>
       </div>
       <div
