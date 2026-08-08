@@ -6,6 +6,7 @@ import {
   clearPgSessionCookie,
   PG_SESSION_COOKIE,
 } from "@/lib/auth/postgres/cookies";
+import { redirectPublic } from "@/lib/http/public-url";
 
 function isPublicAuthPath(pathname: string): boolean {
   return [
@@ -26,10 +27,7 @@ function redirectToLogin(
   request: NextRequest,
   options?: { clearSessionCookie?: boolean },
 ): NextResponse {
-  const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = "/espace-praticien/login";
-  redirectUrl.search = "";
-  const response = NextResponse.redirect(redirectUrl);
+  const response = redirectPublic(request, "/espace-praticien/login", 307);
   // updatePgSession pose le clear sur `NextResponse.next` — si on redirige
   // à la place, il faut reposer le Set-Cookie ici, sinon le cookie mort reste.
   if (options?.clearSessionCookie) {
@@ -77,10 +75,7 @@ export async function proxy(request: NextRequest) {
       !isPublicPath &&
       !isSetPasswordPath(pathname)
     ) {
-      const dest = request.nextUrl.clone();
-      dest.pathname = "/espace-praticien/set-password";
-      dest.search = "";
-      return NextResponse.redirect(dest);
+      return redirectPublic(request, "/espace-praticien/set-password", 307);
     }
 
     return response;

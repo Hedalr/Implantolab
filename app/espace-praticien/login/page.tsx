@@ -3,6 +3,7 @@ import {
   authFieldClassName,
   authLabelClassName,
 } from "@/components/auth/authFormStyles";
+import { isPostgresBackend } from "@/lib/db/backend";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import { buildMailtoHref } from "@/lib/mailto";
 import { site } from "@/content/fr/site";
@@ -18,7 +19,8 @@ export default async function LoginPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const configured = isSupabaseConfigured();
+  // Postgres (Scalingo) n’a pas besoin des clés Supabase pour afficher le form.
+  const configured = isPostgresBackend() || isSupabaseConfigured();
   const configError = params.error === "config" || !configured;
   const credentialsError = params.error === "1";
   const inviteError = params.error === "invite";

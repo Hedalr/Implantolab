@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import {
   getServerSupabase,
   isSupabaseConfigured,
@@ -9,13 +9,11 @@ import {
   PG_SESSION_COOKIE,
 } from "@/lib/auth/postgres/cookies";
 import { destroyPgSessionToken } from "@/lib/auth/postgres/session";
+import { redirectPublic } from "@/lib/http/public-url";
 
 /** POST logout → login (303). Échec signOut ignoré : on redirige quand même. */
 export async function POST(request: NextRequest) {
-  const redirectUrl = request.nextUrl.clone();
-  redirectUrl.pathname = "/espace-praticien/login";
-  redirectUrl.search = "";
-  const response = NextResponse.redirect(redirectUrl, { status: 303 });
+  const response = redirectPublic(request, "/espace-praticien/login", 303);
 
   if (isPostgresBackend()) {
     const token = request.cookies.get(PG_SESSION_COOKIE)?.value;

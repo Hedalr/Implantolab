@@ -81,7 +81,10 @@ export async function loadAuthEmailById(
   return emailById;
 }
 
-/** URL publique du site (invitations Supabase, callbacks auth). */
+/**
+ * URL publique du site (invitations e-mail, callbacks auth).
+ * Sur Scalingo : définir `NEXT_PUBLIC_SITE_URL` (pas de VERCEL_URL).
+ */
 export function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");

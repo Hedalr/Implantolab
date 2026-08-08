@@ -51,6 +51,8 @@ Smoke global local : `node scripts/smoke-m9-global.mjs` (prérequis Docker + see
 ```bash
 DATA_BACKEND=postgres
 DATABASE_URL=postgresql://...          # obligatoire en prod (fail-closed)
+NEXT_PUBLIC_SITE_URL=https://….osc-fr1.scalingo.io   # ou domaine custom
+# ↑ Requis pour redirects auth / e-mails si le Host interne (localhost:$PORT) fuit
 LOCAL_STORAGE_ROOT=/app/.data/storage   # ou stockage objet plus tard
 # Symlinks sous ce root : refusés (fail-closed) — voir lib/storage/local.ts
 CRON_SECRET=...

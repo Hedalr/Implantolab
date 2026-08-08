@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import { apiSignIn, getClientIp } from "@/lib/api/v1/auth";
 import {
   PG_SESSION_COOKIE,
@@ -6,6 +6,7 @@ import {
 } from "@/lib/auth/postgres/cookies";
 import { destroyPgSessionToken } from "@/lib/auth/postgres/session";
 import { isPostgresBackend } from "@/lib/db/backend";
+import { redirectPublic } from "@/lib/http/public-url";
 import { homePathForRole } from "@/lib/roles";
 import {
   getServerSupabase,
@@ -13,15 +14,12 @@ import {
 } from "@/lib/supabase/server";
 
 function loginErrorRedirect(request: NextRequest, code: "1" | "config") {
-  const url = request.nextUrl.clone();
-  url.pathname = "/espace-praticien/login";
-  url.search = `?error=${code}`;
-  return NextResponse.redirect(url, { status: 303 });
+  return redirectPublic(request, `/espace-praticien/login?error=${code}`, 303);
 }
 
 /** POST email/password → cookie session + redirect (303). */
 export async function POST(request: NextRequest) {
-  if (!isSupabaseConfigured()) {
+  if (!isPostgresBackend() && !isSupabaseConfigured()) {
     return loginErrorRedirect(request, "config");
   }
 
@@ -52,10 +50,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const dest = request.nextUrl.clone();
-    dest.pathname = homePathForRole(result.profile.role);
-    dest.search = "";
-    const response = NextResponse.redirect(dest, { status: 303 });
+    const response = redirectPublic(
+      request,
+      homePathForRole(result.profile.role),
+      303,
+    );
     setPgSessionCookie(response, result.token);
     return response;
   }
@@ -70,8 +69,5 @@ export async function POST(request: NextRequest) {
     return loginErrorRedirect(request, "1");
   }
 
-  const dest = request.nextUrl.clone();
-  dest.pathname = "/espace-praticien";
-  dest.search = "";
-  return NextResponse.redirect(dest, { status: 303 });
+  return redirectPublic(request, "/espace-praticien", 303);
 }
